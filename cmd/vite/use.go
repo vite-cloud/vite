@@ -1,10 +1,10 @@
-package nest
+package vite
 
 import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/redwebcreation/nest/container"
 	"github.com/spf13/cobra"
+	"github.com/vite-cloud/vite/container"
 )
 
 type useOptions struct {

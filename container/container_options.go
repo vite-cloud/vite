@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/docker/docker/client"
 	"github.com/mitchellh/go-homedir"
-	"github.com/redwebcreation/nest/loggy"
-	"github.com/redwebcreation/nest/service"
+	"github.com/vite-cloud/vite/loggy"
+	"github.com/vite-cloud/vite/service"
 	"io"
 	"log"
 	"os"
@@ -68,8 +68,8 @@ func WithDefaultConfigHome() Option {
 			return nil
 		}
 
-		if os.Getenv("NEST_HOME") != "" {
-			context.home = strings.TrimRight(os.Getenv("NEST_HOME"), "/")
+		if os.Getenv("VITE_HOME") != "" {
+			context.home = strings.TrimRight(os.Getenv("VITE_HOME"), "/")
 			return nil
 		}
 
@@ -79,7 +79,7 @@ func WithDefaultConfigHome() Option {
 			return err
 		}
 
-		context.home = userHome + "/.nest"
+		context.home = userHome + "/.vite"
 
 		return nil
 	}

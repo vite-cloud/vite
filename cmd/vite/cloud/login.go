@@ -2,9 +2,9 @@ package cloud
 
 import (
 	"fmt"
-	"github.com/redwebcreation/nest/cloud"
-	"github.com/redwebcreation/nest/container"
 	"github.com/spf13/cobra"
+	"github.com/vite-cloud/vite/cloud"
+	"github.com/vite-cloud/vite/container"
 )
 
 type loginOptions struct {
@@ -39,7 +39,7 @@ func runLoginCommand(ct *container.Container, opts *loginOptions) error {
 func NewLoginCommand(ct *container.Container) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
-		Short: "login to nest cloud",
+		Short: "login to vite cloud",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args[0]) != 45 {

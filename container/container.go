@@ -7,12 +7,12 @@ import (
 	"github.com/c-robinson/iplib"
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
-	"github.com/redwebcreation/nest/cloud"
-	"github.com/redwebcreation/nest/docker"
-	"github.com/redwebcreation/nest/loggy"
-	"github.com/redwebcreation/nest/proxy"
-	"github.com/redwebcreation/nest/proxy/plane"
-	"github.com/redwebcreation/nest/service"
+	"github.com/vite-cloud/vite/cloud"
+	"github.com/vite-cloud/vite/docker"
+	"github.com/vite-cloud/vite/loggy"
+	"github.com/vite-cloud/vite/proxy"
+	"github.com/vite-cloud/vite/proxy/plane"
+	"github.com/vite-cloud/vite/service"
 	"golang.org/x/crypto/acme/autocert"
 	"gopkg.in/yaml.v2"
 	"io"
@@ -26,15 +26,15 @@ import (
 // Container is a struct that holds the state of the application
 // and creates the necessary components to run the application
 type Container struct {
-	// home is the path to the logger config for nest.
+	// home is the path to the logger config for vite.
 	//
 	// It resolves to the following (in order):
 	// - WithConfigHome option
 	// - the --config/-c flag
-	// - $NEST_HOME
-	// - ~/.nest
+	// - $VITE_HOME
+	// - ~/.vite
 	home string
-	// config contains the path to nest's config file.
+	// config contains the path to vite's config file.
 	// it is resolved once and cached.
 	config *service.Locator
 	// servicesConfig contains the resolved server config from the config.
@@ -46,7 +46,7 @@ type Container struct {
 	in FileReader
 	// err is a minimal interface to write to stderr.
 	err io.Writer
-	// logger is nest's internal logger.
+	// logger is vite's internal logger.
 	// it is used to log any action that changes any kind of state.
 	logger *log.Logger
 	// proxyLogger is solely used to log proxy events such as a request coming in, an error in the proxy, etc.
@@ -78,12 +78,12 @@ func New(opts ...Option) (*Container, error) {
 	return ct, nil
 }
 
-// Config returns the cached nest config or loads it if it hasn't been loaded yet.
+// Config returns the cached vite config or loads it if it hasn't been loaded yet.
 func (c *Container) Config() (*service.Locator, error) {
 	if c.config == nil {
 		contents, err := os.ReadFile(c.configFile())
 		if err != nil {
-			return nil, fmt.Errorf("run `nest setup` to setup nest")
+			return nil, fmt.Errorf("run `vite setup` to setup vite")
 		}
 
 		cf := &service.Locator{
@@ -112,9 +112,9 @@ func (c *Container) ServicesConfig() (*service.Config, error) {
 		if err != nil {
 			return nil, err
 		}
-		configFile := "nest.yaml"
-		if cfg.Git.Exists(c.configStoreDir(), "nest.yml", cfg.Commit) {
-			configFile = "nest.yml"
+		configFile := "vite.yaml"
+		if cfg.Git.Exists(c.configStoreDir(), "vite.yml", cfg.Commit) {
+			configFile = "vite.yml"
 		}
 
 		contents, err := cfg.Read(configFile)
@@ -302,9 +302,27 @@ func (c *Container) ControlPlane() (*gin.Engine, error) {
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(func(ctx *gin.Context) {
-		ctx.Set("nest", c)
+		ctx.Set("vite", c)
 
 		ctx.Next()
+	})
+	id, token, err := c.CloudCredentials()
+	if err != nil {
+		return nil, err
+	}
+	router.Use(func(c *gin.Context) {
+		username, password, ok := c.Request.BasicAuth()
+		if !ok {
+			c.AbortWithStatus(401)
+			return
+		}
+
+		if username != id || password != token {
+			c.AbortWithStatus(401)
+			return
+		}
+
+		c.Next()
 	})
 
 	cfg, err := c.Config()

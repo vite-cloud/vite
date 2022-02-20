@@ -2,23 +2,23 @@ package main
 
 import (
 	"fmt"
-	"github.com/redwebcreation/nest/build"
-	"github.com/redwebcreation/nest/cmd/nest"
-	"github.com/redwebcreation/nest/cmd/nest/cloud"
-	"github.com/redwebcreation/nest/cmd/nest/proxy"
-	"github.com/redwebcreation/nest/container"
-	"github.com/redwebcreation/nest/loggy"
 	"github.com/spf13/cobra"
+	"github.com/vite-cloud/vite/build"
+	"github.com/vite-cloud/vite/cmd/vite"
+	"github.com/vite-cloud/vite/cmd/vite/cloud"
+	"github.com/vite-cloud/vite/cmd/vite/proxy"
+	"github.com/vite-cloud/vite/container"
+	"github.com/vite-cloud/vite/loggy"
 	"os"
 )
 
-func newNestCommand(ct *container.Container) *cobra.Command {
+func newViteCommand(ct *container.Container) *cobra.Command {
 	cli := &cobra.Command{
-		Use:           "nest",
+		Use:           "vite",
 		Short:         "Service orchestrator",
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		Long:          "Nest is a powerful service orchestrator for a single server.",
+		Long:          "Vite is a powerful service orchestrator for a single server.",
 		Version:       fmt.Sprintf("%s, build %s", build.Version, build.Commit),
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
@@ -44,22 +44,22 @@ func newNestCommand(ct *container.Container) *cobra.Command {
 
 	cli.AddCommand(
 		// version
-		nest.NewVersionCommand(ct),
+		vite.NewVersionCommand(ct),
 
 		// setup
-		nest.NewSetupCommand(ct),
+		vite.NewSetupCommand(ct),
 
 		// use
-		nest.NewUseCommand(ct),
+		vite.NewUseCommand(ct),
 
 		// medic
-		nest.NewMedicCommand(ct),
+		vite.NewMedicCommand(ct),
 
 		// self-update
-		nest.NewSelfUpdateCommand(ct),
+		vite.NewSelfUpdateCommand(ct),
 
 		// deploy
-		nest.NewDeployCommand(ct),
+		vite.NewDeployCommand(ct),
 
 		// proxy commands
 		proxy.NewRootCommand(ct),
@@ -78,7 +78,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = newNestCommand(ct).Execute()
+	err = newViteCommand(ct).Execute()
 	if err != nil {
 		ct.Logger().Print(loggy.NewEvent(loggy.ErrorLevel, err.Error(), nil))
 

@@ -1,9 +1,9 @@
-package nest
+package vite
 
 import (
 	"github.com/Netflix/go-expect"
-	"github.com/redwebcreation/nest/container"
 	"github.com/spf13/cobra"
+	"github.com/vite-cloud/vite/container"
 	"gotest.tools/v3/assert"
 	"testing"
 )
@@ -16,7 +16,7 @@ func TestNewUseCommand(t *testing.T) {
 		},
 		Setup: func(ct *container.Container) []container.Option {
 			return []container.Option{
-				container.WithConfig(ct.NewConfig("github", "redwebcreation/nest-configs", "empty-config")),
+				container.WithConfig(ct.NewConfig("github", "vite-cloud/vite-configs", "empty-config")),
 			}
 		},
 		NewCommand: func(ct *container.Container) (*cobra.Command, error) {
@@ -37,6 +37,6 @@ func TestNewUseCommand(t *testing.T) {
 	config, err := ct.Config()
 	assert.NilError(t, err)
 
-	// see https://github.com/redwebcreation/nest-configs/tree/empty-config
+	// see https://github.com/vite-cloud/vite-configs/tree/empty-config
 	assert.Equal(t, config.Commit, "3ea941eaf6d2bfcc97480ce5df49bee91d8f09e2")
 }

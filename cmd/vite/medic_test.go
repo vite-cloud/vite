@@ -1,10 +1,10 @@
-package nest
+package vite
 
 import (
 	"github.com/Netflix/go-expect"
-	"github.com/redwebcreation/nest/container"
-	"github.com/redwebcreation/nest/service"
 	"github.com/spf13/cobra"
+	"github.com/vite-cloud/vite/container"
+	"github.com/vite-cloud/vite/service"
 	"testing"
 )
 

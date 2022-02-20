@@ -2,7 +2,7 @@ package docker
 
 import (
 	"github.com/docker/docker/client"
-	"github.com/redwebcreation/nest/loggy"
+	"github.com/vite-cloud/vite/loggy"
 	"log"
 )
 

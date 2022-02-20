@@ -1,12 +1,12 @@
-package nest
+package vite
 
 import (
 	"context"
 	"fmt"
 	"github.com/google/go-github/v42/github"
-	"github.com/redwebcreation/nest/build"
-	"github.com/redwebcreation/nest/container"
 	"github.com/spf13/cobra"
+	"github.com/vite-cloud/vite/build"
+	"github.com/vite-cloud/vite/container"
 	"io"
 	"net/http"
 	"os"
@@ -23,9 +23,9 @@ func runSelfUpdate(ct *container.Container, opts *selfUpdateOptions) error {
 	var err error
 
 	if opts.version != "" {
-		release, _, err = client.Repositories.GetReleaseByTag(context.Background(), "redwebcreation", "nest", opts.version)
+		release, _, err = client.Repositories.GetReleaseByTag(context.Background(), "vite-cloud", "vite", opts.version)
 	} else {
-		release, _, err = client.Repositories.GetLatestRelease(context.Background(), "redwebcreation", "nest")
+		release, _, err = client.Repositories.GetLatestRelease(context.Background(), "vite-cloud", "vite")
 	}
 
 	if err != nil {
@@ -33,7 +33,7 @@ func runSelfUpdate(ct *container.Container, opts *selfUpdateOptions) error {
 	}
 
 	if release.GetTagName() == build.Version {
-		return fmt.Errorf("you are already using the latest version of nest")
+		return fmt.Errorf("you are already using the latest version of vite")
 	}
 
 	binary := release.Assets[0]

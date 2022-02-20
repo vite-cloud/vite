@@ -111,6 +111,6 @@ package service
 //	assert.Equal(t, len(containers), 1)
 //	assert.Equal(t, containers[0].State, "running")
 //	assert.Equal(t, containers[0].Image, "nginx:1.21.5")
-//	assert.Equal(t, containers[0].Labels["cloud.usenest.deployment_id"], pipeline.Deployment.ID)
-//	assert.Equal(t, containers[0].Labels["cloud.usenest.service"], pipeline.Service.Name)
+//	assert.Equal(t, containers[0].Labels["cloud.vite.deployment_id"], pipeline.Deployment.ID)
+//	assert.Equal(t, containers[0].Labels["cloud.vite.service"], pipeline.Service.Name)
 //}

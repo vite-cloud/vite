@@ -1,9 +1,9 @@
-package nest
+package vite
 
 import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/redwebcreation/nest/container"
+	"github.com/vite-cloud/vite/container"
 	"regexp"
 
 	"github.com/spf13/cobra"
@@ -90,7 +90,7 @@ func runSetupCommand(ct *container.Container, opts *setupOptions) error {
 		return err
 	}
 
-	fmt.Fprintln(ct.Out(), "\nYou now need to run `nest use` to specify which version of the oldConfig you want to use.")
+	fmt.Fprintln(ct.Out(), "\nYou now need to run `vite use` to specify which version of the oldConfig you want to use.")
 
 	return nil
 }
@@ -101,7 +101,7 @@ func NewSetupCommand(ct *container.Container) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "setup",
-		Short: "set up nest",
+		Short: "set up vite",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.UsesFlags = cmd.Flags().NFlag() > 0

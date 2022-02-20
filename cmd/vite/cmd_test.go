@@ -1,10 +1,10 @@
-package nest
+package vite
 
 import (
 	"github.com/Netflix/go-expect"
 	"github.com/hinshun/vt10x"
-	"github.com/redwebcreation/nest/container"
 	"github.com/spf13/cobra"
+	"github.com/vite-cloud/vite/container"
 	"gotest.tools/v3/assert"
 	"os"
 	"testing"
@@ -18,7 +18,7 @@ type CommandTest struct {
 }
 
 func (c CommandTest) Run(t *testing.T) *container.Container {
-	dir, err := os.MkdirTemp("", "nest")
+	dir, err := os.MkdirTemp("", "vite")
 	assert.NilError(t, err)
 
 	console, _, err := vt10x.NewVT10XConsole()

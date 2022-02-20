@@ -4,13 +4,13 @@
     "title": "Release :version"
   },
   "before_release": [
-    "go build -ldflags='-w -s -X github.com/redwebcreation/nest/globals.Version=:version -X github.com/redwebcreation/nest/globals.Version=:fullCommit' -gcflags=all='-l'"
+    "go build -ldflags='-w -s -X github.com/vite-cloud/vite/build.Version=:version -X github.com/vite-cloud/vite/globals.Version=:fullCommit' -gcflags=all='-l'"
   ],
   "after_release": [
-    "rm nest"
+    "rm vite"
   ],
   "assets": [
-    "./nest"
+    "./vite"
   ],
   "tag_message": "Version :tag"
 }

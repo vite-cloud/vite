@@ -7,7 +7,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
-	"github.com/redwebcreation/nest/docker"
+	"github.com/vite-cloud/vite/docker"
 	"strings"
 	"time"
 )
@@ -90,8 +90,8 @@ func (p *Pipeline) CreateServiceNetwork() (string, error) {
 	name := fmt.Sprintf("%s_%s", p.Service.Name, p.Deployment.ID)
 
 	net, err := p.Deployment.Docker.NetworkCreate(name, map[string]string{
-		"cloud.usenest.service":       p.Service.Name,
-		"cloud.usenest.deployment_id": p.Deployment.ID,
+		"cloud.vite.service":       p.Service.Name,
+		"cloud.vite.deployment_id": p.Deployment.ID,
 	})
 
 	if err != nil {
@@ -116,7 +116,7 @@ func (p *Pipeline) ConnectRequiredServices(networkID string) error {
 }
 
 func (p *Pipeline) ContainerName() string {
-	return "nest_" + p.Service.Name + "_" + strings.Replace(p.Service.Image, ":", "_", 1) + "_" + p.Deployment.ID
+	return "vite_" + p.Service.Name + "_" + strings.Replace(p.Service.Image, ":", "_", 1) + "_" + p.Deployment.ID
 }
 
 func (p *Pipeline) CreateContainer() (string, error) {
@@ -137,8 +137,8 @@ func (p *Pipeline) CreateContainer() (string, error) {
 	return p.Deployment.Docker.ContainerCreate(&container.Config{
 		Image: p.Service.Image,
 		Labels: map[string]string{
-			"cloud.usenest.service":       p.Service.Name,
-			"cloud.usenest.deployment_id": p.Deployment.ID,
+			"cloud.vite.service":       p.Service.Name,
+			"cloud.vite.deployment_id": p.Deployment.ID,
 		},
 		Env: p.Service.Env.ForDocker(),
 	}, &container.HostConfig{

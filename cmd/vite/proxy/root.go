@@ -1,8 +1,8 @@
 package proxy
 
 import (
-	"github.com/redwebcreation/nest/container"
 	"github.com/spf13/cobra"
+	"github.com/vite-cloud/vite/container"
 )
 
 // NewRootCommand returns a new instance of the proxy root command

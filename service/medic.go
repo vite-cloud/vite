@@ -27,7 +27,7 @@ func (d *Diagnostic) MustPass() error {
 		return nil
 	}
 
-	return fmt.Errorf("invalid config (run `nest medic` for details)")
+	return fmt.Errorf("invalid config (run `vite medic` for details)")
 }
 
 // DiagnoseConfig runs the diagnostics on the Config.

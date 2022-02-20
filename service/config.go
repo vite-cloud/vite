@@ -1,11 +1,11 @@
 package service
 
 import (
-	"github.com/redwebcreation/nest/docker"
+	"github.com/vite-cloud/vite/docker"
 	"gopkg.in/yaml.v2"
 )
 
-// Config represents nest's config
+// Config represents vite's config
 type Config struct {
 	Services     ServiceMap  `yaml:"services" json:"services"`
 	Registries   RegistryMap `yaml:"registries" json:"registries"`

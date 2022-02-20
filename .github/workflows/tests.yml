@@ -7,14 +7,14 @@ on:
       - .gitignore
       - .gitattributes
     branches:
-      - next
+      - main
   pull_request:
     paths-ignore:
       - README.md
       - .gitignore
       - .gitattributes
     branches:
-      - next
+      - main
   workflow_dispatch:
 
 jobs:

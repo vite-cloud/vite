@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/redwebcreation/nest/build"
+	"github.com/vite-cloud/vite/build"
 	"io"
 	"net/http"
 )
@@ -49,8 +49,8 @@ func (c Client) Request(method string, url string, params map[string]any, v any)
 
 	if response.StatusCode == http.StatusNotFound {
 		return ErrResourceNotFound
-	} else if response.StatusCode < 200 || response.StatusCode > 400 {
-		return fmt.Errorf("invalid nest cloud response: status=%d path=%s", response.StatusCode, url)
+	} else if response.StatusCode < 200 || response.StatusCode > 400 && response.StatusCode != 422 {
+		return fmt.Errorf("invalid vite cloud response: status=%d path=%s", response.StatusCode, url)
 	}
 
 	defer response.Body.Close()
@@ -58,6 +58,14 @@ func (c Client) Request(method string, url string, params map[string]any, v any)
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return err
+	}
+
+	if response.StatusCode == 422 {
+		message := struct {
+			Message string `json:"message"`
+		}{}
+		err = json.Unmarshal(body, &message)
+		return fmt.Errorf("validation error: %s", message.Message)
 	}
 
 	return json.Unmarshal(body, &v)

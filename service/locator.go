@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/redwebcreation/nest/loggy"
+	"github.com/vite-cloud/vite/loggy"
 	"io/fs"
 	"log"
 	"os"
 	"strings"
 )
 
-// Locator contains nest's configuration
+// Locator contains vite's configuration
 type Locator struct {
 	Provider   string `json:"provider"`
 	Repository string `json:"repository"`

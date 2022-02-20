@@ -3,7 +3,7 @@ package service
 import (
 	"bytes"
 	"fmt"
-	"github.com/redwebcreation/nest/loggy"
+	"github.com/vite-cloud/vite/loggy"
 	"log"
 	"os/exec"
 	"strings"

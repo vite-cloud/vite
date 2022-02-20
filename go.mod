@@ -1,4 +1,4 @@
-module github.com/redwebcreation/nest
+module github.com/vite-cloud/vite
 
 go 1.18
 

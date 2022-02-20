@@ -47,7 +47,7 @@ func (m ManifestManager) Latest() (*Manifest, error) {
 	}
 
 	if len(manifests) == 0 {
-		return nil, fmt.Errorf("no manifest found: run `nest deploy`")
+		return nil, fmt.Errorf("no manifest found: run `vite deploy`")
 	}
 
 	latest := manifests[len(manifests)-1].Name()

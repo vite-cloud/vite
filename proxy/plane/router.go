@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/redwebcreation/nest/build"
-	"github.com/redwebcreation/nest/docker"
-	"github.com/redwebcreation/nest/service"
+	"github.com/vite-cloud/vite/build"
+	"github.com/vite-cloud/vite/docker"
+	"github.com/vite-cloud/vite/service"
 )
 
 type ControlPlane struct {
@@ -19,7 +19,7 @@ type ControlPlane struct {
 func (cp ControlPlane) From(router *gin.Engine) *gin.Engine {
 	router.GET("/api/v1/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"software": "nest",
+			"software": "vite",
 			"version":  build.Version,
 			"build":    build.Commit,
 		})
