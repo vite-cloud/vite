@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/google/go-github/v42/github"
 	"github.com/redwebcreation/nest/build"
-	context2 "github.com/redwebcreation/nest/context"
+	"github.com/redwebcreation/nest/container"
 	"github.com/spf13/cobra"
 	"io"
 	"net/http"
@@ -16,7 +16,7 @@ type selfUpdateOptions struct {
 	version string
 }
 
-func runSelfUpdate(ctx *context2.Context, opts *selfUpdateOptions) error {
+func runSelfUpdate(ct *container.Container, opts *selfUpdateOptions) error {
 	client := github.NewClient(nil)
 
 	var release *github.RepositoryRelease
@@ -42,7 +42,7 @@ func runSelfUpdate(ctx *context2.Context, opts *selfUpdateOptions) error {
 		return fmt.Errorf("the binary is not available yet, try again later")
 	}
 
-	fmt.Fprintf(ctx.Out(), "Downloading %s...\n", binary.GetName())
+	fmt.Fprintf(ct.Out(), "Downloading %s...\n", binary.GetName())
 
 	executable, err := os.Executable()
 	if err != nil {
@@ -59,13 +59,13 @@ func runSelfUpdate(ctx *context2.Context, opts *selfUpdateOptions) error {
 		return err
 	}
 
-	fmt.Fprintf(ctx.Out(), "Successfully updated to version %s.\n", release.GetTagName())
+	fmt.Fprintf(ct.Out(), "Successfully updated to version %s.\n", release.GetTagName())
 
 	return nil
 }
 
 // NewSelfUpdateCommand creates a new `self-update` command.
-func NewSelfUpdateCommand(ctx *context2.Context) *cobra.Command {
+func NewSelfUpdateCommand(ct *container.Container) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "self-update [version]",
 		Short: "update the CLI to the latest version",
@@ -77,7 +77,7 @@ func NewSelfUpdateCommand(ctx *context2.Context) *cobra.Command {
 				opts.version = args[0]
 			}
 
-			return runSelfUpdate(ctx, opts)
+			return runSelfUpdate(ct, opts)
 		},
 	}
 

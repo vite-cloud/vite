@@ -2,33 +2,33 @@ package nest
 
 import (
 	"fmt"
-	"github.com/redwebcreation/nest/context"
-	"github.com/redwebcreation/nest/deploy"
+	"github.com/redwebcreation/nest/container"
+	"github.com/redwebcreation/nest/service"
 	"github.com/spf13/cobra"
 	"io"
 )
 
-func runDeployCommand(ctx *context.Context) error {
-	config, err := ctx.ServicesConfig()
+func runDeployCommand(ct *container.Container) error {
+	config, err := ct.ServicesConfig()
 	if err != nil {
 		return err
 	}
 
-	deployment := deploy.NewDeployment(config, ctx.Logger(), ctx.ManifestManager(), ctx.Subnetter(config.Network.Subnets))
+	deployment := service.NewDeployment(config, ct.ManifestManager(), ct.DockerClient())
 
 	go func() {
 		err = deployment.Start()
 		if err != nil {
-			deployment.Events <- deploy.Event{
+			deployment.Events <- service.Event{
 				Service: nil,
-				Value:   deploy.ErrDeploymentFailed,
+				Value:   service.ErrDeploymentFailed,
 			}
 		}
 	}()
 
 	for event := range deployment.Events {
-		if event.Value == deploy.ErrDeploymentFailed {
-			fmt.Fprintln(ctx.Out(), "Deployment failed")
+		if event.Value == service.ErrDeploymentFailed {
+			fmt.Fprintln(ct.Out(), "Deployment failed")
 			break
 		}
 
@@ -37,22 +37,22 @@ func runDeployCommand(ctx *context.Context) error {
 		}
 
 		if event.Service != nil {
-			fmt.Fprintf(ctx.Out(), "%s: %v\n", event.Service.Name, event.Value)
+			fmt.Fprintf(ct.Out(), "%s: %v\n", event.Service.Name, event.Value)
 		} else {
-			fmt.Fprintf(ctx.Out(), "global: %v\n", event.Value)
+			fmt.Fprintf(ct.Out(), "global: %v\n", event.Value)
 		}
 	}
 
-	return ctx.ManifestManager().Save(deployment.Manifest)
+	return ct.ManifestManager().Save(deployment.Manifest)
 }
 
 // NewDeployCommand creates a new `deploy` command.
-func NewDeployCommand(ctx *context.Context) *cobra.Command {
+func NewDeployCommand(ct *container.Container) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy",
 		Short: "deploy the config",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runDeployCommand(ctx)
+			return runDeployCommand(ct)
 		},
 	}
 

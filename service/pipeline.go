@@ -1,4 +1,4 @@
-package deploy
+package service
 
 import (
 	"context"
@@ -8,106 +8,104 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/redwebcreation/nest/docker"
-	"github.com/redwebcreation/nest/service"
 	"strings"
 	"time"
 )
 
 type Event struct {
-	Service *service.Service
+	Service *Service
 	Value   any
 }
 
 type Pipeline struct {
-	Docker          *docker.Client
 	Deployment      *Deployment
-	Service         *service.Service
+	Service         *Service
 	HasDependencies bool
 }
 
-func (d *Pipeline) Log(v any) {
-	d.Deployment.Events <- Event{d.Service, v}
+func (p *Pipeline) Log(v any) {
+	p.Deployment.Events <- Event{p.Service, v}
 }
 
-func (d Pipeline) Run() error {
-	if d.HasDependencies {
-		net, err := d.CreateServiceNetwork()
+func (p Pipeline) Run() error {
+	if p.HasDependencies {
+		net, err := p.CreateServiceNetwork()
 		if err != nil {
 			return err
 		}
 
-		err = d.ConnectRequiredServices(net)
+		err = p.ConnectRequiredServices(net)
 		if err != nil {
 			return err
 		}
 	}
 
-	err := d.PullImage()
+	err := p.PullImage()
 	if err != nil {
 		return err
 	}
-	id, err := d.CreateContainer()
-	if err != nil {
-		return err
-	}
-
-	err = d.RunHooks(id, d.Service.Hooks.Prestart)
+	id, err := p.CreateContainer()
 	if err != nil {
 		return err
 	}
 
-	err = d.StartContainer(id)
+	err = p.RunHooks(id, p.Service.Hooks.Prestart)
 	if err != nil {
 		return err
 	}
 
-	err = d.RunHooks(id, d.Service.Hooks.Poststart)
+	err = p.StartContainer(id)
 	if err != nil {
 		return err
 	}
 
-	err = d.EnsureContainerIsRunning(id)
+	err = p.RunHooks(id, p.Service.Hooks.Poststart)
 	if err != nil {
-		if err2 := d.Docker.ContainerDelete(id); err2 != nil {
+		return err
+	}
+
+	err = p.EnsureContainerIsRunning(id)
+	if err != nil {
+		if err2 := p.Deployment.Docker.ContainerDelete(id); err2 != nil {
 			return fmt.Errorf("%s (cleanup failed: %s)", err, err2)
 		}
 
 		return err
 	}
 
-	d.Log("deployment ended")
+	p.Log("deployment ended")
 
 	return nil
 }
 
-func (d *Pipeline) PullImage() error {
-	image := docker.Image(d.Service.Image)
+func (p *Pipeline) PullImage() error {
+	image := docker.Image(p.Service.Image)
 
-	return d.Docker.ImagePull(image, func(event *docker.PullEvent) {
-		d.Log(event.Status)
-	}, d.Deployment.ServicesConfig.Registries[d.Service.Registry])
+	return p.Deployment.Docker.ImagePull(image, func(event *docker.PullEvent) {
+		p.Log(event.Status)
+	}, p.Deployment.ServicesConfig.Registries[p.Service.Registry])
 }
 
-func (d *Pipeline) CreateServiceNetwork() (string, error) {
-	name := fmt.Sprintf("%s_%s", d.Service.Name, d.Deployment.ID)
+func (p *Pipeline) CreateServiceNetwork() (string, error) {
+	name := fmt.Sprintf("%s_%s", p.Service.Name, p.Deployment.ID)
 
-	net, err := d.Docker.NetworkCreate(name, map[string]string{
-		"cloud.usenest.service":       d.Service.Name,
-		"cloud.usenest.deployment_id": d.Deployment.ID,
+	net, err := p.Deployment.Docker.NetworkCreate(name, map[string]string{
+		"cloud.usenest.service":       p.Service.Name,
+		"cloud.usenest.deployment_id": p.Deployment.ID,
 	})
 
 	if err != nil {
 		return "", err
 	}
 
-	d.Deployment.Manifest.Networks[d.Service.Name] = net
+	p.Deployment.Manifest.Networks[p.Service.Name] = net
 
 	return net, nil
 }
 
-func (d *Pipeline) ConnectRequiredServices(networkID string) error {
-	for _, require := range d.Service.Requires {
-		err := d.Docker.NetworkConnect(networkID, d.Deployment.Manifest.Containers[require], []string{require})
+func (p *Pipeline) ConnectRequiredServices(networkID string) error {
+	for _, require := range p.Service.Requires {
+		err := p.Deployment.Docker.NetworkConnect(networkID, p.Deployment.Manifest.Containers[require], []string{require})
 
 		if err != nil {
 			return err
@@ -117,32 +115,32 @@ func (d *Pipeline) ConnectRequiredServices(networkID string) error {
 	return nil
 }
 
-func (d *Pipeline) ContainerName() string {
-	return "nest_" + d.Service.Name + "_" + strings.Replace(d.Service.Image, ":", "_", 1) + "_" + d.Deployment.ID
+func (p *Pipeline) ContainerName() string {
+	return "nest_" + p.Service.Name + "_" + strings.Replace(p.Service.Image, ":", "_", 1) + "_" + p.Deployment.ID
 }
 
-func (d *Pipeline) CreateContainer() (string, error) {
-	containerName := d.ContainerName()
+func (p *Pipeline) CreateContainer() (string, error) {
+	containerName := p.ContainerName()
 
 	var networking *network.NetworkingConfig
 
-	if d.HasDependencies {
+	if p.HasDependencies {
 		networking = &network.NetworkingConfig{
 			EndpointsConfig: map[string]*network.EndpointSettings{
-				d.Service.Name: {
-					NetworkID: d.Deployment.Manifest.Networks[d.Service.Name],
+				p.Service.Name: {
+					NetworkID: p.Deployment.Manifest.Networks[p.Service.Name],
 				},
 			},
 		}
 	}
 
-	return d.Docker.ContainerCreate(&container.Config{
-		Image: d.Service.Image,
+	return p.Deployment.Docker.ContainerCreate(&container.Config{
+		Image: p.Service.Image,
 		Labels: map[string]string{
-			"cloud.usenest.service":       d.Service.Name,
-			"cloud.usenest.deployment_id": d.Deployment.ID,
+			"cloud.usenest.service":       p.Service.Name,
+			"cloud.usenest.deployment_id": p.Deployment.ID,
 		},
-		Env: d.Service.Env.ForDocker(),
+		Env: p.Service.Env.ForDocker(),
 	}, &container.HostConfig{
 		RestartPolicy: container.RestartPolicy{
 			Name: "always",
@@ -150,26 +148,26 @@ func (d *Pipeline) CreateContainer() (string, error) {
 	}, networking, containerName)
 }
 
-func (d *Pipeline) RunHooks(containerID string, commands []string) error {
+func (p *Pipeline) RunHooks(containerID string, commands []string) error {
 	for _, command := range commands {
-		err := d.Docker.ContainerExec(containerID, command)
+		err := p.Deployment.Docker.ContainerExec(containerID, command)
 		if err != nil {
 			return err
 		}
 
-		d.Log("ran command: " + command)
+		p.Log("ran command: " + command)
 	}
 
 	return nil
 }
 
-func (d *Pipeline) StartContainer(containerID string) error {
-	err := d.Docker.ContainerStart(containerID)
+func (p *Pipeline) StartContainer(containerID string) error {
+	err := p.Deployment.Docker.ContainerStart(containerID)
 	if err != nil {
 		return err
 	}
 
-	d.Deployment.Manifest.Containers[d.Service.Name] = containerID
+	p.Deployment.Manifest.Containers[p.Service.Name] = containerID
 
 	return nil
 }
@@ -185,8 +183,8 @@ var (
 // - Retries * (Interval + Timeout) if the container has a health-check
 //
 // todo(pipeline): return logs from failed container
-func (d *Pipeline) EnsureContainerIsRunning(containerID string) error {
-	info, err := d.Docker.Client.ContainerInspect(context.Background(), containerID)
+func (p *Pipeline) EnsureContainerIsRunning(containerID string) error {
+	info, err := p.Deployment.Docker.Client.ContainerInspect(context.Background(), containerID)
 	if err != nil {
 		return err
 	}
@@ -209,7 +207,7 @@ func (d *Pipeline) EnsureContainerIsRunning(containerID string) error {
 		case <-ctx.Done():
 			return ErrContainerTimeout
 		case <-time.After(250 * time.Millisecond):
-			info, err = d.Docker.Client.ContainerInspect(ctx, containerID)
+			info, err = p.Deployment.Docker.Client.ContainerInspect(ctx, containerID)
 			if err != nil {
 				return err
 			}

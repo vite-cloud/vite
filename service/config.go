@@ -1,16 +1,14 @@
-package config
+package service
 
 import (
-	"encoding/json"
 	"github.com/redwebcreation/nest/docker"
-	"github.com/redwebcreation/nest/service"
 	"gopkg.in/yaml.v2"
 )
 
-// ServicesConfig represents nest's config
-type ServicesConfig struct {
-	Services     service.ServiceMap `yaml:"services" json:"services"`
-	Registries   RegistryMap        `yaml:"registries" json:"registries"`
+// Config represents nest's config
+type Config struct {
+	Services     ServiceMap  `yaml:"services" json:"services"`
+	Registries   RegistryMap `yaml:"registries" json:"registries"`
 	ControlPlane struct {
 		Host string `yaml:"host" json:"host"`
 	} `yaml:"control_plane" json:"controlPlane"`
@@ -19,24 +17,10 @@ type ServicesConfig struct {
 		HTTPS      string `yaml:"https" json:"https"`
 		SelfSigned bool   `yaml:"self_signed" json:"selfSigned"`
 	} `yaml:"proxy" json:"proxy"`
-	Network NetworkConfiguration `yaml:"network" json:"network"`
 }
 
-func (c *ServicesConfig) MarshalJSON() ([]byte, error) {
-	if c.Services == nil {
-		c.Services = service.ServiceMap{}
-	}
-
-	if c.Registries == nil {
-		c.Registries = RegistryMap{}
-	}
-
-	type plain ServicesConfig
-	return json.Marshal((*plain)(c))
-}
-
-func (c *ServicesConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	type plain ServicesConfig
+func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type plain Config
 	if err := unmarshal((*plain)(c)); err != nil {
 		return err
 	}
@@ -49,14 +33,10 @@ func (c *ServicesConfig) UnmarshalYAML(unmarshal func(interface{}) error) error 
 		c.Proxy.HTTPS = "443"
 	}
 
-	if c.Network.Policy == "" {
-		c.Network.Policy = "/24"
-	}
-
 	return nil
 }
 
-func (c *ServicesConfig) ExpandIncludes(config *Config) error {
+func (c *Config) ExpandIncludes(config *Locator) error {
 	for _, s := range c.Services {
 		if s.Include == "" {
 			continue
@@ -67,7 +47,7 @@ func (c *ServicesConfig) ExpandIncludes(config *Config) error {
 			return err
 		}
 
-		var parsedService *service.Service
+		var parsedService *Service
 
 		err = yaml.Unmarshal(bytes, &parsedService)
 		if err != nil {
@@ -80,21 +60,6 @@ func (c *ServicesConfig) ExpandIncludes(config *Config) error {
 	}
 
 	return nil
-}
-
-type NetworkConfiguration struct {
-	// todo: implement smallest_subnet policy once subnetter is thoroughly tested
-	Policy  string   `yaml:"policy" json:"policy"` // "smallest_subnet", "/{mask size}"
-	Subnets []string `yaml:"subnets" json:"subnets"`
-}
-
-func (n *NetworkConfiguration) MarshalJSON() ([]byte, error) {
-	if n.Subnets == nil {
-		n.Subnets = []string{}
-	}
-
-	type plain NetworkConfiguration
-	return json.Marshal((*plain)(n))
 }
 
 // RegistryMap maps registry names to their respective docker.Registry structs

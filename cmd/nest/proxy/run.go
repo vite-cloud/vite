@@ -1,9 +1,8 @@
 package proxy
 
 import (
-	"github.com/redwebcreation/nest/context"
-	"github.com/redwebcreation/nest/deploy"
-	"github.com/redwebcreation/nest/proxy"
+	"github.com/redwebcreation/nest/container"
+	"github.com/redwebcreation/nest/service"
 	"github.com/spf13/cobra"
 )
 
@@ -14,24 +13,24 @@ type runOptions struct {
 	selfSigned bool
 }
 
-func runRunCommand(ctx *context.Context, opts *runOptions) error {
+func runRunCommand(ct *container.Container, opts *runOptions) error {
 
-	var manifest *deploy.Manifest
+	var manifest *service.Manifest
 	var err error
 
 	if opts.deployment != "" {
-		manifest, err = ctx.ManifestManager().LoadWithID(opts.deployment)
+		manifest, err = ct.ManifestManager().LoadWithID(opts.deployment)
 		if err != nil {
 			return err
 		}
 	} else {
-		manifest, err = ctx.ManifestManager().Latest()
+		manifest, err = ct.ManifestManager().Latest()
 		if err != nil {
 			return err
 		}
 	}
 
-	config, err := ctx.ServicesConfig()
+	config, err := ct.ServicesConfig()
 	if err != nil {
 		return err
 	}
@@ -40,12 +39,18 @@ func runRunCommand(ctx *context.Context, opts *runOptions) error {
 	config.Proxy.HTTPS = opts.HTTPS
 	config.Proxy.SelfSigned = opts.selfSigned
 
-	proxy.NewProxy(ctx, config, manifest).Run()
-	return err
+	proxy, err := ct.NewProxy(manifest)
+	if err != nil {
+		return err
+	}
+
+	proxy.Run()
+
+	return nil
 }
 
 // NewRunCommand creates a new `run` command
-func NewRunCommand(ctx *context.Context) *cobra.Command {
+func NewRunCommand(ct *container.Container) *cobra.Command {
 	opts := &runOptions{}
 
 	cmd := &cobra.Command{
@@ -53,7 +58,7 @@ func NewRunCommand(ctx *context.Context) *cobra.Command {
 		Short: "Starts the proxy",
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			servicesConfig, err := ctx.ServicesConfig()
+			servicesConfig, err := ct.ServicesConfig()
 			if err != nil {
 				return err
 			}
@@ -74,7 +79,7 @@ func NewRunCommand(ctx *context.Context) *cobra.Command {
 				opts.deployment = args[0]
 			}
 
-			return runRunCommand(ctx, opts)
+			return runRunCommand(ct, opts)
 		},
 	}
 

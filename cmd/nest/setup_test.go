@@ -2,14 +2,14 @@ package nest
 
 import (
 	"github.com/Netflix/go-expect"
-	"github.com/redwebcreation/nest/context"
+	"github.com/redwebcreation/nest/container"
 	"github.com/spf13/cobra"
 	"gotest.tools/v3/assert"
 	"testing"
 )
 
 func TestNewSetupCommand(t *testing.T) {
-	ctx := CommandTest{
+	ct := CommandTest{
 		Test: func(console *expect.Console) {
 			Err(console.ExpectString("Select your provider:")).Check(t)
 			Err(console.SendLine("")).Check(t)
@@ -19,12 +19,12 @@ func TestNewSetupCommand(t *testing.T) {
 			Err(console.SendLine("empty-config")).Check(t)
 			Err(console.ExpectEOF()).Check(t)
 		},
-		NewCommand: func(ctx *context.Context) (*cobra.Command, error) {
-			return NewSetupCommand(ctx), nil
+		NewCommand: func(ct *container.Container) (*cobra.Command, error) {
+			return NewSetupCommand(ct), nil
 		},
 	}.Run(t)
 
-	config, err := ctx.Config()
+	config, err := ct.Config()
 	assert.NilError(t, err)
 
 	assert.Equal(t, "redwebcreation/nest-configs", config.Repository)

@@ -3,7 +3,7 @@ package nest
 import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/redwebcreation/nest/context"
+	"github.com/redwebcreation/nest/container"
 	"github.com/spf13/cobra"
 )
 
@@ -11,8 +11,8 @@ type useOptions struct {
 	commit string
 }
 
-func runUseCommand(ctx *context.Context, opts *useOptions) error {
-	config, err := ctx.Config()
+func runUseCommand(ct *container.Container, opts *useOptions) error {
+	config, err := ct.Config()
 	if err != nil {
 		return err
 	}
@@ -27,14 +27,14 @@ func runUseCommand(ctx *context.Context, opts *useOptions) error {
 		return err
 	}
 
-	fmt.Fprintf(ctx.Out(), "Inspecting %d commits...\n", len(commits))
+	fmt.Fprintf(ct.Out(), "Inspecting %d commits...\n", len(commits))
 
 	if opts.commit == "" {
 		prompt := survey.Select{
 			Message: "Select a commit to use",
 			Options: commits.Hashes(),
 		}
-		err = survey.AskOne(&prompt, &opts.commit, survey.WithStdio(ctx.In(), ctx.Out(), ctx.Err()))
+		err = survey.AskOne(&prompt, &opts.commit, survey.WithStdio(ct.In(), ct.Out(), ct.Err()))
 		if err != nil {
 			return err
 		}
@@ -49,17 +49,17 @@ func runUseCommand(ctx *context.Context, opts *useOptions) error {
 		return err
 	}
 
-	fmt.Fprintf(ctx.Out(), "Updated the config. Now using %s.\n", opts.commit[:7])
+	fmt.Fprintf(ct.Out(), "Updated the config. Now using %s.\n", opts.commit[:7])
 
 	return nil
 }
 
 // NewUseCommand creates a new `use` command
-func NewUseCommand(ctx *context.Context) *cobra.Command {
+func NewUseCommand(ct *container.Container) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "use [commit]",
 		Args:  cobra.RangeArgs(0, 1),
-		Short: "Use a specific commit",
+		Short: "use a specific commit for the config",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts := &useOptions{
 				commit: "",
@@ -69,7 +69,7 @@ func NewUseCommand(ctx *context.Context) *cobra.Command {
 				opts.commit = args[0]
 			}
 
-			return runUseCommand(ctx, opts)
+			return runUseCommand(ct, opts)
 		},
 	}
 

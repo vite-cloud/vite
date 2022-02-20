@@ -3,7 +3,7 @@ package cloud
 import (
 	"fmt"
 	"github.com/redwebcreation/nest/cloud"
-	"github.com/redwebcreation/nest/context"
+	"github.com/redwebcreation/nest/container"
 	"github.com/spf13/cobra"
 )
 
@@ -12,31 +12,31 @@ type loginOptions struct {
 	accessToken string
 }
 
-func runLoginCommand(ctx *context.Context, opts *loginOptions) error {
-	err := ctx.SetCloudCredentials(opts.id, opts.accessToken)
+func runLoginCommand(ct *container.Container, opts *loginOptions) error {
+	err := ct.SetCloudCredentials(opts.id, opts.accessToken)
 	if err != nil {
 		return err
 	}
 
-	client, err := ctx.CloudClient()
+	client, err := ct.CloudClient()
 	if err != nil {
 		return err
 	}
 
 	err = client.Ping()
 	if err == cloud.ErrResourceNotFound {
-		fmt.Fprintln(ctx.Out(), "Invalid token.")
+		fmt.Fprintln(ct.Out(), "Invalid token.")
 	} else if err != nil {
 		return err
 	} else {
-		fmt.Fprintln(ctx.Out(), "Successfully logged in.")
+		fmt.Fprintln(ct.Out(), "Successfully logged in.")
 	}
 
 	return nil
 }
 
 // NewLoginCommand creates a new `login` command.
-func NewLoginCommand(ctx *context.Context) *cobra.Command {
+func NewLoginCommand(ct *container.Container) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "login to nest cloud",
@@ -46,7 +46,7 @@ func NewLoginCommand(ctx *context.Context) *cobra.Command {
 				return fmt.Errorf("invalid token")
 			}
 
-			return runLoginCommand(ctx, &loginOptions{
+			return runLoginCommand(ct, &loginOptions{
 				id:          args[0][:22],
 				accessToken: args[0][23:],
 			})

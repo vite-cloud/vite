@@ -2,8 +2,8 @@ package nest
 
 import (
 	"github.com/Netflix/go-expect"
-	"github.com/redwebcreation/nest/config"
-	"github.com/redwebcreation/nest/context"
+	"github.com/redwebcreation/nest/container"
+	"github.com/redwebcreation/nest/service"
 	"github.com/spf13/cobra"
 	"testing"
 )
@@ -16,13 +16,13 @@ func TestNewMedicCommand(t *testing.T) {
 			Err(console.ExpectString("Warnings:")).Check(t)
 			Err(console.ExpectString("- no warnings")).Check(t)
 		},
-		ContextBuilder: []context.Option{
-			// As the config is not nil, the context does not try to create it
-			context.WithConfig(&config.Config{}),
-			context.WithServicesConfig(&config.ServicesConfig{}),
+		ContextBuilder: []container.Option{
+			// As the config is not nil, the container does not try to create it
+			container.WithConfig(&service.Locator{}),
+			container.WithServicesConfig(&service.Config{}),
 		},
-		NewCommand: func(ctx *context.Context) (*cobra.Command, error) {
-			return NewMedicCommand(ctx), nil
+		NewCommand: func(ct *container.Container) (*cobra.Command, error) {
+			return NewMedicCommand(ct), nil
 		},
 	}.Run(t)
 }

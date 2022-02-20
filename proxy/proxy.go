@@ -8,13 +8,10 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/pseidemann/finish"
-	"github.com/redwebcreation/nest/config"
-	context2 "github.com/redwebcreation/nest/context"
-	"github.com/redwebcreation/nest/deploy"
 	"github.com/redwebcreation/nest/loggy"
-	"github.com/redwebcreation/nest/proxy/plane"
+	"github.com/redwebcreation/nest/service"
 	"golang.org/x/crypto/acme/autocert"
 	"log"
 	"math/big"
@@ -27,39 +24,12 @@ import (
 )
 
 type Proxy struct {
-	Ctx                *context2.Context
-	Config             *config.ServicesConfig
+	ControlPlane       *gin.Engine
+	Logger             *log.Logger
+	CertificateStore   autocert.Cache
+	Config             *service.Config
 	CertificateManager *autocert.Manager
-	hostToIP           map[string]string
-}
-
-func NewProxy(ctx *context2.Context, servicesConfig *config.ServicesConfig, manifest *deploy.Manifest) *Proxy {
-	proxy := &Proxy{
-		Ctx:      ctx,
-		Config:   servicesConfig,
-		hostToIP: make(map[string]string),
-	}
-
-	// todo: get container ip
-	//for _, service := range servicesConfig.Services {
-	//	for _, host := range service.Hosts {
-	//		proxy.hostToIP[host] = manifest.Containers[service.Name].IP
-	//	}
-	//}
-
-	proxy.CertificateManager = &autocert.Manager{
-		Prompt: autocert.AcceptTOS,
-		HostPolicy: func(ctx context.Context, host string) error {
-			if _, ok := proxy.hostToIP[host]; ok {
-				return nil
-			}
-
-			return fmt.Errorf("acme/autocert: host %s not configured", host)
-		},
-		Cache: ctx.CertificateStore(),
-	}
-
-	return proxy
+	HostToIP           map[string]string
 }
 
 func (p *Proxy) Run() {
@@ -67,7 +37,7 @@ func (p *Proxy) Run() {
 		if (r.Host != "" && r.Host == p.Config.ControlPlane.Host) || r.Host == "control-plane" {
 			p.Log(r, loggy.InfoLevel, "proxied request to plane")
 
-			plane.New(p.Ctx).ServeHTTP(w, r)
+			p.ControlPlane.ServeHTTP(w, r)
 			return
 		}
 
@@ -83,12 +53,12 @@ func (p *Proxy) Run() {
 			keyFile := "dev_key.pem"
 			certFile := "dev_cert.pem"
 
-			keyPEM, err := p.Ctx.CertificateStore().Get(context.Background(), keyFile)
+			keyPEM, err := p.CertificateStore.Get(context.Background(), keyFile)
 			if err != nil {
 				return handleSelfSignedCertificates(keyFile, certFile)
 			}
 
-			certPEM, certErr := p.Ctx.CertificateStore().Get(context.Background(), certFile)
+			certPEM, certErr := p.CertificateStore.Get(context.Background(), certFile)
 			if certErr != nil {
 				return handleSelfSignedCertificates(keyFile, certFile)
 			}
@@ -122,9 +92,7 @@ func handleSelfSignedCertificates(keyFile, certFile string) (*tls.Certificate, e
 func (p *Proxy) start(proxy *http.Server) {
 	finisher := &finish.Finisher{
 		Timeout: 10 * time.Second,
-		Log: &FinisherLogger{
-			Logger: p.Ctx.ProxyLogger(),
-		},
+		Log:     &discardLogger{},
 	}
 
 	certsHandler := p.certsCreationHandler()
@@ -135,7 +103,7 @@ func (p *Proxy) start(proxy *http.Server) {
 	go func() {
 		err := certsHandler.ListenAndServe()
 		if err != nil {
-			p.Ctx.ProxyLogger().Print(loggy.NewEvent(loggy.FatalLevel, err.Error(), nil))
+			p.Logger.Print(loggy.NewEvent(loggy.FatalLevel, err.Error(), nil))
 			os.Exit(1)
 		}
 	}()
@@ -143,7 +111,7 @@ func (p *Proxy) start(proxy *http.Server) {
 	go func() {
 		err := proxy.ListenAndServeTLS("", "")
 		if err != nil {
-			p.Ctx.ProxyLogger().Print(loggy.NewEvent(loggy.FatalLevel, err.Error(), nil))
+			p.Logger.Print(loggy.NewEvent(loggy.FatalLevel, err.Error(), nil))
 			os.Exit(1)
 		}
 	}()
@@ -152,7 +120,7 @@ func (p *Proxy) start(proxy *http.Server) {
 }
 
 func (p *Proxy) handler(w http.ResponseWriter, r *http.Request) {
-	ip := p.hostToIP[r.Host]
+	ip := p.HostToIP[r.Host]
 
 	if ip == "" {
 		p.Log(r, loggy.InfoLevel, "host not found")
@@ -175,7 +143,7 @@ func (p *Proxy) Log(r *http.Request, level loggy.Level, message string) {
 		ip = r.RemoteAddr
 	}
 
-	p.Ctx.ProxyLogger().Print(loggy.NewEvent(
+	p.Logger.Print(loggy.NewEvent(
 		level,
 		message,
 		loggy.Fields{
@@ -211,7 +179,7 @@ func (p *Proxy) newServer(port string, handler http.HandlerFunc) *http.Server {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 		Handler:        handler,
-		ErrorLog:       p.Ctx.ProxyLogger(),
+		ErrorLog:       p.Logger,
 	}
 }
 
@@ -283,18 +251,12 @@ func generateSelfSignedCertificates(certFile string, keyFile string) error {
 
 }
 
-type FinisherLogger struct {
-	Logger *log.Logger
+type discardLogger struct{}
+
+func (d discardLogger) Infof(format string, args ...interface{}) {
+	//
 }
 
-func (l FinisherLogger) Infof(message string, args ...any) {
-	l.Logger.Print(loggy.NewEvent(loggy.InfoLevel, fmt.Sprintf(message, args...), loggy.Fields{
-		"tag": "proxy.finisher",
-	}))
-}
-
-func (l FinisherLogger) Errorf(message string, args ...any) {
-	l.Logger.Print(loggy.NewEvent(loggy.ErrorLevel, fmt.Sprintf(message, args...), loggy.Fields{
-		"tag": "proxy.finisher",
-	}))
+func (d discardLogger) Errorf(format string, args ...interface{}) {
+	//
 }

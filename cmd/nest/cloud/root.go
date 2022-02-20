@@ -1,12 +1,12 @@
 package cloud
 
 import (
-	"github.com/redwebcreation/nest/context"
+	"github.com/redwebcreation/nest/container"
 	"github.com/spf13/cobra"
 )
 
 // NewRootCommand creates a new `cloud` command.
-func NewRootCommand(ctx *context.Context) *cobra.Command {
+func NewRootCommand(ct *container.Container) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "cloud",
 		Short: "interact with nest cloud",
@@ -14,7 +14,7 @@ func NewRootCommand(ctx *context.Context) *cobra.Command {
 
 	root.AddCommand(
 		// login
-		NewLoginCommand(ctx),
+		NewLoginCommand(ct),
 	)
 
 	return root

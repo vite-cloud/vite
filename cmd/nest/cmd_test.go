@@ -3,7 +3,7 @@ package nest
 import (
 	"github.com/Netflix/go-expect"
 	"github.com/hinshun/vt10x"
-	"github.com/redwebcreation/nest/context"
+	"github.com/redwebcreation/nest/container"
 	"github.com/spf13/cobra"
 	"gotest.tools/v3/assert"
 	"os"
@@ -12,13 +12,13 @@ import (
 
 type CommandTest struct {
 	Test           func(console *expect.Console)
-	NewCommand     func(ctx *context.Context) (*cobra.Command, error)
-	ContextBuilder []context.Option
-	Setup          func(ctx *context.Context) []context.Option
+	NewCommand     func(ct *container.Container) (*cobra.Command, error)
+	ContextBuilder []container.Option
+	Setup          func(ct *container.Container) []container.Option
 }
 
-func (c CommandTest) Run(t *testing.T) *context.Context {
-	dir, err := os.MkdirTemp("", "nest-home")
+func (c CommandTest) Run(t *testing.T) *container.Container {
+	dir, err := os.MkdirTemp("", "nest")
 	assert.NilError(t, err)
 
 	console, _, err := vt10x.NewVT10XConsole()
@@ -33,22 +33,22 @@ func (c CommandTest) Run(t *testing.T) *context.Context {
 		c.Test(console)
 	}()
 
-	ctx, err := context.New(context.WithConfigHome(dir), context.WithStdio(console.Tty(), console.Tty(), console.Tty()))
+	ct, err := container.New(container.WithConfigHome(dir), container.WithStdio(console.Tty(), console.Tty(), console.Tty()))
 	assert.NilError(t, err)
 
 	for _, option := range c.ContextBuilder {
-		err = option(ctx)
+		err = option(ct)
 		assert.NilError(t, err)
 	}
 
 	if c.Setup != nil {
-		for _, opt := range c.Setup(ctx) {
-			err = opt(ctx)
+		for _, opt := range c.Setup(ct) {
+			err = opt(ct)
 			assert.NilError(t, err)
 		}
 	}
 
-	cmd, err := c.NewCommand(ctx)
+	cmd, err := c.NewCommand(ct)
 	assert.NilError(t, err)
 	cmd.SetArgs([]string{})
 
@@ -59,7 +59,7 @@ func (c CommandTest) Run(t *testing.T) *context.Context {
 	console.Tty().Close()
 	<-donec
 
-	return ctx
+	return ct
 }
 
 type ConsoleError struct {

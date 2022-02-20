@@ -8,7 +8,7 @@ import (
 )
 
 func (c Client) NetworkCreate(name string, labels map[string]string) (string, error) {
-	subnet, err := c.networkConfig.NextSubnet()
+	subnet, err := c.Subnetter.NextSubnet()
 	if err != nil {
 		return "", err
 	}

@@ -1,17 +1,18 @@
-package context
+package container
 
 import (
 	"fmt"
+	"github.com/docker/docker/client"
 	"github.com/mitchellh/go-homedir"
-	"github.com/redwebcreation/nest/config"
 	"github.com/redwebcreation/nest/loggy"
+	"github.com/redwebcreation/nest/service"
 	"io"
 	"log"
 	"os"
 	"strings"
 )
 
-type Option func(*Context) error
+type Option func(*Container) error
 
 // FileWriter provides a minimal interface for Stdin.
 type FileWriter interface {
@@ -25,34 +26,34 @@ type FileReader interface {
 	Fd() uintptr
 }
 
-func WithConfig(config *config.Config) Option {
-	return func(ctx *Context) error {
-		ctx.config = config
+func WithConfig(config *service.Locator) Option {
+	return func(ct *Container) error {
+		ct.config = config
 
 		return nil
 	}
 }
 
 func WithStdio(stdin FileReader, stdout FileWriter, stderr io.Writer) Option {
-	return func(ctx *Context) error {
-		ctx.in = stdin
-		ctx.out = stdout
-		ctx.err = stderr
+	return func(ct *Container) error {
+		ct.in = stdin
+		ct.out = stdout
+		ct.err = stderr
 
 		return nil
 	}
 }
 
-func WithServicesConfig(servicesConfig *config.ServicesConfig) Option {
-	return func(ctx *Context) error {
-		ctx.servicesConfig = servicesConfig
+func WithServicesConfig(servicesConfig *service.Config) Option {
+	return func(ct *Container) error {
+		ct.servicesConfig = servicesConfig
 
 		return nil
 	}
 }
 
 func WithDefaultConfigHome() Option {
-	return func(context *Context) error {
+	return func(context *Container) error {
 		for k, arg := range os.Args {
 			if arg != "--config" && arg != "-c" {
 				continue
@@ -85,14 +86,14 @@ func WithDefaultConfigHome() Option {
 }
 
 func WithConfigHome(home string) Option {
-	return func(context *Context) error {
+	return func(context *Container) error {
 		context.home = home
 		return nil
 	}
 }
 
 func WithDefaultInternalLogger() Option {
-	return func(context *Context) error {
+	return func(context *Container) error {
 		context.logger = log.New(&loggy.FileLogger{
 			Path: context.logFile(),
 		}, "", 0)
@@ -101,7 +102,7 @@ func WithDefaultInternalLogger() Option {
 }
 
 func WithDefaultProxyLogger() Option {
-	return func(context *Context) error {
+	return func(context *Container) error {
 		context.proxyLogger = log.New(loggy.CompositeLogger{
 			Loggers: []io.Writer{
 				&loggy.FileLogger{
@@ -117,9 +118,15 @@ func WithDefaultProxyLogger() Option {
 	}
 }
 
-func WithLogger(logger *log.Logger) Option {
-	return func(context *Context) error {
-		context.logger = logger
+func WithDefaultDockerClient() Option {
+	return func(context *Container) error {
+		client, err := client.NewClientWithOpts(client.FromEnv)
+		if err != nil {
+			return err
+		}
+
+		context.docker = client
+
 		return nil
 	}
 }

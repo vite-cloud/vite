@@ -1,17 +1,15 @@
-package medic
+package service
 
 import (
 	"fmt"
-	"github.com/redwebcreation/nest/config"
-	"github.com/redwebcreation/nest/service"
 	"regexp"
 )
 
 // Diagnostic contains all the information about a given config diagnostic.
 type Diagnostic struct {
-	Config   *config.ServicesConfig `json:"-"`
-	Warnings []Warning              `json:"warnings"`
-	Errors   []Error                `json:"errors"`
+	Config   *Config   `json:"-"`
+	Warnings []Warning `json:"warnings"`
+	Errors   []Error   `json:"errors"`
 }
 
 type Warning struct {
@@ -32,8 +30,8 @@ func (d *Diagnostic) MustPass() error {
 	return fmt.Errorf("invalid config (run `nest medic` for details)")
 }
 
-// DiagnoseConfig runs the diagnostics on the ServicesConfig.
-func DiagnoseConfig(config *config.ServicesConfig) *Diagnostic {
+// DiagnoseConfig runs the diagnostics on the Config.
+func DiagnoseConfig(config *Config) *Diagnostic {
 	diagnostic := Diagnostic{
 		Config: config,
 	}
@@ -47,7 +45,7 @@ func DiagnoseConfig(config *config.ServicesConfig) *Diagnostic {
 	return &diagnostic
 }
 
-func (d *Diagnostic) ValidateService(service *service.Service) {
+func (d *Diagnostic) ValidateService(service *Service) {
 	if service.Image == "" {
 		d.Errors = append(d.Errors, Error{
 			Title: fmt.Sprintf("Service %s has no image", service.Name),

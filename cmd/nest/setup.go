@@ -3,7 +3,7 @@ package nest
 import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/redwebcreation/nest/context"
+	"github.com/redwebcreation/nest/container"
 	"regexp"
 
 	"github.com/spf13/cobra"
@@ -17,8 +17,8 @@ type setupOptions struct {
 	Commit     string
 }
 
-func runSetupCommand(ctx *context.Context, opts *setupOptions) error {
-	oldConfig, err := ctx.Config()
+func runSetupCommand(ct *container.Container, opts *setupOptions) error {
+	oldConfig, err := ct.Config()
 	hasConfig := err == nil
 
 	if !opts.UsesFlags {
@@ -34,7 +34,7 @@ func runSetupCommand(ctx *context.Context, opts *setupOptions) error {
 			Options: []string{"github", "gitlab", "bitbucket"},
 			Default: provider,
 		}
-		err = survey.AskOne(prompt, &opts.Repository, survey.WithValidator(survey.Required), survey.WithStdio(ctx.In(), ctx.Out(), ctx.Err()))
+		err = survey.AskOne(prompt, &opts.Repository, survey.WithValidator(survey.Required), survey.WithStdio(ct.In(), ct.Out(), ct.Err()))
 		if err != nil {
 			return err
 		}
@@ -57,7 +57,7 @@ func runSetupCommand(ctx *context.Context, opts *setupOptions) error {
 				return fmt.Errorf("repository name must be alphanumeric and can contain hyphens and underscores")
 			}
 			return nil
-		}), survey.WithStdio(ctx.In(), ctx.Out(), ctx.Err()))
+		}), survey.WithStdio(ct.In(), ct.Out(), ct.Err()))
 		if err != nil {
 			return err
 		}
@@ -74,13 +74,13 @@ func runSetupCommand(ctx *context.Context, opts *setupOptions) error {
 			Message: "Enter your branch:",
 			Default: branch,
 		}
-		err = survey.AskOne(prompt, &opts.Branch, survey.WithValidator(survey.Required), survey.WithStdio(ctx.In(), ctx.Out(), ctx.Err()))
+		err = survey.AskOne(prompt, &opts.Branch, survey.WithValidator(survey.Required), survey.WithStdio(ct.In(), ct.Out(), ct.Err()))
 		if err != nil {
 			return err
 		}
 	}
 
-	config := ctx.NewConfig(opts.Provider, opts.Repository, opts.Branch)
+	config := ct.NewConfig(opts.Provider, opts.Repository, opts.Branch)
 	if err = config.Save(); err != nil {
 		return err
 	}
@@ -90,22 +90,22 @@ func runSetupCommand(ctx *context.Context, opts *setupOptions) error {
 		return err
 	}
 
-	fmt.Fprintln(ctx.Out(), "\nYou now need to run `nest use` to specify which version of the oldConfig you want to use.")
+	fmt.Fprintln(ct.Out(), "\nYou now need to run `nest use` to specify which version of the oldConfig you want to use.")
 
 	return nil
 }
 
 // NewSetupCommand creates a new `setup` command.
-func NewSetupCommand(ctx *context.Context) *cobra.Command {
+func NewSetupCommand(ct *container.Container) *cobra.Command {
 	opts := &setupOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "setup",
-		Short: "update the loggy config",
+		Short: "set up nest",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.UsesFlags = cmd.Flags().NFlag() > 0
-			return runSetupCommand(ctx, opts)
+			return runSetupCommand(ct, opts)
 		},
 	}
 

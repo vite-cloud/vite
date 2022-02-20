@@ -1,4 +1,4 @@
-package context
+package container
 
 import (
 	"errors"
@@ -8,35 +8,35 @@ import (
 	"strings"
 )
 
-func (c *Context) ConfigStoreDir() string {
+func (c *Container) configStoreDir() string {
 	return ensureDirExists(c.Home() + "/config-store")
 }
 
-func (c *Context) configFile() string {
+func (c *Container) configFile() string {
 	return ensureDirExists(c.Home() + "/config.json")
 }
 
-func (c *Context) manifestsDir() string {
+func (c *Container) manifestsDir() string {
 	return ensureDirExists(c.Home() + "/manifests")
 }
 
-func (c *Context) certsDir() string {
+func (c *Container) certsDir() string {
 	return ensureDirExists(c.Home() + "/certs")
 }
 
-func (c *Context) logFile() string {
+func (c *Container) logFile() string {
 	return ensureDirExists(c.Home() + "/logs/internal.log")
 }
 
-func (c *Context) proxyLogFile() string {
+func (c *Container) proxyLogFile() string {
 	return ensureDirExists(c.Home() + "/logs/proxy.log")
 }
 
-func (c *Context) cloudCredentialsFile() string {
+func (c *Container) cloudCredentialsFile() string {
 	return c.Home() + "/.creds"
 }
 
-func (c *Context) subnetRegistryPath() string {
+func (c *Container) subnetRegistryPath() string {
 	return ensureDirExists(c.Home() + "/subnets.list")
 }
 

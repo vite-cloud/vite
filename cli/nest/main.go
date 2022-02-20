@@ -6,13 +6,13 @@ import (
 	"github.com/redwebcreation/nest/cmd/nest"
 	"github.com/redwebcreation/nest/cmd/nest/cloud"
 	"github.com/redwebcreation/nest/cmd/nest/proxy"
-	"github.com/redwebcreation/nest/context"
+	"github.com/redwebcreation/nest/container"
 	"github.com/redwebcreation/nest/loggy"
 	"github.com/spf13/cobra"
 	"os"
 )
 
-func newNestCommand(ctx *context.Context) *cobra.Command {
+func newNestCommand(ct *container.Container) *cobra.Command {
 	cli := &cobra.Command{
 		Use:           "nest",
 		Short:         "Service orchestrator",
@@ -24,7 +24,7 @@ func newNestCommand(ctx *context.Context) *cobra.Command {
 			DisableDefaultCmd: true,
 		},
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			ctx.Logger().Print(loggy.NewEvent(
+			ct.Logger().Print(loggy.NewEvent(
 				loggy.DebugLevel,
 				"command invoked",
 				loggy.Fields{
@@ -40,47 +40,47 @@ func newNestCommand(ctx *context.Context) *cobra.Command {
 		Hidden: true,
 	})
 
-	cli.PersistentFlags().StringP("config", "c", ctx.Home(), "set the loggy config path")
+	cli.PersistentFlags().StringP("config", "c", ct.Home(), "set the loggy config path")
 
 	cli.AddCommand(
 		// version
-		nest.NewVersionCommand(ctx),
+		nest.NewVersionCommand(ct),
 
 		// setup
-		nest.NewSetupCommand(ctx),
+		nest.NewSetupCommand(ct),
 
 		// use
-		nest.NewUseCommand(ctx),
+		nest.NewUseCommand(ct),
 
 		// medic
-		nest.NewMedicCommand(ctx),
+		nest.NewMedicCommand(ct),
 
 		// self-update
-		nest.NewSelfUpdateCommand(ctx),
+		nest.NewSelfUpdateCommand(ct),
 
 		// deploy
-		nest.NewDeployCommand(ctx),
+		nest.NewDeployCommand(ct),
 
 		// proxy commands
-		proxy.NewRootCommand(ctx),
+		proxy.NewRootCommand(ct),
 
 		// cloud commands
-		cloud.NewRootCommand(ctx),
+		cloud.NewRootCommand(ct),
 	)
 
 	return cli
 }
 
 func main() {
-	ctx, err := context.New()
+	ct, err := container.New()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	err = newNestCommand(ctx).Execute()
+	err = newNestCommand(ct).Execute()
 	if err != nil {
-		ctx.Logger().Print(loggy.NewEvent(loggy.ErrorLevel, err.Error(), nil))
+		ct.Logger().Print(loggy.NewEvent(loggy.ErrorLevel, err.Error(), nil))
 
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

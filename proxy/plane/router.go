@@ -5,22 +5,18 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/redwebcreation/nest/build"
-	"github.com/redwebcreation/nest/context"
-	"github.com/redwebcreation/nest/deploy"
+	"github.com/redwebcreation/nest/docker"
+	"github.com/redwebcreation/nest/service"
 )
 
-func New(ctx *context.Context) *gin.Engine {
-	// config is already resolved at this point
-	config, _ := ctx.Config()
-	servicesConfig, _ := ctx.ServicesConfig()
+type ControlPlane struct {
+	Config          *service.Locator
+	ServicesConfig  *service.Config
+	ManifestManager *service.ManifestManager
+	Docker          *docker.Client
+}
 
-	gin.SetMode(gin.ReleaseMode)
-
-	router := gin.New()
-	router.Use(gin.Recovery())
-	router.Use(WithNestContext(ctx))
-	router.Use(Auth())
-
+func (cp ControlPlane) From(router *gin.Engine) *gin.Engine {
 	router.GET("/api/v1/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"software": "nest",
@@ -31,24 +27,24 @@ func New(ctx *context.Context) *gin.Engine {
 
 	router.GET("/api/v1/server", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"commit":     config.Commit,
-			"branch":     config.Branch,
-			"repository": config.Repository,
-			"remote":     config.RemoteURL(),
-			"provider":   config.Provider,
-			"config":     servicesConfig,
+			"commit":     cp.Config.Commit,
+			"branch":     cp.Config.Branch,
+			"repository": cp.Config.Repository,
+			"remote":     cp.Config.RemoteURL(),
+			"provider":   cp.Config.Provider,
+			"config":     cp.ServicesConfig,
 		})
 	})
 
 	router.GET("/api/v1/deploy", func(context *gin.Context) {
-		deployment := deploy.NewDeployment(servicesConfig, ctx.Logger(), ctx.ManifestManager(), ctx.Subnetter(servicesConfig.Network.Subnets))
+		deployment := service.NewDeployment(cp.ServicesConfig, cp.ManifestManager, cp.Docker)
 
 		go func() {
 			err := deployment.Start()
 			if err != nil {
-				deployment.Events <- deploy.Event{
+				deployment.Events <- service.Event{
 					Service: nil,
-					Value:   deploy.ErrDeploymentFailed,
+					Value:   service.ErrDeploymentFailed,
 				}
 			}
 		}()
@@ -94,7 +90,7 @@ func New(ctx *context.Context) *gin.Engine {
 			context.Writer.Flush()
 		}
 
-		if err = ctx.ManifestManager().Save(deployment.Manifest); err != nil {
+		if err = cp.ManifestManager.Save(deployment.Manifest); err != nil {
 			fmt.Fprintf(context.Writer, "data: %s\n\n", sseEvent{
 				Kind: "error",
 				Data: fmt.Sprintf("%v", err),

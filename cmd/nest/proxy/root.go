@@ -1,12 +1,12 @@
 package proxy
 
 import (
-	"github.com/redwebcreation/nest/context"
+	"github.com/redwebcreation/nest/container"
 	"github.com/spf13/cobra"
 )
 
 // NewRootCommand returns a new instance of the proxy root command
-func NewRootCommand(ctx *context.Context) *cobra.Command {
+func NewRootCommand(ct *container.Container) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "proxy",
 		Short: "manage the proxy",
@@ -14,7 +14,7 @@ func NewRootCommand(ctx *context.Context) *cobra.Command {
 
 	root.AddCommand(
 		// run
-		NewRunCommand(ctx),
+		NewRunCommand(ct),
 	)
 
 	return root

@@ -1,4 +1,4 @@
-package deploy
+package service
 
 import (
 	"encoding/json"
@@ -12,12 +12,12 @@ type Manifest struct {
 	Networks   map[string]string `json:"networks"`
 }
 
-// Manager contains the path to the manifest file and methods to manage manifests.
-type Manager struct {
+// ManifestManager contains the path to the manifest file and methods to manage manifests.
+type ManifestManager struct {
 	Path string
 }
 
-func (m Manager) NewManifest(id string) *Manifest {
+func (m ManifestManager) NewManifest(id string) *Manifest {
 	return &Manifest{
 		ID:         id,
 		Containers: make(map[string]string),
@@ -25,7 +25,7 @@ func (m Manager) NewManifest(id string) *Manifest {
 	}
 }
 
-func (m Manager) LoadWithID(path string) (*Manifest, error) {
+func (m ManifestManager) LoadWithID(path string) (*Manifest, error) {
 	bytes, err := os.ReadFile(m.Path + "/" + path)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (m Manager) LoadWithID(path string) (*Manifest, error) {
 	return &manifest, nil
 }
 
-func (m Manager) Latest() (*Manifest, error) {
+func (m ManifestManager) Latest() (*Manifest, error) {
 	manifests, err := os.ReadDir(m.Path)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (m Manager) Latest() (*Manifest, error) {
 	return m.LoadWithID(latest)
 }
 
-func (m Manager) Save(manifest *Manifest) error {
+func (m ManifestManager) Save(manifest *Manifest) error {
 	bytes, err := json.Marshal(m)
 	if err != nil {
 		return err
