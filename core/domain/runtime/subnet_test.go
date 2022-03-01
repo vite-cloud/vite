@@ -46,6 +46,7 @@ func TestSubnetManager_IsFree(t *testing.T) {
 
 	// regression test for a case where IsFree would return true once.
 	ok, err = manager.IsFree(subnet)
+	assert.NilError(t, err)
 	assert.Assert(t, !ok)
 }
 

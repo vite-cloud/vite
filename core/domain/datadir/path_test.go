@@ -56,7 +56,7 @@ func TestPath3(t *testing.T) {
 	assert.NilError(t, err)
 
 	_, err = Store("test").Path("hello.world")
-	assert.ErrorContains(t, err, "no such file or directory")
+	assert.ErrorContains(t, err, "not a directory")
 }
 
 func TestDir(t *testing.T) {
