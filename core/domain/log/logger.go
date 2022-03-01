@@ -4,17 +4,18 @@ import (
 	"fmt"
 	"github.com/vite-cloud/vite/core/domain/datadir"
 	"os"
-	"sync"
 )
 
 var (
-	logger       writer
-	createLogger = new(sync.Once)
+	logger writer
 )
+
+// Store is the unique name of the logger store
+const Store = datadir.Store("logs")
 
 // newLogger creates a new writer to log internal events.
 func newLogger() (writer, error) {
-	path, err := datadir.Path("logs", "internal.log")
+	path, err := Store.Path("internal.log")
 	if err != nil {
 		return nil, err
 	}
@@ -23,14 +24,21 @@ func newLogger() (writer, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
 	return &fileWriter{file}, nil
 }
 
+func UseTestLogger() *MemoryWriter {
+	testWriter := &MemoryWriter{}
+
+	logger = testWriter
+
+	return testWriter
+}
+
 // Log logs internal events to the configured log target.
 func Log(level level, format string, fields Fields) {
-	createLogger.Do(func() {
+	if logger == nil {
 		w, err := newLogger()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -38,7 +46,7 @@ func Log(level level, format string, fields Fields) {
 		}
 
 		logger = w
-	})
+	}
 
 	err := logger.Write(level, format, fields)
 	if err != nil {

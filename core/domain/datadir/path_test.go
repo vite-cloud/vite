@@ -14,14 +14,14 @@ func TestPath(t *testing.T) {
 
 	homeDir = home
 
-	path, err := Path("test", "hello.world")
+	path, err := Store("test").Path("hello.world")
 	assert.NilError(t, err)
 
-	if path != homeDir+"/"+configFileDir+"/test/hello.world" {
+	if path != homeDir+"/"+dataDirName+"/test/hello.world" {
 		t.Fatal("path is not correct")
 	}
 
-	_, err = os.Stat(homeDir + "/" + configFileDir + "/test")
+	_, err = os.Stat(homeDir + "/" + dataDirName + "/test")
 	assert.NilError(t, err)
 
 	// Ensure that it creates the parent directory but not the file
@@ -37,7 +37,7 @@ func TestPath2(t *testing.T) {
 
 	homeDir = home
 
-	_, err = Path("test", "../../../../..", "etc", "passwd")
+	_, err = Store("test").Path("../../../../..", "etc", "passwd")
 	assert.Error(t, err, "path is not in data dir")
 }
 
@@ -49,5 +49,5 @@ func TestDir(t *testing.T) {
 
 	homeDir = home
 
-	assert.Equal(t, homeDir+"/"+configFileDir, Dir())
+	assert.Equal(t, homeDir+"/"+dataDirName, Dir())
 }

@@ -11,6 +11,10 @@ type Fields map[string]any
 
 // String returns a logfmt-compatible string representation of the fields.
 func (f Fields) String() string {
+	if len(f) == 0 {
+		return ""
+	}
+	
 	var buf bytes.Buffer
 	enc := logfmt.NewEncoder(&buf)
 

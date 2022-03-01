@@ -27,14 +27,17 @@ type CLI struct {
 	err io.Writer
 }
 
+// Out returns the current output writer.
 func (c *CLI) Out() Stdout {
 	return c.out
 }
 
+// In returns the current input reader.
 func (c *CLI) In() Stdin {
 	return c.in
 }
 
+// Err returns the current error writer.
 func (c *CLI) Err() io.Writer {
 	return c.err
 }
@@ -63,6 +66,7 @@ func (c *CLI) Run(args []string) int {
 	return 0
 }
 
+// New returns a new CLI.
 func New() *CLI {
 	return &CLI{
 		out: os.Stdout,

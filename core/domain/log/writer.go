@@ -47,6 +47,7 @@ type compositeWriter struct {
 	writers []writer
 }
 
+// Write writes the log message to all writers.
 func (c *compositeWriter) Write(level level, message string, fields Fields) error {
 	for _, writer := range c.writers {
 		err := writer.Write(level, message, fields)
@@ -56,4 +57,41 @@ func (c *compositeWriter) Write(level level, message string, fields Fields) erro
 	}
 
 	return nil
+}
+
+// TestEvent contains the log values for testing.
+type TestEvent struct {
+	Level   level
+	Message string
+	Fields  Fields
+}
+
+// MemoryWriter is a writer for testing only.
+// It stores logs in memory.
+type MemoryWriter struct {
+	Events []TestEvent
+}
+
+// Write writes the log message to the memory.
+func (m *MemoryWriter) Write(level level, message string, fields Fields) error {
+	m.Events = append(m.Events, TestEvent{level, message, fields})
+	return nil
+}
+
+// Last is a convenience method for getting the last event.
+func (m *MemoryWriter) Last() TestEvent {
+	return m.Events[len(m.Events)-1]
+}
+
+// LastN is a convenience method for getting the last N events.
+func (m *MemoryWriter) LastN(n int) []TestEvent {
+	if len(m.Events) < n {
+		return m.Events
+	}
+
+	return m.Events[len(m.Events)-n:]
+}
+
+func (m *MemoryWriter) Len() int {
+	return len(m.Events)
 }
