@@ -109,6 +109,10 @@ func TestSubnetManager_Next(t *testing.T) {
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
 
+	manager.WithBlocks([]iplib.Net4{
+		iplib.NewNet4(net.IPv4(192, 168, 0, 0), 16),
+	})
+
 	subnet, err := manager.Next()
 	assert.NilError(t, err)
 

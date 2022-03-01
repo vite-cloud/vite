@@ -16,8 +16,9 @@ import (
 
 // subnetManager handles all subnet related operations
 type subnetManager struct {
-	mu   *sync.Mutex
-	used *os.File
+	mu     *sync.Mutex
+	used   *os.File
+	blocks []iplib.Net4
 }
 
 // related errors
@@ -34,13 +35,13 @@ const Store = datadir.Store("subnets")
 // SubnetDataFile is the name of the file that stores created subnets.
 const SubnetDataFile = "subnet.dat"
 
-// PrivateIpv4Blocks is the list of private ipv4 blocks.
+// DefaultSubnetBlocks is the list of private ipv4 blocks.
 // It respects https://datatracker.ietf.org/doc/html/rfc1918.
 // It contains the following blocks:
 // - 10.0.0.0/8
 // - 172.16.0.0/12
 // - 192.168.0.0/16
-var PrivateIpv4Blocks = []iplib.Net4{
+var DefaultSubnetBlocks = []iplib.Net4{
 	iplib.NewNet4(net.IPv4(10, 0, 0, 0), 8),
 	iplib.NewNet4(net.IPv4(172, 16, 0, 0), 12),
 	iplib.NewNet4(net.IPv4(192, 168, 0, 0), 16),
@@ -54,9 +55,15 @@ func NewSubnetManager() (*subnetManager, error) {
 	}
 
 	return &subnetManager{
-		mu:   &sync.Mutex{},
-		used: file,
+		mu:     &sync.Mutex{},
+		used:   file,
+		blocks: DefaultSubnetBlocks,
 	}, nil
+}
+
+func (sm *subnetManager) WithBlocks(blocks []iplib.Net4) *subnetManager {
+	sm.blocks = blocks
+	return sm
 }
 
 // Next returns the next available subnet from any of the blocks.
@@ -64,7 +71,7 @@ func (sm *subnetManager) Next() (*iplib.Net4, error) {
 	next := make(chan *iplib.Net4)
 	failed := 0
 
-	for _, network := range PrivateIpv4Blocks {
+	for _, network := range sm.blocks {
 		network := network
 		go func() {
 			subnets, _ := network.Subnet(24)
@@ -90,7 +97,7 @@ func (sm *subnetManager) Next() (*iplib.Net4, error) {
 			}
 			return subnet, nil
 		case <-time.After(time.Millisecond * 50):
-			if failed == len(PrivateIpv4Blocks) {
+			if failed == len(sm.blocks) {
 				return nil, ErrNoAvailableSubnet
 			}
 		}
