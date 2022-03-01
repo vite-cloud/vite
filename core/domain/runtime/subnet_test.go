@@ -109,6 +109,8 @@ func TestSubnetManager_Next(t *testing.T) {
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
 
+	// we're specifically giving only one subnet to the manager,
+	// so we know for sure what the next subnet will be
 	manager.WithBlocks([]iplib.Net4{
 		iplib.NewNet4(net.IPv4(192, 168, 0, 0), 16),
 	})

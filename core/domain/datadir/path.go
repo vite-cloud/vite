@@ -90,7 +90,7 @@ func setDataDir() {
 		return
 	}
 
-	dataDir = getHomeDir() + "/" + dataDirName
+	dataDir = strings.TrimRight(getHomeDir(), "/") + "/" + dataDirName
 
 	if err := os.MkdirAll(dataDir, 0700); err != nil {
 		panic(err)
