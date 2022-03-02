@@ -15,12 +15,12 @@ const Store = datadir.Store("logs")
 
 // newLogger creates a new writer to log internal events.
 func newLogger() (writer, error) {
-	path, err := Store.Path("internal.log")
+	dir, err := Store.Dir()
 	if err != nil {
 		return nil, err
 	}
 
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+	file, err := os.OpenFile(dir+"/internal.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 	if err != nil {
 		return nil, err
 	}

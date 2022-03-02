@@ -8,14 +8,19 @@ import (
 	"sync"
 )
 
+// Store is the manifest store.
 const Store = datadir.Store("manifest")
 
+// Manifest is a set of tagged resources for a given deployment.
 type Manifest struct {
+	// Version is the version of the manifest's deployment.
 	Version string
 
+	// Resources is a map of tags associated with resources.
 	Resources sync.Map
 }
 
+// Save writes the manifest to the Store.
 func (m *Manifest) Save() error {
 	f, err := Store.Open(m.Version+".json", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if err != nil {
@@ -35,6 +40,7 @@ func (m *Manifest) Save() error {
 	return f.Close()
 }
 
+// Add adds a resource to the manifest under a given tag.
 func (m *Manifest) Add(key string, value any) {
 	v, ok := m.Resources.Load(key)
 	if !ok {
@@ -45,6 +51,13 @@ func (m *Manifest) Add(key string, value any) {
 	m.Resources.Store(key, append(v.([]any), value))
 }
 
+type manifestJSON struct {
+	Version   string
+	Resources map[string]any
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+// It takes care of converting the resource map to a marshalable map.
 func (m *Manifest) MarshalJSON() ([]byte, error) {
 	v := make(map[string]any)
 
@@ -65,5 +78,68 @@ func (m *Manifest) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("manifest.MarshalJSON: invalid manifest key (must be string)")
 	}
 
-	return json.Marshal(v)
+	return json.Marshal(manifestJSON{
+		Version:   m.Version,
+		Resources: v,
+	})
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+// It takes care of converting the resources map to a sync.Map.
+// Avoid using ints to the map, as they will be converted to float64s.
+// Use strings instead.
+func (m *Manifest) UnmarshalJSON(data []byte) error {
+	var manifestJSON manifestJSON
+
+	err := json.Unmarshal(data, &manifestJSON)
+	if err != nil {
+		return err
+	}
+
+	m.Version = manifestJSON.Version
+	m.Resources = sync.Map{}
+
+	for k, v := range manifestJSON.Resources {
+		m.Resources.Store(k, v)
+	}
+
+	return nil
+}
+
+func List() ([]*Manifest, error) {
+	var manifests []*Manifest
+
+	dir, err := Store.Dir()
+	if err != nil {
+		return nil, err
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			return nil, fmt.Errorf("manifest store is corrupted: %s is a directory", entry.Name())
+		}
+
+		f, err := Store.Open(entry.Name(), os.O_RDONLY, 0)
+		if err != nil {
+			return nil, err
+		}
+
+		defer f.Close()
+
+		var manifest Manifest
+
+		err = json.NewDecoder(f).Decode(&manifest)
+		if err != nil {
+			return nil, err
+		}
+
+		manifests = append(manifests, &manifest)
+	}
+
+	return manifests, nil
 }

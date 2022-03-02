@@ -1,7 +1,6 @@
 package datadir
 
 import (
-	"errors"
 	"github.com/docker/docker/pkg/homedir"
 	"os"
 	"path/filepath"
@@ -25,20 +24,6 @@ const dataDirName = ".vite"
 // For example Store(certs) would return ~/.vite/certs
 type Store string
 
-// Path returns a path from the current Store. It creates the store directory if it does not exist yet.
-func (s Store) Path(p ...string) (string, error) {
-	path := filepath.Join(append([]string{Dir(), s.String()}, p...)...)
-	if !strings.HasPrefix(path, Dir()+"/") {
-		return "", errors.New("path is not in data dir")
-	}
-
-	if err := os.MkdirAll(filepath.Join(Dir(), s.String()), 0700); err != nil {
-		return "", err
-	}
-
-	return path, nil
-}
-
 // String returns the string representation of the Store
 func (s Store) String() string {
 	return string(s)
@@ -46,11 +31,23 @@ func (s Store) String() string {
 
 // Open is a convenience method to open a file from the current Store
 func (s Store) Open(path string, flags int, perm os.FileMode) (*os.File, error) {
-	p, err := s.Path(path)
+	dir, err := s.Dir()
 	if err != nil {
 		return nil, err
 	}
-	return os.OpenFile(p, flags, perm)
+
+	return os.OpenFile(dir+"/"+strings.TrimLeft(path, "/"), flags, perm)
+}
+
+// Dir returns the store directory for the current user.
+func (s Store) Dir() (string, error) {
+	path := filepath.Join(Dir(), s.String())
+
+	if err := os.MkdirAll(path, 0700); err != nil {
+		return "", err
+	}
+
+	return path, nil
 }
 
 // Dir returns the path to the data directory for the current user

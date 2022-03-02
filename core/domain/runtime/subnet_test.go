@@ -69,10 +69,9 @@ func TestSubnetManager_Allocate(t *testing.T) {
 	err = manager.Allocate(subnet)
 	assert.NilError(t, err)
 
-	path, err := Store.Path(SubnetDataFile)
+	dir, err := Store.Dir()
 	assert.NilError(t, err)
-
-	contents, err := os.ReadFile(path)
+	contents, err := os.ReadFile(dir + "/" + SubnetDataFile)
 	assert.NilError(t, err)
 	assert.Assert(t, len(contents) > 0)
 	assert.Equal(t, string(contents), subnet.String()+"\n")

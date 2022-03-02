@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-// Fields is a map of fields, which may be marshalled into a logfmt-compatible string.
+// Fields is a map of fields, which may be marshaled into a logfmt-compatible string.
 type Fields map[string]any
 
 // String returns a logfmt-compatible string representation of the fields.

@@ -16,6 +16,7 @@ import (
 
 // subnetManager handles all subnet related operations
 type subnetManager struct {
+	// mu ensures that we
 	mu     *sync.Mutex
 	used   *os.File
 	blocks []iplib.Net4
@@ -61,6 +62,7 @@ func NewSubnetManager() (*subnetManager, error) {
 	}, nil
 }
 
+// WithBlocks sets the list of subnet blocks to use.
 func (sm *subnetManager) WithBlocks(blocks []iplib.Net4) *subnetManager {
 	sm.blocks = blocks
 	return sm
