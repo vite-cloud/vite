@@ -14,7 +14,7 @@ func (f Fields) String() string {
 	if len(f) == 0 {
 		return ""
 	}
-	
+
 	var buf bytes.Buffer
 	enc := logfmt.NewEncoder(&buf)
 

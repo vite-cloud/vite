@@ -6,6 +6,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/vite-cloud/vite/core/domain/log"
+	"github.com/vite-cloud/vite/core/domain/manifest"
 )
 
 // ContainerCreateOptions defines the options for creating a container
@@ -45,6 +46,8 @@ func (c Client) ContainerCreate(ctx context.Context, image string, opts Containe
 		"with_registry": opts.Registry != nil,
 	})
 
+	ctx.Value("manifest").(*manifest.Manifest).Add("created_container", res.ID)
+
 	return res, nil
 }
 
@@ -58,6 +61,8 @@ func (c Client) ContainerStart(ctx context.Context, id string) error {
 	log.Log(log.DebugLevel, "started container", log.Fields{
 		"id": id,
 	})
+
+	ctx.Value("manifest").(*manifest.Manifest).Add("started_container", id)
 
 	return nil
 }
