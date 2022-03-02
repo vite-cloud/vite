@@ -1,10 +1,26 @@
 package main
 
 import (
-	"github.com/vite-cloud/vite/core/handler/cli"
+	"encoding/json"
+	"fmt"
+	"github.com/vite-cloud/vite/core/domain/metrics"
 	"os"
 )
 
 func main() {
-	os.Exit(cli.New().Run(os.Args[1:]))
+	m, err := metrics.Gather()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	s, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	fmt.Println(string(s))
+
+	//os.Exit(cli.New().Run(os.Args[1:]))
 }

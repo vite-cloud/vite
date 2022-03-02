@@ -6,6 +6,7 @@ require (
 	github.com/c-robinson/iplib v1.0.3
 	github.com/docker/docker v20.10.12+incompatible
 	github.com/go-logfmt/logfmt v0.5.1
+	github.com/mackerelio/go-osstat v0.2.1
 	github.com/magiconair/properties v1.8.5
 	github.com/spf13/cobra v1.3.0
 	gotest.tools/v3 v3.1.0

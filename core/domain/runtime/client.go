@@ -8,14 +8,22 @@ type Client struct {
 	client *client.Client
 }
 
+var clientInstance *Client
+
 // NewClient creates a new docker client
 func NewClient() (*Client, error) {
+	if clientInstance != nil {
+		return clientInstance, nil
+	}
+
 	docker, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Client{
+	clientInstance = &Client{
 		client: docker,
-	}, nil
+	}
+
+	return clientInstance, nil
 }
