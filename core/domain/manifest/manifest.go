@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/vite-cloud/vite/core/domain/datadir"
 	"os"
@@ -142,4 +143,38 @@ func List() ([]*Manifest, error) {
 	}
 
 	return manifests, nil
+}
+
+// Delete removes the manifest from the Store and returns an error if it fails.
+// It does not return an error if the manifest does not exist.
+func Delete(version string) error {
+	dir, err := Store.Dir()
+	if err != nil {
+		return err
+	}
+
+	path := dir + "/" + version + ".json"
+
+	if _, err = os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	return os.Remove(path)
+}
+
+// Get returns the manifest for a given version or os.ErrNotExist if it does not exist.
+func Get(version string) (*Manifest, error) {
+	f, err := Store.Open(version+".json", os.O_RDONLY, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	defer f.Close()
+
+	var manifest Manifest
+
+	err = json.NewDecoder(f).Decode(&manifest)
+	return &manifest, err
 }

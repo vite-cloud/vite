@@ -49,7 +49,7 @@ func TestManifest_Add(t *testing.T) {
 }
 
 func TestManifest_Save(t *testing.T) {
-	home, err := os.MkdirTemp("", "subnet-test")
+	home, err := os.MkdirTemp("", "manifest-test")
 	assert.NilError(t, err)
 
 	datadir.SetHomeDir(home)
@@ -76,7 +76,7 @@ func TestManifest_Save(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	home, err := os.MkdirTemp("", "subnet-test")
+	home, err := os.MkdirTemp("", "manifest-test")
 	assert.NilError(t, err)
 
 	datadir.SetHomeDir(home)
@@ -118,4 +118,70 @@ func TestManifest_UnmarshalJSON(t *testing.T) {
 	assert.Assert(t, ok)
 	assert.Equal(t, got.([]any)[0], "bar")
 	assert.Equal(t, got.([]any)[1], 4.0)
+}
+
+func TestGet(t *testing.T) {
+	home, err := os.MkdirTemp("", "manifest-test")
+	assert.NilError(t, err)
+
+	datadir.SetHomeDir(home)
+
+	m := &Manifest{Version: "testing"}
+
+	m.Add("hello", "world")
+	m.Add("foo", "bar")
+	m.Add("foo", 4)
+
+	err = m.Save()
+	assert.NilError(t, err)
+
+	found, err := Get("testing")
+	assert.NilError(t, err)
+
+	assert.Equal(t, found.Version, "testing")
+
+	got, ok := found.Resources.Load("hello")
+	assert.Assert(t, ok)
+	assert.Equal(t, got.([]any)[0], "world")
+
+	got, ok = found.Resources.Load("foo")
+	assert.Assert(t, ok)
+	assert.Equal(t, got.([]any)[0], "bar")
+	assert.Equal(t, got.([]any)[1], 4.0)
+}
+
+func TestDelete(t *testing.T) {
+	home, err := os.MkdirTemp("", "manifest-test")
+	assert.NilError(t, err)
+
+	datadir.SetHomeDir(home)
+
+	m := &Manifest{Version: "testing"}
+
+	m.Add("hello", "world")
+	m.Add("foo", "bar")
+	m.Add("foo", 4)
+
+	err = m.Save()
+	assert.NilError(t, err)
+
+	found, err := Get("testing")
+	assert.NilError(t, err)
+
+	assert.Equal(t, found.Version, "testing")
+
+	got, ok := found.Resources.Load("hello")
+	assert.Assert(t, ok)
+	assert.Equal(t, got.([]any)[0], "world")
+
+	got, ok = found.Resources.Load("foo")
+	assert.Assert(t, ok)
+	assert.Equal(t, got.([]any)[0], "bar")
+	assert.Equal(t, got.([]any)[1], 4.0)
+
+	err = Delete("testing")
+	assert.NilError(t, err)
+
+	_, err = Get("testing")
+	assert.ErrorIs(t, err, os.ErrNotExist)
 }
