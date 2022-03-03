@@ -12,9 +12,8 @@ import (
 // It holds the path to the repository path.
 type Git string
 
-var (
-	ErrRepositoryNotFound = errors.New("repository not found")
-)
+// ErrRepositoryNotFound is returned when a repository does not exist at the given path.
+var ErrRepositoryNotFound = errors.New("repository not found")
 
 // Clone clones the given repository and branch.
 func (g Git) Clone(remote, branch string) error {
@@ -36,6 +35,7 @@ func (g Git) String() string {
 	return string(g)
 }
 
+// run runs a git command with the given arguments.
 func (g Git) run(args ...string) ([]byte, error) {
 	if _, err := os.Stat(g.String()); errors.Is(err, os.ErrNotExist) {
 		return nil, ErrRepositoryNotFound
@@ -60,6 +60,7 @@ func (g Git) run(args ...string) ([]byte, error) {
 	return out, nil
 }
 
+// RepoExists returns true if a repository exists at the given path.
 func (g Git) RepoExists() bool {
 	_, err := os.Stat(g.String())
 	return !errors.Is(err, os.ErrNotExist)

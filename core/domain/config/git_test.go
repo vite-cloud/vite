@@ -49,4 +49,20 @@ func TestGit_RepoExists(t *testing.T) {
 	assert.Assert(t, ok)
 }
 
-func Test
+func TestGit_Clone(t *testing.T) {
+	dir, err := os.MkdirTemp("", "git-repo")
+	assert.NilError(t, err)
+
+	git := Git(dir)
+	err = git.Clone("git@github.com:vite-cloud/vite.git", "main")
+	assert.NilError(t, err)
+}
+
+func TestGit_Clone2(t *testing.T) {
+	dir, err := os.MkdirTemp("", "git-repo")
+	assert.NilError(t, err)
+
+	git := Git(dir)
+	err = git.Clone("nop does not exist", "main")
+	assert.ErrorContains(t, err, "fatal: repository 'nop does not exist' does not exist")
+}

@@ -11,7 +11,7 @@ const configStore = datadir.Store("locator")
 
 // Locator contains the configuration for the locator.
 type Locator struct {
-	Provider   provider
+	Provider   Provider
 	UseHTTPS   bool
 	Repository string
 	Branch     string
@@ -19,13 +19,15 @@ type Locator struct {
 	Path       string
 }
 
-func (l *Locator) getProtocol() string {
+// protocolName returns the protocol name, either ssh or https.
+func (l *Locator) protocolName() string {
 	if l.UseHTTPS {
 		return "https"
 	}
 	return "ssh"
 }
 
+// Read a file from the repository.
 func (l *Locator) Read(file string) ([]byte, error) {
 	git, err := l.git()
 	if err != nil {
@@ -47,6 +49,7 @@ func (l *Locator) Read(file string) ([]byte, error) {
 	return contents, nil
 }
 
+// git returns a Git object for the locator.
 func (l *Locator) git() (Git, error) {
 	dir, err := configStore.Dir()
 	if err != nil {
