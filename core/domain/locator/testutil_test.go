@@ -1,4 +1,4 @@
-package config
+package locator
 
 import (
 	"errors"
@@ -72,19 +72,9 @@ func (r *RepoBuilder) Commit() string {
 
 	r.files = nil
 
-	name, email := string(runGit(r.t, r.path, "config", "user.name")), string(runGit(r.t, r.path, "config", "user.email"))
-
-	if strings.TrimSpace(name) == "" {
-		runGit(r.t, r.path, "config", "--local", "user.name", "Test User")
-	}
-
-	if strings.TrimSpace(email) == "" {
-		runGit(r.t, r.path, "config", "--local", "user.email", "commiter@example.com")
-	}
-
 	runGit(r.t, r.path, "add", ".")
 
-	runGit(r.t, r.path, "commit", "-m", "commit")
+	runGit(r.t, r.path, "commit", "-m", "commit", "--author=\"Test Runner <testing@example.com>\"")
 
 	// get last commit
 	out := runGit(r.t, r.path, "log", "-1", "--pretty=format:%H")

@@ -1,4 +1,4 @@
-package config
+package locator
 
 import (
 	"github.com/vite-cloud/vite/core/domain/datadir"

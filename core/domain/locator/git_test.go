@@ -1,4 +1,4 @@
-package config
+package locator
 
 import (
 	"gotest.tools/v3/assert"
