@@ -74,7 +74,11 @@ func (r *RepoBuilder) Commit() string {
 
 	runGit(r.t, r.path, "add", ".")
 
-	runGit(r.t, r.path, "commit", "-m", "commit", "--author=\"Test Runner <testing@example.com>\"")
+	// set author name and email
+	runGit(r.t, r.path, "config", "user.name", "test")
+	runGit(r.t, r.path, "config", "user.email", "testing@example.com")
+
+	runGit(r.t, r.path, "commit", "-m", "commit")
 
 	// get last commit
 	out := runGit(r.t, r.path, "log", "-1", "--pretty=format:%H")
