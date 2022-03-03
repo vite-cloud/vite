@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"gotest.tools/v3/assert"
 	"io/ioutil"
 	"os"
@@ -44,7 +45,7 @@ func runGit(t *testing.T, repo string, args ...string) []byte {
 	cmd.Dir = repo
 
 	out, err := cmd.CombinedOutput()
-	assert.NilError(t, err, string(out))
+	assert.NilError(t, err, fmt.Sprintf("command: %s, %s", args, out))
 
 	return out
 }
