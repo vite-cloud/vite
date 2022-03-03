@@ -60,7 +60,7 @@ func TestGit_Clone(t *testing.T) {
 	assert.NilError(t, err)
 
 	git := Git(dir)
-	err = git.Clone("git@github.com:vite-cloud/vite.git", "main")
+	err = git.Clone("https://github.com/vite-cloud/vite.git", "main")
 	assert.NilError(t, err)
 }
 
