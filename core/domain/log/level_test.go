@@ -18,7 +18,7 @@ func TestLevel_String(t *testing.T) {
 
 	for _, tt := range tests {
 		if got := tt.level.String(); got != tt.want {
-			t.Errorf("%v.String() = %v, want %v", tt.level, got, tt.want)
+			t.Errorf("%v.Marshal() = %v, want %v", tt.level, got, tt.want)
 		}
 	}
 }

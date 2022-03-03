@@ -1,12 +1,7 @@
 package log
 
 import (
-	"fmt"
 	"os"
-	"path"
-	"runtime"
-	"strings"
-	"time"
 )
 
 // writer is the log writer interface.
@@ -21,24 +16,7 @@ type fileWriter struct {
 
 // Write writes the log message to the file.
 func (f *fileWriter) Write(level level, message string, fields Fields) error {
-	fields["level"] = level.String()
-	fields["message"] = message
-	fields["time"] = time.Now().Format("2006-01-02 15:04:05")
-
-	var stack string
-
-	for i := 0; i < 4; i++ {
-		_, file, line, ok := runtime.Caller(i + 1)
-		if !ok {
-			break
-		}
-
-		stack += fmt.Sprintf("%s:%d;", path.Base(file), line)
-	}
-
-	fields["stack"] = strings.TrimRight(stack, ";")
-
-	_, err := f.file.Write([]byte(fields.String() + "\n"))
+	_, err := f.file.Write([]byte(fields.Marshal(level, message)))
 	return err
 }
 

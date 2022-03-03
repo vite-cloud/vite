@@ -1,8 +1,12 @@
 package log
 
 import (
+	"fmt"
 	"gotest.tools/v3/assert"
+	"os"
+	"strconv"
 	"testing"
+	"time"
 )
 
 func TestCompositeWriter_Write(t *testing.T) {
@@ -24,6 +28,24 @@ func TestCompositeWriter_Write(t *testing.T) {
 		assert.Equal(t, "test", wr.Last().Message)
 		assert.Equal(t, "bar", wr.Last().Fields["foo"])
 	}
+}
+
+type failingWriter struct{}
+
+func (f failingWriter) Write(level level, message string, fields Fields) error {
+	return fmt.Errorf("failed")
+}
+
+func TestCompositeWriter_Write2(t *testing.T) {
+	w := &compositeWriter{[]writer{
+		&failingWriter{},
+	}}
+
+	err := w.Write(DebugLevel, "test", Fields{
+		"foo": "bar",
+	})
+
+	assert.ErrorContains(t, err, "failed")
 }
 
 func TestMemoryWriter_Len(t *testing.T) {
@@ -72,4 +94,28 @@ func TestMemoryWriter_Write(t *testing.T) {
 	assert.Equal(t, DebugLevel, w.Last().Level)
 	assert.Equal(t, "test", w.Last().Message)
 	assert.Equal(t, "bar", w.Last().Fields["foo"])
+}
+
+func TestFileWriter_Write(t *testing.T) {
+	path := "/tmp/tmp-filew-" + strconv.Itoa(int(time.Now().UnixMilli()))
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0600)
+	assert.NilError(t, err)
+
+	defer file.Close()
+
+	w := fileWriter{
+		file: file,
+	}
+
+	err = w.Write(DebugLevel, "test", Fields{
+		"foo":    "bar",
+		"_time":  "@", // simplifies testing
+		"_stack": "@", // simplifies testing
+	})
+	assert.NilError(t, err)
+
+	contents, err := os.ReadFile(path)
+	assert.NilError(t, err)
+
+	assert.Equal(t, "_level=debug _message=test _stack=@ _time=@ foo=bar\n", string(contents))
 }
