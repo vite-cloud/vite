@@ -36,7 +36,7 @@ func (s Store) Open(path string, flags int, perm os.FileMode) (*os.File, error) 
 		return nil, err
 	}
 
-	return os.OpenFile(dir+"/"+strings.TrimLeft(path, "/"), flags, perm)
+	return os.OpenFile(filepath.Join(dir, path), flags, perm)
 }
 
 // Dir returns the store directory for the current user.

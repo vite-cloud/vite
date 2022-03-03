@@ -14,6 +14,7 @@ var logger *log.MemoryWriter
 
 func TestMain(m *testing.M) {
 	logger = log.UseTestLogger()
+
 	os.Exit(m.Run())
 }
 
