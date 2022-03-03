@@ -61,15 +61,7 @@ func (m *MemoryWriter) Last() TestEvent {
 	return m.Events[len(m.Events)-1]
 }
 
-// LastN is a convenience method for getting the last N events.
-func (m *MemoryWriter) LastN(n int) []TestEvent {
-	if len(m.Events) < n {
-		return m.Events
-	}
-
-	return m.Events[len(m.Events)-n:]
-}
-
+// Len returns the number of events in the memory.
 func (m *MemoryWriter) Len() int {
 	return len(m.Events)
 }

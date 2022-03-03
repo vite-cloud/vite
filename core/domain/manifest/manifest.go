@@ -52,6 +52,7 @@ func (m *Manifest) Add(key string, value any) {
 	m.Resources.Store(key, append(v.([]any), value))
 }
 
+// manifestJSON is the marshalable representation of a Manifest as it does not rely on sync.Map.
 type manifestJSON struct {
 	Version   string
 	Resources map[string]any
@@ -107,6 +108,7 @@ func (m *Manifest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// List returns a list of all the manifests in the Store.
 func List() ([]*Manifest, error) {
 	var manifests []*Manifest
 

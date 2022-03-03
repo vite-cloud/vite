@@ -19,14 +19,6 @@ type Locator struct {
 	Path       string
 }
 
-// protocolName returns the protocol name, either ssh or https.
-func (l *Locator) protocolName() string {
-	if l.UseHTTPS {
-		return "https"
-	}
-	return "ssh"
-}
-
 // Read a file from the repository.
 func (l *Locator) Read(file string) ([]byte, error) {
 	git, err := l.git()

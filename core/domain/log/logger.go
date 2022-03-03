@@ -28,6 +28,8 @@ func newLogger() (writer, error) {
 	return &fileWriter{file}, nil
 }
 
+// UseTestLogger sets the logger to a test logger.
+// It should only be used in testing to check for expected log messages.
 func UseTestLogger() *MemoryWriter {
 	testWriter := &MemoryWriter{}
 
