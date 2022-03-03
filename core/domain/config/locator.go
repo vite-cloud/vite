@@ -56,7 +56,7 @@ func (l *Locator) git() (Git, error) {
 		return "", err
 	}
 
-	path := dir + "/" + l.Branch + "/" + strings.Replace(l.Repository, "/", "-", -1)
+	path := dir + "/" + l.Branch + "-" + strings.Replace(l.Repository, "/", "-", -1)
 
 	return Git(path), nil
 }

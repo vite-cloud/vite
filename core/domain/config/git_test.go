@@ -7,7 +7,10 @@ import (
 )
 
 func TestGit_Read(t *testing.T) {
-	builder := newLocalRepo(t)
+	dir, err := os.MkdirTemp("", "git_test")
+	assert.NilError(t, err)
+
+	builder := newLocalRepo(t, dir)
 	builder.WriteFile("vite.yml", []byte("here is some content"), 0600)
 	commit := builder.Commit()
 	git := builder.Git()
@@ -19,13 +22,16 @@ func TestGit_Read(t *testing.T) {
 }
 
 func TestGit_Read2(t *testing.T) {
-	builder := newLocalRepo(t)
+	dir, err := os.MkdirTemp("", "git_test")
+	assert.NilError(t, err)
+
+	builder := newLocalRepo(t, dir)
 	commit := builder.
 		WriteFile("something", []byte(""), 0600).
 		Commit()
 	git := builder.Git()
 
-	_, err := git.Read(commit, "vite.yml")
+	_, err = git.Read(commit, "vite.yml")
 	assert.ErrorContains(t, err, "fatal: path 'vite.yml' does not exist")
 }
 

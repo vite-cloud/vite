@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"gotest.tools/v3/assert"
 	"io/ioutil"
 	"os"
@@ -22,15 +23,19 @@ type RepoBuilder struct {
 	files []File
 }
 
-func newLocalRepo(t *testing.T) *RepoBuilder {
-	repo, err := os.MkdirTemp("", "git-repo")
-	assert.NilError(t, err)
+func newLocalRepo(t *testing.T, path string) *RepoBuilder {
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		err = os.MkdirAll(path, 0755)
+		assert.NilError(t, err)
+	} else if err != nil {
+		t.Fatal(err)
+	}
 
-	runGit(t, repo, "init")
+	runGit(t, path, "init")
 
 	return &RepoBuilder{
 		t:    t,
-		path: repo,
+		path: path,
 	}
 }
 
