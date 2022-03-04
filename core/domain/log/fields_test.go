@@ -1,8 +1,10 @@
 package log
 
 import (
-	"github.com/magiconair/properties/assert"
 	"testing"
+
+	panics "github.com/magiconair/properties/assert"
+	"gotest.tools/v3/assert"
 )
 
 func TestFields_String(t *testing.T) {
@@ -17,7 +19,7 @@ func TestFields_String(t *testing.T) {
 }
 
 func TestFields_String3(t *testing.T) {
-	assert.Panic(t, func() {
+	panics.Panic(t, func() {
 		f := Fields{
 			"foo": []string{"hello", "world"},
 		}

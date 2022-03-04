@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	panics "github.com/magiconair/properties/assert"
+
 	"github.com/docker/docker/pkg/homedir"
 	"gotest.tools/v3/assert"
 )
@@ -78,6 +80,18 @@ func TestStore_Open(t *testing.T) {
 	f.Close()
 }
 
+func TestStore_Open2(t *testing.T) {
+	defer resetDataDir()
+
+	// can not use SetHomeDir as it calls setDataDir
+	// which panics if it can not create the directory
+	homeDir = "/nop"
+	dataDir = "/nop/.vite"
+
+	_, err := Store("this").Open("file", os.O_RDWR|os.O_CREATE, 0600)
+	assert.ErrorIs(t, err, os.ErrPermission)
+}
+
 func TestStore_String(t *testing.T) {
 	assert.Equal(t, Store("something").String(), "something")
 }
@@ -99,4 +113,14 @@ func TestSetDataDir(t *testing.T) {
 	setDataDir()
 
 	assert.Equal(t, "/something", dataDir)
+}
+
+func TestSetHomeDir2(t *testing.T) {
+	defer resetDataDir()
+
+	panics.Panic(t, func() {
+		SetHomeDir("/nop")
+
+		Dir()
+	}, "mkdir /nop: permission denied")
 }
