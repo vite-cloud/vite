@@ -1,9 +1,11 @@
 package log
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
+	panics "github.com/magiconair/properties/assert"
 	"github.com/vite-cloud/vite/core/domain/datadir"
 	"gotest.tools/v3/assert"
 )
@@ -53,4 +55,38 @@ func TestGetLogger(t *testing.T) {
 	SetLogger(l)
 
 	assert.Equal(t, GetLogger(), l)
+}
+
+func TestLog3(t *testing.T) {
+	SetLogger(nil)
+	datadir.SetHomeDir("/nop")
+
+	panics.Panic(t, func() {
+		Log(DebugLevel, "hello world", Fields{})
+	}, "mkdir /nop: permission denied")
+}
+
+func TestLog4(t *testing.T) {
+	home, err := os.MkdirTemp("", "vite-datadir")
+	assert.NilError(t, err)
+
+	datadir.SetHomeDir(home)
+
+	dir, err := Store.Dir()
+	assert.NilError(t, err)
+
+	err = os.Mkdir(dir+"/internal.log", 0600)
+	assert.NilError(t, err)
+
+	panics.Panic(t, func() {
+		Log(DebugLevel, "hello world", Fields{})
+	}, fmt.Sprintf("open %s: is a directory", dir+"/internal.log"))
+}
+
+func TestLog5(t *testing.T) {
+	SetLogger(&failingWriter{})
+
+	panics.Panic(t, func() {
+		Log(DebugLevel, "hello world", Fields{})
+	}, "failed")
 }
