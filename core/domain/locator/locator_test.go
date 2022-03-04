@@ -1,11 +1,12 @@
 package locator
 
 import (
-	"github.com/vite-cloud/vite/core/domain/datadir"
-	"gotest.tools/v3/assert"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/vite-cloud/vite/core/domain/datadir"
+	"gotest.tools/v3/assert"
 )
 
 func TestLocator_Read(t *testing.T) {
@@ -24,9 +25,11 @@ func TestLocator_Read(t *testing.T) {
 	assert.NilError(t, err)
 
 	builder := newLocalRepo(t, filepath.Join(dir, "main-foo-bar"))
-	builder.
+	commit := builder.
 		WriteFile("vite.yaml", []byte("services:\n"), 0600).
 		Commit()
+
+	locator.Commit = commit
 
 	contents, err := locator.Read("vite.yaml")
 	assert.NilError(t, err)

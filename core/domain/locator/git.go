@@ -21,7 +21,8 @@ func (g Git) Clone(remote, branch string) error {
 		return fmt.Errorf("branch is empty")
 	}
 
-	_, err := g.run("clone", "--branch", branch, remote, g.String())
+	cmd := exec.Command("git", "clone", "--branch", branch, remote, g.String())
+	_, err := globalRun(cmd)
 	return err
 }
 
@@ -35,17 +36,7 @@ func (g Git) String() string {
 	return string(g)
 }
 
-// run runs a git command with the given arguments.
-func (g Git) run(args ...string) ([]byte, error) {
-	if _, err := os.Stat(g.String()); errors.Is(err, os.ErrNotExist) {
-		return nil, ErrRepositoryNotFound
-	} else if err != nil {
-		return nil, err
-	}
-
-	cmd := exec.Command("git", args...)
-	cmd.Dir = g.String()
-
+func globalRun(cmd *exec.Cmd) ([]byte, error) {
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
@@ -58,6 +49,20 @@ func (g Git) run(args ...string) ([]byte, error) {
 	}
 
 	return out, nil
+}
+
+// run runs a git command with the given arguments.
+func (g Git) run(args ...string) ([]byte, error) {
+	if _, err := os.Stat(g.String()); errors.Is(err, os.ErrNotExist) {
+		return nil, ErrRepositoryNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	cmd := exec.Command("git", args...)
+	cmd.Dir = g.String()
+
+	return globalRun(cmd)
 }
 
 // RepoExists returns true if a repository exists at the given path.

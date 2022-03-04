@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	panics "github.com/magiconair/properties/assert"
-
 	"github.com/docker/docker/pkg/homedir"
 	"gotest.tools/v3/assert"
 )
@@ -20,7 +18,10 @@ func TestDir(t *testing.T) {
 
 	homeDir = home
 
-	assert.Equal(t, homeDir+"/"+dataDirName, Dir())
+	dir, err := Dir()
+	assert.NilError(t, err)
+
+	assert.Equal(t, homeDir+"/"+dataDirName, dir)
 }
 
 func TestSetHomeDir(t *testing.T) {
@@ -31,13 +32,19 @@ func TestSetHomeDir(t *testing.T) {
 
 	homeDir = home
 
-	assert.Equal(t, homeDir+"/"+dataDirName, Dir())
+	dir, err := Dir()
+	assert.NilError(t, err)
+
+	assert.Equal(t, homeDir+"/"+dataDirName, dir)
 
 	newHome := "/tmp/vite-datadir-" + strconv.Itoa(int(time.Now().UnixMilli()))
 
 	SetHomeDir(newHome)
 
-	assert.Equal(t, newHome+"/"+dataDirName, Dir())
+	dir, err = Dir()
+	assert.NilError(t, err)
+
+	assert.Equal(t, newHome+"/"+dataDirName, dir)
 }
 
 func TestStore_Dir(t *testing.T) {
@@ -48,16 +55,19 @@ func TestStore_Dir(t *testing.T) {
 
 	SetHomeDir(home)
 
-	_, err = os.Stat(Dir() + "/this")
+	dir, err := Dir()
+	assert.NilError(t, err)
+
+	_, err = os.Stat(dir + "/this")
 	assert.ErrorIs(t, err, os.ErrNotExist)
 
-	dir, err := Store("this").Dir()
+	path, err := Store("this").Dir()
 	assert.NilError(t, err)
 
-	_, err = os.Stat(dir)
+	_, err = os.Stat(path)
 	assert.NilError(t, err)
 
-	assert.Equal(t, dir, Dir()+"/this")
+	assert.Equal(t, path, dir+"/this")
 }
 
 func TestStore_Open(t *testing.T) {
@@ -68,13 +78,16 @@ func TestStore_Open(t *testing.T) {
 
 	SetHomeDir(home)
 
-	_, err = os.Stat(Dir() + "/this")
+	dir, err := Dir()
+	assert.NilError(t, err)
+
+	_, err = os.Stat(dir + "/this")
 	assert.ErrorIs(t, err, os.ErrNotExist)
 
 	f, err := Store("this").Open("file", os.O_RDWR|os.O_CREATE, 0600)
 	assert.NilError(t, err)
 
-	_, err = os.Stat(Dir() + "/this/file")
+	_, err = os.Stat(dir + "/this/file")
 	assert.NilError(t, err)
 
 	f.Close()
@@ -118,9 +131,8 @@ func TestSetDataDir(t *testing.T) {
 func TestSetHomeDir2(t *testing.T) {
 	defer resetDataDir()
 
-	panics.Panic(t, func() {
-		SetHomeDir("/nop")
+	// ensure that there's no panic
+	SetHomeDir("/nop")
 
-		Dir()
-	}, "mkdir /nop: permission denied")
+	Dir()
 }
