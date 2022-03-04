@@ -1,20 +1,29 @@
 package log
 
 import (
-	"fmt"
-	"github.com/vite-cloud/vite/core/domain/datadir"
 	"os"
+
+	"github.com/vite-cloud/vite/core/domain/datadir"
 )
 
-var (
-	logger writer
-)
+// logger contains an instance of the global logger.
+var logger writer
 
 // Store is the unique name of the logger store
 const Store = datadir.Store("logs")
 
-// newLogger creates a new writer to log internal events.
-func newLogger() (writer, error) {
+// SetLogger sets the global logger to a given writer.
+func SetLogger(w writer) {
+	logger = w
+}
+
+// GetLogger returns the global logger.
+func GetLogger() writer {
+	return logger
+}
+
+// defaultLogger creates a default logger.
+func defaultLogger() (writer, error) {
 	dir, err := Store.Dir()
 	if err != nil {
 		return nil, err
@@ -28,31 +37,19 @@ func newLogger() (writer, error) {
 	return &fileWriter{file}, nil
 }
 
-// UseTestLogger sets the logger to a test logger.
-// It should only be used in testing to check for expected log messages.
-func UseTestLogger() *MemoryWriter {
-	testWriter := &MemoryWriter{}
-
-	logger = testWriter
-
-	return testWriter
-}
-
-// Log logs internal events to the configured log target.
-func Log(level level, format string, fields Fields) {
+// Log logs an internal event to the global logger
+func Log(level level, message string, fields Fields) {
 	if logger == nil {
-		w, err := newLogger()
+		w, err := defaultLogger()
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			panic(err)
 		}
 
-		logger = w
+		SetLogger(w)
 	}
 
-	err := logger.Write(level, format, fields)
+	err := logger.Write(level, message, fields)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		panic(err)
 	}
 }

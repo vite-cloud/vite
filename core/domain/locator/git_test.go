@@ -1,9 +1,10 @@
 package locator
 
 import (
-	"gotest.tools/v3/assert"
 	"os"
 	"testing"
+
+	"gotest.tools/v3/assert"
 )
 
 func TestGit_Read(t *testing.T) {
@@ -32,7 +33,7 @@ func TestGit_Read2(t *testing.T) {
 	git := builder.Git()
 
 	_, err = git.Read(commit, "vite.yml")
-	assert.ErrorContains(t, err, "fatal: path 'vite.yml' does not exist")
+	assert.ErrorContains(t, err, "'vite.yml' does not exist")
 }
 
 func TestGit_String(t *testing.T) {

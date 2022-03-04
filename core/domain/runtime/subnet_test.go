@@ -1,19 +1,21 @@
 package runtime
 
 import (
+	"net"
+	"os"
+	"testing"
+
 	"github.com/c-robinson/iplib"
 	"github.com/vite-cloud/vite/core/domain/datadir"
 	"github.com/vite-cloud/vite/core/domain/log"
 	"gotest.tools/v3/assert"
-	"net"
-	"os"
-	"testing"
 )
 
 var logger *log.MemoryWriter
 
 func TestMain(m *testing.M) {
-	logger = log.UseTestLogger()
+	logger = &log.MemoryWriter{}
+	log.SetLogger(logger)
 
 	os.Exit(m.Run())
 }
