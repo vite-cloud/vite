@@ -70,6 +70,15 @@ func TestStore_Dir(t *testing.T) {
 	assert.Equal(t, path, dir+"/this")
 }
 
+func TestStore_Dir2(t *testing.T) {
+	defer resetDataDir()
+
+	SetHomeDir("/nop")
+
+	_, err := Store("this").Dir()
+	assert.ErrorIs(t, err, os.ErrPermission)
+}
+
 func TestStore_Open(t *testing.T) {
 	defer resetDataDir()
 
