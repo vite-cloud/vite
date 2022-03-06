@@ -3,9 +3,11 @@ module github.com/vite-cloud/vite
 go 1.18
 
 require (
+	github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8
 	github.com/c-robinson/iplib v1.0.3
 	github.com/docker/docker v20.10.12+incompatible
 	github.com/go-logfmt/logfmt v0.5.1
+	github.com/hinshun/vt10x v0.0.0-20180616224451-1954e6464174
 	github.com/mackerelio/go-osstat v0.2.1
 	github.com/magiconair/properties v1.8.5
 	github.com/spf13/cobra v1.3.0
@@ -22,6 +24,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/kr/pty v1.1.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2-0.20211117181255-693428a734f5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

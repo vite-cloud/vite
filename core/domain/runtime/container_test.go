@@ -14,15 +14,15 @@ import (
 const testImage = "nginx:1.21.5"
 
 func TestClient_ContainerCreate(t *testing.T) {
-	logger := &log.MemoryWriter{}
-	log.SetLogger(logger)
-
 	ctx, cli, raw := createTestEnv(t)
 
 	name := uniqueContainerName()
 
 	err := cli.ImagePull(ctx, testImage, ImagePullOptions{})
 	assert.NilError(t, err)
+
+	logger := &log.MemoryWriter{}
+	log.SetLogger(logger)
 
 	body, err := cli.ContainerCreate(ctx, testImage, ContainerCreateOptions{
 		Name: name,
@@ -58,9 +58,6 @@ func TestClient_ContainerCreate(t *testing.T) {
 }
 
 func TestClient_ContainerStart(t *testing.T) {
-	logger := &log.MemoryWriter{}
-	log.SetLogger(logger)
-
 	ctx, cli, raw := createTestEnv(t)
 
 	name := uniqueContainerName()
@@ -73,6 +70,9 @@ func TestClient_ContainerStart(t *testing.T) {
 	})
 	assert.NilError(t, err)
 
+	logger := &log.MemoryWriter{}
+	log.SetLogger(logger)
+
 	err = cli.ContainerStart(ctx, body.ID)
 	assert.NilError(t, err)
 
@@ -82,7 +82,7 @@ func TestClient_ContainerStart(t *testing.T) {
 	assert.Equal(t, ins.ID, body.ID)
 	assert.Equal(t, ins.State.Status, "running")
 
-	assert.Equal(t, logger.Len(), 2)
+	assert.Equal(t, logger.Len(), 1)
 	assert.Equal(t, logger.Last().Message, "started container")
 	assert.Equal(t, logger.Last().Level, log.DebugLevel)
 	assert.Equal(t, logger.Last().Fields["id"], body.ID)
@@ -95,9 +95,6 @@ func TestClient_ContainerStart(t *testing.T) {
 }
 
 func TestClient_ContainerStop(t *testing.T) {
-	logger := &log.MemoryWriter{}
-	log.SetLogger(logger)
-
 	ctx, cli, raw := createTestEnv(t)
 
 	name := uniqueContainerName()
@@ -113,6 +110,9 @@ func TestClient_ContainerStop(t *testing.T) {
 	err = cli.ContainerStart(ctx, body.ID)
 	assert.NilError(t, err)
 
+	logger := &log.MemoryWriter{}
+	log.SetLogger(logger)
+
 	err = cli.ContainerStop(ctx, body.ID)
 	assert.NilError(t, err)
 
@@ -122,7 +122,7 @@ func TestClient_ContainerStop(t *testing.T) {
 	assert.Equal(t, ins.ID, body.ID)
 	assert.Equal(t, ins.State.Status, "exited")
 
-	assert.Equal(t, logger.Len(), 3)
+	assert.Equal(t, logger.Len(), 1)
 	assert.Equal(t, logger.Last().Message, "stopped container")
 	assert.Equal(t, logger.Last().Level, log.DebugLevel)
 	assert.Equal(t, logger.Last().Fields["id"], body.ID)
