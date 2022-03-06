@@ -21,6 +21,9 @@ func TestClient_ContainerCreate(t *testing.T) {
 
 	name := uniqueContainerName()
 
+	err := cli.ImagePull(ctx, testImage, ImagePullOptions{})
+	assert.NilError(t, err)
+
 	body, err := cli.ContainerCreate(ctx, testImage, ContainerCreateOptions{
 		Name: name,
 		Env: []string{
@@ -62,6 +65,9 @@ func TestClient_ContainerStart(t *testing.T) {
 
 	name := uniqueContainerName()
 
+	err := cli.ImagePull(ctx, testImage, ImagePullOptions{})
+	assert.NilError(t, err)
+
 	body, err := cli.ContainerCreate(ctx, testImage, ContainerCreateOptions{
 		Name: name,
 	})
@@ -95,6 +101,9 @@ func TestClient_ContainerStop(t *testing.T) {
 	ctx, cli, raw := createTestEnv(t)
 
 	name := uniqueContainerName()
+
+	err := cli.ImagePull(ctx, testImage, ImagePullOptions{})
+	assert.NilError(t, err)
 
 	body, err := cli.ContainerCreate(ctx, testImage, ContainerCreateOptions{
 		Name: name,

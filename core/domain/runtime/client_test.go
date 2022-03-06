@@ -6,6 +6,17 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
-	_, err := NewClient()
+	clientInstance = nil
+
+	cli, err := NewClient()
 	assert.NilError(t, err)
+
+	assert.Assert(t, cli == clientInstance)
+
+	old := clientInstance
+
+	cli, err = NewClient()
+	assert.NilError(t, err)
+
+	assert.Assert(t, cli == old)
 }
