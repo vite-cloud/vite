@@ -117,5 +117,5 @@ func TestFileWriter_Write(t *testing.T) {
 	contents, err := os.ReadFile(path)
 	assert.NilError(t, err)
 
-	assert.Equal(t, "_level=debug _message=test _stack=@ _time=@ foo=bar\n", string(contents))
+	assert.Equal(t, "_stack=@ _time=@ foo=bar level=debug message=test\n", string(contents))
 }

@@ -50,7 +50,7 @@ func TestClient_ContainerCreate(t *testing.T) {
 	assert.Equal(t, logger.Last().Fields["image"], testImage)
 	assert.Equal(t, logger.Last().Fields["with_registry"], false)
 
-	created, err := ctx.Value("manifest").(*manifest.Manifest).Get(CreatedContainerManifestKey)
+	created, err := ctx.Value(manifest.ContextKey).(*manifest.Manifest).Get(CreatedContainerManifestKey)
 	assert.NilError(t, err)
 
 	assert.Equal(t, len(created), 1)
@@ -87,7 +87,7 @@ func TestClient_ContainerStart(t *testing.T) {
 	assert.Equal(t, logger.Last().Level, log.DebugLevel)
 	assert.Equal(t, logger.Last().Fields["id"], body.ID)
 
-	started, err := ctx.Value("manifest").(*manifest.Manifest).Get(StartedContainerManifestKey)
+	started, err := ctx.Value(manifest.ContextKey).(*manifest.Manifest).Get(StartedContainerManifestKey)
 	assert.NilError(t, err)
 
 	assert.Equal(t, len(started), 1)
@@ -139,7 +139,7 @@ func contains(s []string, e string) bool {
 
 func createTestEnv(t *testing.T) (context.Context, *Client, *client.Client) {
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, "manifest", &manifest.Manifest{})
+	ctx = context.WithValue(ctx, manifest.ContextKey, &manifest.Manifest{})
 
 	cli, err := NewClient()
 	assert.NilError(t, err)

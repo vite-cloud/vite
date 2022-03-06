@@ -16,7 +16,12 @@ type fileWriter struct {
 
 // Write writes the log message to the file.
 func (f *fileWriter) Write(level level, message string, fields Fields) error {
-	_, err := f.file.Write([]byte(fields.Marshal(level, message)))
+	marshalled, err := fields.Marshal(level, message)
+	if err != nil {
+		return err
+	}
+
+	_, err = f.file.Write(marshalled)
 	return err
 }
 

@@ -132,7 +132,8 @@ func TestSetDataDir(t *testing.T) {
 	// ensures that setDataDir does not update dataDir if it is already set.
 	dataDir = "/something"
 
-	setDataDir()
+	err := setDataDir()
+	assert.NilError(t, err)
 
 	assert.Equal(t, "/something", dataDir)
 }
@@ -140,8 +141,8 @@ func TestSetDataDir(t *testing.T) {
 func TestSetHomeDir2(t *testing.T) {
 	defer resetDataDir()
 
-	// ensure that there's no panic
 	SetHomeDir("/nop")
 
-	Dir()
+	_, err := Dir()
+	assert.ErrorIs(t, err, os.ErrPermission)
 }

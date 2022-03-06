@@ -30,22 +30,17 @@ func (f Fields) stack() string {
 }
 
 // Marshal returns a logfmt-compatible string representation of the fields.
-func (f Fields) Marshal(level level, message string) string {
-	if _, ok := f["_level"]; !ok {
-		f["_level"] = level.String()
-	}
-
-	if _, ok := f["_message"]; !ok {
-		f["_message"] = message
+func (f Fields) Marshal(level level, message string) ([]byte, error) {
+	if _, ok := f["_stack"]; !ok {
+		f["_stack"] = f.stack()
 	}
 
 	if _, ok := f["_time"]; !ok {
 		f["_time"] = time.Now().Format("2006-01-02 15:04:05")
 	}
 
-	if _, ok := f["_stack"]; !ok {
-		f["_stack"] = f.stack()
-	}
+	f["level"] = level.String()
+	f["message"] = message
 
 	var buf bytes.Buffer
 	enc := logfmt.NewEncoder(&buf)
@@ -60,14 +55,14 @@ func (f Fields) Marshal(level level, message string) string {
 	for _, k := range keys {
 		err := enc.EncodeKeyval(k, f[k])
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 	}
 
 	err := enc.EndRecord()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return buf.String()
+	return buf.Bytes(), nil
 }

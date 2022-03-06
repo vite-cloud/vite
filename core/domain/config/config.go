@@ -14,7 +14,6 @@ type Config struct {
 		Host string `yaml:"host"`
 	} `yaml:"control_plane"`
 }
-
 type Service struct {
 	Image string `yaml:"image"`
 

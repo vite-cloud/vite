@@ -12,6 +12,10 @@ import (
 // Store is the manifest store.
 const Store = datadir.Store("manifest")
 
+type contextKey string
+
+var ContextKey = contextKey("manifest")
+
 // Manifest is a set of tagged resources for a given deployment.
 type Manifest struct {
 	// Version is the version of the manifest's deployment.

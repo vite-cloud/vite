@@ -51,7 +51,7 @@ func (c Client) ContainerCreate(ctx context.Context, image string, opts Containe
 		"with_registry": opts.Registry != nil,
 	})
 
-	ctx.Value("manifest").(*manifest.Manifest).Add(CreatedContainerManifestKey, res.ID)
+	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(CreatedContainerManifestKey, res.ID)
 
 	return res, nil
 }
@@ -67,7 +67,7 @@ func (c Client) ContainerStart(ctx context.Context, id string) error {
 		"id": id,
 	})
 
-	ctx.Value("manifest").(*manifest.Manifest).Add(StartedContainerManifestKey, id)
+	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(StartedContainerManifestKey, id)
 
 	return nil
 }

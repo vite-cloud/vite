@@ -5,23 +5,16 @@ import (
 	"testing"
 )
 
-func TestGitHubProvider_URL(t *testing.T) {
-	provider := GitHubProvider{}
+func TestProvider_Name(t *testing.T) {
+	p := Provider("github")
 
-	assert.Equal(t, provider.URL(true, "foo/bar"), "git@github.com:foo/bar.git")
-	assert.Equal(t, provider.URL(false, "foo/bar"), "https://github.com/foo/bar.git")
+	assert.Equal(t, p.Name(), "github")
 }
 
-func TestGitLabProvider_URL(t *testing.T) {
-	provider := GitLabProvider{}
-
-	assert.Equal(t, provider.URL(true, "foo/bar"), "git@gitlab.com:foo/bar.git")
-	assert.Equal(t, provider.URL(false, "foo/bar"), "https://gitlab.com/foo/bar.git")
-}
-
-func TestBitbucketProvider_URL(t *testing.T) {
-	provider := BitbucketProvider{}
-
-	assert.Equal(t, provider.URL(true, "foo/bar"), "git@bitbucket.com:foo/bar.git")
-	assert.Equal(t, provider.URL(false, "foo/bar"), "https://bitbucket.org/foo/bar.git")
+func TestProvider_URL(t *testing.T) {
+	p := Provider("github")
+	
+	assert.Equal(t, p.URL("ssh", "foo/bar"), "git@github.com:foo/bar.git")
+	assert.Equal(t, p.URL("https", "foo/bar"), "https://github.com/foo/bar.git")
+	assert.Equal(t, p.URL("", "foo/bar"), "git://github.com/foo/bar.git")
 }

@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/Netflix/go-expect"
 	"github.com/hinshun/vt10x"
+	"github.com/kr/pty"
 	"github.com/spf13/cobra"
 	"github.com/vite-cloud/vite/core/domain/datadir"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
@@ -50,32 +51,46 @@ func (c CommandTest) Run(t *testing.T) {
 
 	datadir.SetHomeDir(dir)
 
-	console, _, err := vt10x.NewVT10XConsole()
+	console, err := newConsole()
 	assert.NilError(t, err)
 
 	defer func(console *expect.Console) {
 		err = console.Close()
-		if err != nil {
-			panic(err)
-		}
+		assert.NilError(t, err)
 	}(console)
 
 	donec := make(chan struct{})
 	go func() {
 		defer close(donec)
-
 		c.Test(&Expect{
-			t:       t,
 			console: console,
+			t:       t,
 		})
 	}()
 
 	cmd := c.NewCommand(cli.New(console.Tty(), console.Tty(), console.Tty()))
-	cmd.SetArgs([]string{})
+	cmd.SetArgs(nil)
 
 	err = cmd.Execute()
 	assert.NilError(t, err)
 
-	console.Tty().Close()
+	err = console.Tty().Close()
+	assert.NilError(t, err)
 	<-donec
+}
+
+func newConsole() (*expect.Console, error) {
+	ptm, pts, err := pty.Open()
+	if err != nil {
+		return nil, err
+	}
+
+	term := vt10x.New(vt10x.WithWriter(ptm))
+
+	c, err := expect.NewConsole(expect.WithStdin(ptm), expect.WithStdout(term), expect.WithCloser(pts, ptm))
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }

@@ -35,8 +35,8 @@ func TestLog2(t *testing.T) {
 
 	Log(DebugLevel, "hello world", Fields{
 		"foo":    "bar baz",
-		"_stack": "@",
-		"_time":  "@",
+		"_stack": "@", // simplifies testing
+		"_time":  "@", // simplifies testing
 	})
 
 	logDir, err := Store.Dir()
@@ -47,7 +47,7 @@ func TestLog2(t *testing.T) {
 	contents, err := os.ReadFile(logFile)
 	assert.NilError(t, err)
 
-	assert.Equal(t, string(contents), "_level=debug _message=\"hello world\" _stack=@ _time=@ foo=\"bar baz\"\n")
+	assert.Equal(t, string(contents), "_stack=@ _time=@ foo=\"bar baz\" level=debug message=\"hello world\"\n")
 }
 
 func TestGetLogger(t *testing.T) {
