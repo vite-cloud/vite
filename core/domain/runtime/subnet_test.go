@@ -11,16 +11,9 @@ import (
 	"gotest.tools/v3/assert"
 )
 
-var logger *log.MemoryWriter
-
-func TestMain(m *testing.M) {
-	logger = &log.MemoryWriter{}
-	log.SetLogger(logger)
-
-	os.Exit(m.Run())
-}
-
 func TestSubnetManager_IsFree(t *testing.T) {
+	log.SetLogger(&log.MemoryWriter{})
+
 	home, err := os.MkdirTemp("", "subnet-test")
 	assert.NilError(t, err)
 
@@ -54,6 +47,8 @@ func TestSubnetManager_IsFree(t *testing.T) {
 }
 
 func TestSubnetManager_Allocate(t *testing.T) {
+	log.SetLogger(&log.MemoryWriter{})
+
 	home, err := os.MkdirTemp("", "subnet-test")
 	assert.NilError(t, err)
 
@@ -81,6 +76,8 @@ func TestSubnetManager_Allocate(t *testing.T) {
 }
 
 func TestSubnetManager_Allocate2(t *testing.T) {
+	log.SetLogger(&log.MemoryWriter{})
+
 	home, err := os.MkdirTemp("", "subnet-test")
 	assert.NilError(t, err)
 
@@ -104,6 +101,8 @@ func TestSubnetManager_Allocate2(t *testing.T) {
 }
 
 func TestSubnetManager_Next(t *testing.T) {
+	log.SetLogger(&log.MemoryWriter{})
+
 	home, err := os.MkdirTemp("", "subnet-test")
 	assert.NilError(t, err)
 
@@ -130,6 +129,8 @@ func TestSubnetManager_Next(t *testing.T) {
 }
 
 func TestSubnetManager_Next2(t *testing.T) {
+	log.SetLogger(&log.MemoryWriter{})
+
 	home, err := os.MkdirTemp("", "subnet-test")
 	assert.NilError(t, err)
 
@@ -145,6 +146,9 @@ func TestSubnetManager_Next2(t *testing.T) {
 }
 
 func TestSubnetManager_Allocate3(t *testing.T) {
+	logger := &log.MemoryWriter{}
+	log.SetLogger(logger)
+
 	home, err := os.MkdirTemp("", "subnet-test")
 	assert.NilError(t, err)
 

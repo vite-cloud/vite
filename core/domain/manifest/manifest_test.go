@@ -38,11 +38,11 @@ func TestManifest_Add(t *testing.T) {
 	m.Add("foo", "bar")
 	m.Add("foo", 4)
 
-	got, ok := m.Resources.Load("hello")
+	got, ok := m.resources.Load("hello")
 	assert.Assert(t, ok)
 	assert.Equal(t, got.([]any)[0], "world")
 
-	got, ok = m.Resources.Load("foo")
+	got, ok = m.resources.Load("foo")
 	assert.Assert(t, ok)
 	assert.Equal(t, got.([]any)[0], "bar")
 	assert.Equal(t, got.([]any)[1], 4)
@@ -73,6 +73,23 @@ func TestManifest_Save(t *testing.T) {
 	assert.NilError(t, err)
 
 	assert.Equal(t, string(got), string(want))
+}
+
+func TestManifest_Get(t *testing.T) {
+	m := &Manifest{Version: "testing"}
+
+	m.Add("hello", "world")
+	m.Add("foo", "bar")
+	m.Add("foo", 4)
+
+	got, err := m.Get("hello")
+	assert.NilError(t, err)
+	assert.Equal(t, got[0], "world")
+
+	got, err = m.Get("foo")
+	assert.NilError(t, err)
+	assert.Equal(t, got[0], "bar")
+	assert.Equal(t, got[1], 4)
 }
 
 func TestList(t *testing.T) {
@@ -110,11 +127,11 @@ func TestManifest_UnmarshalJSON(t *testing.T) {
 	err = json.Unmarshal(marshaled, &unmarshaled)
 	assert.NilError(t, err)
 
-	got, ok := unmarshaled.Resources.Load("hello")
+	got, ok := unmarshaled.resources.Load("hello")
 	assert.Assert(t, ok)
 	assert.Equal(t, got.([]any)[0], "world")
 
-	got, ok = unmarshaled.Resources.Load("foo")
+	got, ok = unmarshaled.resources.Load("foo")
 	assert.Assert(t, ok)
 	assert.Equal(t, got.([]any)[0], "bar")
 	assert.Equal(t, got.([]any)[1], 4.0)
@@ -140,11 +157,11 @@ func TestGet(t *testing.T) {
 
 	assert.Equal(t, found.Version, "testing")
 
-	got, ok := found.Resources.Load("hello")
+	got, ok := found.resources.Load("hello")
 	assert.Assert(t, ok)
 	assert.Equal(t, got.([]any)[0], "world")
 
-	got, ok = found.Resources.Load("foo")
+	got, ok = found.resources.Load("foo")
 	assert.Assert(t, ok)
 	assert.Equal(t, got.([]any)[0], "bar")
 	assert.Equal(t, got.([]any)[1], 4.0)
@@ -170,11 +187,11 @@ func TestDelete(t *testing.T) {
 
 	assert.Equal(t, found.Version, "testing")
 
-	got, ok := found.Resources.Load("hello")
+	got, ok := found.resources.Load("hello")
 	assert.Assert(t, ok)
 	assert.Equal(t, got.([]any)[0], "world")
 
-	got, ok = found.Resources.Load("foo")
+	got, ok = found.resources.Load("foo")
 	assert.Assert(t, ok)
 	assert.Equal(t, got.([]any)[0], "bar")
 	assert.Equal(t, got.([]any)[1], 4.0)

@@ -17,8 +17,14 @@ type Manifest struct {
 	// Version is the version of the manifest's deployment.
 	Version string
 
-	// Resources is a map of tags associated with resources.
-	Resources sync.Map
+	// resources is a map of tags associated with resources.
+	resources sync.Map
+}
+
+// manifestJSON is the marshalable representation of a Manifest as it does not rely on sync.Map.
+type manifestJSON struct {
+	Version   string
+	Resources map[string]any
 }
 
 // Save writes the manifest to the Store.
@@ -43,19 +49,23 @@ func (m *Manifest) Save() error {
 
 // Add adds a resource to the manifest under a given tag.
 func (m *Manifest) Add(key string, value any) {
-	v, ok := m.Resources.Load(key)
+	v, ok := m.resources.Load(key)
 	if !ok {
-		m.Resources.Store(key, []any{value})
+		m.resources.Store(key, []any{value})
 		return
 	}
 
-	m.Resources.Store(key, append(v.([]any), value))
+	m.resources.Store(key, append(v.([]any), value))
 }
 
-// manifestJSON is the marshalable representation of a Manifest as it does not rely on sync.Map.
-type manifestJSON struct {
-	Version   string
-	Resources map[string]any
+// Get returns the resources associated with a given tag.
+func (m *Manifest) Get(key string) ([]any, error) {
+	v, ok := m.resources.Load(key)
+	if !ok {
+		return nil, errors.New("no resources found")
+	}
+
+	return v.([]any), nil
 }
 
 // MarshalJSON implements the json.Marshaler interface.
@@ -65,7 +75,7 @@ func (m *Manifest) MarshalJSON() ([]byte, error) {
 
 	valid := true
 
-	m.Resources.Range(func(key, value any) bool {
+	m.resources.Range(func(key, value any) bool {
 		k, ok := key.(string)
 		if !ok {
 			valid = false
@@ -99,10 +109,10 @@ func (m *Manifest) UnmarshalJSON(data []byte) error {
 	}
 
 	m.Version = manifestJSON.Version
-	m.Resources = sync.Map{}
+	m.resources = sync.Map{}
 
 	for k, v := range manifestJSON.Resources {
-		m.Resources.Store(k, v)
+		m.resources.Store(k, v)
 	}
 
 	return nil

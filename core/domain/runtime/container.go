@@ -9,12 +9,13 @@ import (
 	"github.com/vite-cloud/vite/core/domain/manifest"
 )
 
+const CreatedContainerManifestKey = "CreatedContainer"
+const StartedContainerManifestKey = "StartedContainer"
+
 // ContainerCreateOptions defines the options for creating a container
 type ContainerCreateOptions struct {
 	// Name of the container
 	Name string
-	// Image to use
-	Image string
 	// Registry to pull image from, if any
 	Registry *types.AuthConfig
 	// Env variables to set
@@ -35,7 +36,11 @@ func (c Client) ContainerCreate(ctx context.Context, image string, opts Containe
 	res, err := c.client.ContainerCreate(ctx, &container.Config{
 		Image: fullImageName(image, opts.Registry),
 		Env:   opts.Env,
-	}, nil, nil, nil, opts.Name)
+	}, &container.HostConfig{
+		RestartPolicy: container.RestartPolicy{
+			Name: "always",
+		},
+	}, nil, nil, opts.Name)
 	if err != nil {
 		return container.ContainerCreateCreatedBody{}, err
 	}
@@ -46,7 +51,7 @@ func (c Client) ContainerCreate(ctx context.Context, image string, opts Containe
 		"with_registry": opts.Registry != nil,
 	})
 
-	ctx.Value("manifest").(*manifest.Manifest).Add("created_container", res.ID)
+	ctx.Value("manifest").(*manifest.Manifest).Add(CreatedContainerManifestKey, res.ID)
 
 	return res, nil
 }
@@ -62,7 +67,7 @@ func (c Client) ContainerStart(ctx context.Context, id string) error {
 		"id": id,
 	})
 
-	ctx.Value("manifest").(*manifest.Manifest).Add("started_container", id)
+	ctx.Value("manifest").(*manifest.Manifest).Add(StartedContainerManifestKey, id)
 
 	return nil
 }
