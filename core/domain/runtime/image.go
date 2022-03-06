@@ -18,18 +18,28 @@ type ImagePullOptions struct {
 	Listener func(status string)
 }
 
+func marshalAuth(auth *types.AuthConfig) (string, error) {
+	if auth == nil {
+		return "", nil
+	}
+	authJSON, err := json.Marshal(auth)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.URLEncoding.EncodeToString(authJSON), nil
+}
+
 // ImagePull pulls an image from a remote registry.
 func (c Client) ImagePull(ctx context.Context, image string, options ImagePullOptions) error {
 	opts := types.ImagePullOptions{}
 
-	if options.Auth != nil {
-		auth, err := json.Marshal(options.Auth)
-		if err != nil {
-			return err
-		}
-
-		opts.RegistryAuth = base64.StdEncoding.EncodeToString(auth)
+	auth, err := marshalAuth(options.Auth)
+	if err != nil {
+		return err
 	}
+
+	opts.RegistryAuth = auth
 
 	events, err := c.client.ImagePull(ctx, image, opts)
 	if err != nil {
