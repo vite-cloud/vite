@@ -14,10 +14,7 @@ import (
 func TestSubnetManager_IsFree(t *testing.T) {
 	log.SetLogger(&log.MemoryWriter{})
 
-	home, err := os.MkdirTemp("", "subnet-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
@@ -44,10 +41,7 @@ func TestSubnetManager_IsFree(t *testing.T) {
 func TestSubnetManager_Allocate(t *testing.T) {
 	log.SetLogger(&log.MemoryWriter{})
 
-	home, err := os.MkdirTemp("", "subnet-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
@@ -68,10 +62,7 @@ func TestSubnetManager_Allocate(t *testing.T) {
 func TestSubnetManager_Allocate2(t *testing.T) {
 	log.SetLogger(&log.MemoryWriter{})
 
-	home, err := os.MkdirTemp("", "subnet-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
@@ -88,10 +79,7 @@ func TestSubnetManager_Allocate2(t *testing.T) {
 func TestSubnetManager_Next(t *testing.T) {
 	log.SetLogger(&log.MemoryWriter{})
 
-	home, err := os.MkdirTemp("", "subnet-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
@@ -116,10 +104,7 @@ func TestSubnetManager_Next(t *testing.T) {
 func TestSubnetManager_Next2(t *testing.T) {
 	log.SetLogger(&log.MemoryWriter{})
 
-	home, err := os.MkdirTemp("", "subnet-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
@@ -134,10 +119,7 @@ func TestSubnetManager_Allocate3(t *testing.T) {
 	logger := &log.MemoryWriter{}
 	log.SetLogger(logger)
 
-	home, err := os.MkdirTemp("", "subnet-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)

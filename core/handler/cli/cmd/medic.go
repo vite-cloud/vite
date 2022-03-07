@@ -10,12 +10,12 @@ import (
 )
 
 func runMedicCommand(cmd *cobra.Command, args []string) error {
-	locator, err := locator.LoadFromStore()
+	l, err := locator.LoadFromStore()
 	if err != nil {
 		return err
 	}
 
-	conf, err := config.Get(locator)
+	conf, err := config.Get(l)
 	if err != nil {
 		return err
 	}

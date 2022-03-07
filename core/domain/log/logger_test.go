@@ -26,10 +26,7 @@ func TestLog(t *testing.T) {
 }
 
 func TestLog2(t *testing.T) {
-	dir, err := os.MkdirTemp("", "logger-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(dir)
+	datadir.UseTestHome(t)
 
 	SetLogger(nil)
 
@@ -67,10 +64,7 @@ func TestLog3(t *testing.T) {
 }
 
 func TestLog4(t *testing.T) {
-	home, err := os.MkdirTemp("", "vite-datadir")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	dir, err := Store.Dir()
 	assert.NilError(t, err)

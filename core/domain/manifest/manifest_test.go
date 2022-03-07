@@ -50,10 +50,7 @@ func TestManifest_Add(t *testing.T) {
 }
 
 func TestManifest_Save(t *testing.T) {
-	home, err := os.MkdirTemp("", "manifest-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	m := &Manifest{Version: "testing"}
 
@@ -61,7 +58,7 @@ func TestManifest_Save(t *testing.T) {
 	m.Add("foo", "bar")
 	m.Add("foo", 4)
 
-	err = m.Save()
+	err := m.Save()
 	assert.NilError(t, err)
 
 	dir, err := Store.Dir()
@@ -94,10 +91,7 @@ func TestManifest_Get(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	home, err := os.MkdirTemp("", "manifest-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	m := &Manifest{Version: "testing"}
 
@@ -105,7 +99,7 @@ func TestList(t *testing.T) {
 	m.Add("foo", "bar")
 	m.Add("foo", 4)
 
-	err = m.Save()
+	err := m.Save()
 	assert.NilError(t, err)
 
 	got, err := List()
@@ -139,10 +133,7 @@ func TestManifest_UnmarshalJSON(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	home, err := os.MkdirTemp("", "manifest-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	m := &Manifest{Version: "testing"}
 
@@ -150,7 +141,7 @@ func TestGet(t *testing.T) {
 	m.Add("foo", "bar")
 	m.Add("foo", 4)
 
-	err = m.Save()
+	err := m.Save()
 	assert.NilError(t, err)
 
 	found, err := Get("testing")
@@ -169,10 +160,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	home, err := os.MkdirTemp("", "manifest-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	m := &Manifest{Version: "testing"}
 
@@ -180,7 +168,7 @@ func TestDelete(t *testing.T) {
 	m.Add("foo", "bar")
 	m.Add("foo", 4)
 
-	err = m.Save()
+	err := m.Save()
 	assert.NilError(t, err)
 
 	found, err := Get("testing")
@@ -212,22 +200,16 @@ func TestDelete2(t *testing.T) {
 }
 
 func TestDelete3(t *testing.T) {
-	home, err := os.MkdirTemp("", "manifest-test")
-	assert.NilError(t, err)
+	datadir.UseTestHome(t)
 
-	datadir.SetHomeDir(home)
-
-	err = Delete("does_not_exist")
+	err := Delete("does_not_exist")
 	assert.NilError(t, err)
 }
 
 func TestDelete4(t *testing.T) {
-	home, err := os.MkdirTemp("", "manifest-test")
-	assert.NilError(t, err)
+	datadir.UseTestHome(t)
 
-	datadir.SetHomeDir(home)
-
-	err = Delete("\000x")
+	err := Delete("\000x")
 	assert.ErrorContains(t, err, "invalid argument")
 }
 
@@ -239,10 +221,7 @@ func TestList2(t *testing.T) {
 }
 
 func TestList3(t *testing.T) {
-	home, err := os.MkdirTemp("", "manifest-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	dir, err := Store.Dir()
 	assert.NilError(t, err)
@@ -255,11 +234,7 @@ func TestList3(t *testing.T) {
 }
 
 func TestList4(t *testing.T) {
-	// ensure that an invalid json file returns an error
-	home, err := os.MkdirTemp("", "manifest-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	dir, err := Store.Dir()
 	assert.NilError(t, err)
@@ -287,10 +262,7 @@ func TestManifest_Get2(t *testing.T) {
 }
 
 func TestManifest_Save2(t *testing.T) {
-	home, err := os.MkdirTemp("", "manifest-test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	m := &Manifest{Version: "testing"}
 

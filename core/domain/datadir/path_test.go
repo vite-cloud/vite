@@ -50,10 +50,7 @@ func TestSetHomeDir(t *testing.T) {
 func TestStore_Dir(t *testing.T) {
 	defer resetDataDir()
 
-	home, err := os.MkdirTemp("", "vite-datadir")
-	assert.NilError(t, err)
-
-	SetHomeDir(home)
+	UseTestHome(t)
 
 	dir, err := Dir()
 	assert.NilError(t, err)
@@ -82,10 +79,7 @@ func TestStore_Dir2(t *testing.T) {
 func TestStore_Open(t *testing.T) {
 	defer resetDataDir()
 
-	home, err := os.MkdirTemp("", "vite-datadir")
-	assert.NilError(t, err)
-
-	SetHomeDir(home)
+	UseTestHome(t)
 
 	dir, err := Dir()
 	assert.NilError(t, err)
@@ -105,7 +99,7 @@ func TestStore_Open(t *testing.T) {
 func TestStore_Open2(t *testing.T) {
 	defer resetDataDir()
 
-	// can not use SetHomeDir as it calls setDataDir
+	// can not use setHomeDir as it calls setDataDir
 	// which panics if it can not create the directory
 	homeDir = "/nop"
 	dataDir = "/nop/.vite"

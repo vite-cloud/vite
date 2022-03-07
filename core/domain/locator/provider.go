@@ -18,9 +18,3 @@ func (p *Provider) URL(protocol, repository string) string {
 		return fmt.Sprintf("git://%s.com/%s.git", p.Name(), repository)
 	}
 }
-
-var GitHubProvider = Provider("github")
-
-var GitLabProvider = Provider("gitlab")
-
-var BitbucketProvider = Provider("bitbucket")

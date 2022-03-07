@@ -5,10 +5,8 @@ import (
 	"github.com/hinshun/vt10x"
 	"github.com/kr/pty"
 	"github.com/spf13/cobra"
-	"github.com/vite-cloud/vite/core/domain/datadir"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 	"gotest.tools/v3/assert"
-	"os"
 	"testing"
 )
 
@@ -17,7 +15,7 @@ type Expect struct {
 	t       *testing.T
 }
 
-func (e *Expect) String(s string) *Expect {
+func (e *Expect) Expect(s string) *Expect {
 	_, err := e.console.ExpectString(s)
 	e.check(err)
 
@@ -40,17 +38,28 @@ func (e *Expect) EOF() *Expect {
 	return e
 }
 
+func (e *Expect) Enter() *Expect {
+	_, err := e.console.SendLine("")
+	e.check(err)
+
+	return e
+}
+
+func (e *Expect) Write(s string) *Expect {
+	_, err := e.console.SendLine(s)
+	e.check(err)
+
+	return e
+}
+
 type CommandTest struct {
-	Test       func(console *Expect)
-	NewCommand func(cli *cli.CLI) *cobra.Command
+	Test         func(console *Expect)
+	NewCommand   func(cli *cli.CLI) *cobra.Command
+	ExpectsError func(t *testing.T, err error)
+	Prerun       func(t *testing.T)
 }
 
 func (c CommandTest) Run(t *testing.T) {
-	dir, err := os.MkdirTemp("", "vite-home")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(dir)
-
 	console, err := newConsole()
 	assert.NilError(t, err)
 
@@ -60,23 +69,37 @@ func (c CommandTest) Run(t *testing.T) {
 	}(console)
 
 	donec := make(chan struct{})
-	go func() {
-		defer close(donec)
-		c.Test(&Expect{
-			console: console,
-			t:       t,
-		})
-	}()
+	if c.Test != nil {
+		go func() {
+			defer close(donec)
+
+			if c.Prerun != nil {
+				c.Prerun(t)
+			}
+
+			c.Test(&Expect{
+				console: console,
+				t:       t,
+			})
+		}()
+	}
 
 	cmd := c.NewCommand(cli.New(console.Tty(), console.Tty(), console.Tty()))
 	cmd.SetArgs(nil)
 
 	err = cmd.Execute()
-	assert.NilError(t, err)
+	if c.ExpectsError == nil {
+		assert.NilError(t, err)
+	} else {
+		c.ExpectsError(t, err)
+	}
 
 	err = console.Tty().Close()
 	assert.NilError(t, err)
-	<-donec
+
+	if c.Test != nil {
+		<-donec
+	}
 }
 
 func newConsole() (*expect.Console, error) {

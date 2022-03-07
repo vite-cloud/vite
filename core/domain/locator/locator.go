@@ -19,12 +19,12 @@ const configFile = "config.json"
 
 // Locator contains the configuration for the locator.
 type Locator struct {
-	Provider   Provider `json:"provider"`
-	Protocol   string   `json:"protocol"`
-	Repository string   `json:"repository"`
-	Branch     string   `json:"branch"`
-	Commit     string   `json:"commit"`
-	Path       string   `json:"path"`
+	Provider   Provider `json:"provider,omitempty"`
+	Protocol   string   `json:"protocol,omitempty"`
+	Repository string   `json:"repository,omitempty"`
+	Branch     string   `json:"branch,omitempty"`
+	Commit     string   `json:"commit,omitempty"`
+	Path       string   `json:"path,omitempty"`
 }
 
 // Read a file from the repository.

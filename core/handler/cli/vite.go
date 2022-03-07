@@ -13,6 +13,7 @@ func New() *cli.CLI {
 	c.Add(
 		cmd.NewVersionCommand(c),
 		cmd.NewMedicCommand(c),
+		cmd.NewSetupCommand(c),
 	)
 
 	return c

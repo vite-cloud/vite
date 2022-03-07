@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"testing"
 
 	"github.com/docker/docker/pkg/homedir"
 )
@@ -66,6 +67,17 @@ func Dir() (string, error) {
 	}
 
 	return dataDir, nil
+}
+
+func UseTestHome(t *testing.T) string {
+	home, err := os.MkdirTemp("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	SetHomeDir(home)
+
+	return home
 }
 
 // SetHomeDir sets the home directory for the current user

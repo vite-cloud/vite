@@ -1,7 +1,6 @@
 package locator
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -13,13 +12,10 @@ func TestLocator_Read(t *testing.T) {
 	locator := Locator{
 		Branch:     "main",
 		Repository: "foo/bar",
-		Provider:   GitHubProvider,
+		Provider:   Provider("github"),
 	}
 
-	home, err := os.MkdirTemp("", "locator_test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	dir, err := configStore.Dir()
 	assert.NilError(t, err)
@@ -38,20 +34,17 @@ func TestLocator_Read(t *testing.T) {
 }
 
 func TestLoadFromStore(t *testing.T) {
-	home, err := os.MkdirTemp("", "locator_test")
-	assert.NilError(t, err)
-
-	datadir.SetHomeDir(home)
+	datadir.UseTestHome(t)
 
 	locator := Locator{
 		Branch:     "main",
 		Repository: "foo/bar",
-		Provider:   GitHubProvider,
+		Provider:   Provider("github"),
 		Commit:     "ffffffffffffffffffffffffffffffffffffffff",
 		Path:       "/sub/path",
 		Protocol:   "https",
 	}
-	err = locator.Save()
+	err := locator.Save()
 	assert.NilError(t, err)
 
 	l, err := LoadFromStore()

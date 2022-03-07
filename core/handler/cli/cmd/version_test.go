@@ -9,7 +9,7 @@ func TestNewVersionCommand(t *testing.T) {
 		NewCommand: NewVersionCommand,
 		Test: func(console *Expect) {
 			console.
-				String("Vite version dev, build unknown").
+				Expect("Vite version dev, build unknown").
 				EOF()
 		},
 	}.Run(t)
