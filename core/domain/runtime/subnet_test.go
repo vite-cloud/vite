@@ -22,12 +22,12 @@ func TestSubnetManager_IsFree(t *testing.T) {
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
 
-	subnet := &iplib.Net4{
+	subnet := iplib.Net4{
 		IPNet: net.IPNet{
 			IP:   net.IP{192, 168, 0, 0},
 			Mask: net.IPMask{255, 255, 0, 0},
 		},
-	}
+	}.String()
 
 	ok, err := manager.IsFree(subnet)
 	assert.NilError(t, err)
@@ -57,12 +57,12 @@ func TestSubnetManager_Allocate(t *testing.T) {
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
 
-	subnet := &iplib.Net4{
+	subnet := iplib.Net4{
 		IPNet: net.IPNet{
 			IP:   net.IP{192, 168, 0, 0},
 			Mask: net.IPMask{255, 255, 0, 0},
 		},
-	}
+	}.String()
 
 	err = manager.Allocate(subnet)
 	assert.NilError(t, err)
@@ -72,7 +72,7 @@ func TestSubnetManager_Allocate(t *testing.T) {
 	contents, err := os.ReadFile(dir + "/" + SubnetDataFile)
 	assert.NilError(t, err)
 	assert.Assert(t, len(contents) > 0)
-	assert.Equal(t, string(contents), subnet.String()+"\n")
+	assert.Equal(t, string(contents), subnet+"\n")
 }
 
 func TestSubnetManager_Allocate2(t *testing.T) {
@@ -86,12 +86,13 @@ func TestSubnetManager_Allocate2(t *testing.T) {
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
 
-	subnet := &iplib.Net4{
+	// todo: write the string directly
+	subnet := iplib.Net4{
 		IPNet: net.IPNet{
 			IP:   net.IP{192, 168, 0, 0},
 			Mask: net.IPMask{255, 255, 0, 0},
 		},
-	}
+	}.String()
 
 	err = manager.Allocate(subnet)
 	assert.NilError(t, err)
@@ -157,13 +158,13 @@ func TestSubnetManager_Allocate3(t *testing.T) {
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
 
-	subnet := iplib.NewNet4(net.IPv4(192, 168, 0, 0), 24)
-	err = manager.Allocate(&subnet)
+	subnet := iplib.NewNet4(net.IPv4(192, 168, 0, 0), 24).String()
+	err = manager.Allocate(subnet)
 	assert.NilError(t, err)
 
 	assert.Assert(t, logger.Len() > 0)
 	assert.Assert(t, logger.Last().Level == log.DebugLevel)
 	assert.Assert(t, logger.Last().Message == "subnet allocated")
 	assert.Assert(t, len(logger.Last().Fields) == 1)
-	assert.Assert(t, logger.Last().Fields["subnet"] == subnet.String())
+	assert.Assert(t, logger.Last().Fields["subnet"] == subnet)
 }

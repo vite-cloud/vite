@@ -4,14 +4,15 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/c-robinson/iplib"
-	"github.com/vite-cloud/vite/core/domain/datadir"
-	"github.com/vite-cloud/vite/core/domain/log"
 	"io"
 	"net"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/c-robinson/iplib"
+	"github.com/vite-cloud/vite/core/domain/datadir"
+	"github.com/vite-cloud/vite/core/domain/log"
 )
 
 // subnetManager handles all subnet related operations
@@ -70,7 +71,7 @@ func (sm *subnetManager) WithBlocks(blocks []iplib.Net4) *subnetManager {
 
 // Next returns the next available subnet from any of the blocks.
 func (sm *subnetManager) Next() (*iplib.Net4, error) {
-	next := make(chan *iplib.Net4)
+	next := make(chan iplib.Net4)
 	failed := 0
 
 	for _, network := range sm.blocks {
@@ -79,10 +80,10 @@ func (sm *subnetManager) Next() (*iplib.Net4, error) {
 			subnets, _ := network.Subnet(24)
 
 			for _, subnet := range subnets {
-				ok, _ := sm.IsFree(&subnet)
+				ok, _ := sm.IsFree(subnet.String())
 
 				if ok {
-					next <- &subnet
+					next <- subnet
 					return
 				}
 			}
@@ -94,10 +95,10 @@ func (sm *subnetManager) Next() (*iplib.Net4, error) {
 	for {
 		select {
 		case subnet := <-next:
-			if err := sm.Allocate(subnet); err != nil {
+			if err := sm.Allocate(subnet.String()); err != nil {
 				return nil, err
 			}
-			return subnet, nil
+			return &subnet, nil
 		case <-time.After(time.Millisecond * 50):
 			if failed == len(sm.blocks) {
 				return nil, ErrNoAvailableSubnet
@@ -107,7 +108,7 @@ func (sm *subnetManager) Next() (*iplib.Net4, error) {
 }
 
 // Allocate allocates a subnet.
-func (sm *subnetManager) Allocate(subnet *iplib.Net4) error {
+func (sm *subnetManager) Allocate(subnet string) error {
 	ok, err := sm.IsFree(subnet)
 	if err != nil {
 		return err
@@ -118,7 +119,7 @@ func (sm *subnetManager) Allocate(subnet *iplib.Net4) error {
 	}
 
 	sm.mu.Lock()
-	_, err = sm.used.WriteString(fmt.Sprintf("%s\n", subnet.String()))
+	_, err = sm.used.WriteString(fmt.Sprintf("%s\n", subnet))
 	sm.mu.Unlock()
 
 	if err != nil {
@@ -126,14 +127,14 @@ func (sm *subnetManager) Allocate(subnet *iplib.Net4) error {
 	}
 
 	log.Log(log.DebugLevel, "subnet allocated", log.Fields{
-		"subnet": subnet.String(),
+		"subnet": subnet,
 	})
 
 	return nil
 }
 
 // IsFree checks if a subnet is free for allocation.
-func (sm *subnetManager) IsFree(subnet *iplib.Net4) (bool, error) {
+func (sm *subnetManager) IsFree(subnet string) (bool, error) {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 
@@ -158,7 +159,7 @@ func (sm *subnetManager) IsFree(subnet *iplib.Net4) (bool, error) {
 
 	for scanner.Scan() {
 		cmp := scanner.Text()
-		if cmp == subnet.String() {
+		if cmp == subnet {
 			return false, nil
 		}
 	}
