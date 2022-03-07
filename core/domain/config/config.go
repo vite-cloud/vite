@@ -1,5 +1,10 @@
 package config
 
+import (
+	"github.com/vite-cloud/vite/core/domain/locator"
+	"gopkg.in/yaml.v2"
+)
+
 // Config holds vite's configuration.
 type Config struct {
 	Services map[string]*Service `yaml:"services"`
@@ -27,4 +32,19 @@ type Service struct {
 		Prestop   []string `yaml:"prestop"`
 		Poststop  []string `yaml:"poststop"`
 	} `yaml:"hooks"`
+}
+
+func Get(l *locator.Locator) (*Config, error) {
+	contents, err := l.Read("vite.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	var config Config
+	err = yaml.Unmarshal(contents, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &config, nil
 }

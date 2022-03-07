@@ -1,9 +1,10 @@
 package cli
 
 import (
+	"os"
+
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 	"github.com/vite-cloud/vite/core/handler/cli/cmd"
-	"os"
 )
 
 func New() *cli.CLI {
@@ -11,6 +12,7 @@ func New() *cli.CLI {
 
 	c.Add(
 		cmd.NewVersionCommand(c),
+		cmd.NewMedicCommand(c),
 	)
 
 	return c

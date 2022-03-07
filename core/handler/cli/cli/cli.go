@@ -2,9 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/spf13/cobra"
 	"github.com/vite-cloud/vite/core/static"
-	"io"
 )
 
 // Stdout provides a minimal interface for writing to stdout.
@@ -82,8 +83,8 @@ func (c *CLI) Run(args []string) int {
 	return 0
 }
 
-func (c *CLI) Add(command *cobra.Command) *CLI {
-	c.commands = append(c.commands, command)
+func (c *CLI) Add(commands ...*cobra.Command) *CLI {
+	c.commands = append(c.commands, commands...)
 
 	return c
 }

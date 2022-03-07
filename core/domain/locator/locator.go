@@ -2,10 +2,14 @@ package locator
 
 import (
 	"encoding/json"
-	"github.com/vite-cloud/vite/core/domain/datadir"
+	"errors"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/vite-cloud/vite/core/domain/datadir"
 )
 
 // configStore is the storage used by locator to store cloned configs.
@@ -77,12 +81,13 @@ func LoadFromStore() (*Locator, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer f.Close()
 
 	var locator Locator
 	err = json.NewDecoder(f).Decode(&locator)
-	if err != nil {
+	if errors.Is(err, io.EOF) {
+		return nil, fmt.Errorf("config locator hasn't been configured yet, run `vite setup` first")
+	} else if err != nil {
 		return nil, err
 	}
 

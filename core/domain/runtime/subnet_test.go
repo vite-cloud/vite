@@ -22,12 +22,7 @@ func TestSubnetManager_IsFree(t *testing.T) {
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
 
-	subnet := iplib.Net4{
-		IPNet: net.IPNet{
-			IP:   net.IP{192, 168, 0, 0},
-			Mask: net.IPMask{255, 255, 0, 0},
-		},
-	}.String()
+	subnet := "192.168.0.0/16"
 
 	ok, err := manager.IsFree(subnet)
 	assert.NilError(t, err)
@@ -57,12 +52,7 @@ func TestSubnetManager_Allocate(t *testing.T) {
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
 
-	subnet := iplib.Net4{
-		IPNet: net.IPNet{
-			IP:   net.IP{192, 168, 0, 0},
-			Mask: net.IPMask{255, 255, 0, 0},
-		},
-	}.String()
+	subnet := "192.168.0.0/16"
 
 	err = manager.Allocate(subnet)
 	assert.NilError(t, err)
@@ -86,13 +76,7 @@ func TestSubnetManager_Allocate2(t *testing.T) {
 	manager, err := NewSubnetManager()
 	assert.NilError(t, err)
 
-	// todo: write the string directly
-	subnet := iplib.Net4{
-		IPNet: net.IPNet{
-			IP:   net.IP{192, 168, 0, 0},
-			Mask: net.IPMask{255, 255, 0, 0},
-		},
-	}.String()
+	subnet := "192.168.0.0/16"
 
 	err = manager.Allocate(subnet)
 	assert.NilError(t, err)
