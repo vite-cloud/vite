@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/vite-cloud/vite/core/domain/datadir"
 	"os"
 	"sync"
+
+	"github.com/vite-cloud/vite/core/domain/datadir"
 )
 
 // Store is the manifest store.
@@ -66,7 +67,7 @@ func (m *Manifest) Add(key string, value any) {
 func (m *Manifest) Get(key string) ([]any, error) {
 	v, ok := m.resources.Load(key)
 	if !ok {
-		return nil, errors.New("no resources found")
+		return nil, errors.New("no resources found matching given key")
 	}
 
 	return v.([]any), nil
@@ -77,22 +78,12 @@ func (m *Manifest) Get(key string) ([]any, error) {
 func (m *Manifest) MarshalJSON() ([]byte, error) {
 	v := make(map[string]any)
 
-	valid := true
-
 	m.resources.Range(func(key, value any) bool {
-		k, ok := key.(string)
-		if !ok {
-			valid = false
-			return false
-		}
-
-		v[k] = value
+		// Add only accepts strings as key, therefore, it is
+		// safe to assume that the key is a string.
+		v[key.(string)] = value
 		return true
 	})
-
-	if !valid {
-		return nil, fmt.Errorf("manifest.MarshalJSON: invalid manifest key (must be string)")
-	}
 
 	return json.Marshal(manifestJSON{
 		Version:   m.Version,

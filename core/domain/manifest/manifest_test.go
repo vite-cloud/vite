@@ -2,10 +2,11 @@ package manifest
 
 import (
 	"encoding/json"
-	"github.com/vite-cloud/vite/core/domain/datadir"
-	"gotest.tools/v3/assert"
 	"os"
 	"testing"
+
+	"github.com/vite-cloud/vite/core/domain/datadir"
+	"gotest.tools/v3/assert"
 )
 
 func TestManifest_MarshalJSON(t *testing.T) {
@@ -201,4 +202,104 @@ func TestDelete(t *testing.T) {
 
 	_, err = Get("testing")
 	assert.ErrorIs(t, err, os.ErrNotExist)
+}
+
+func TestDelete2(t *testing.T) {
+	datadir.SetHomeDir("/nop")
+
+	err := Delete("testing")
+	assert.ErrorIs(t, err, os.ErrPermission)
+}
+
+func TestDelete3(t *testing.T) {
+	home, err := os.MkdirTemp("", "manifest-test")
+	assert.NilError(t, err)
+
+	datadir.SetHomeDir(home)
+
+	err = Delete("does_not_exist")
+	assert.NilError(t, err)
+}
+
+func TestDelete4(t *testing.T) {
+	home, err := os.MkdirTemp("", "manifest-test")
+	assert.NilError(t, err)
+
+	datadir.SetHomeDir(home)
+
+	err = Delete("\000x")
+	assert.ErrorContains(t, err, "invalid argument")
+}
+
+func TestList2(t *testing.T) {
+	datadir.SetHomeDir("/nop")
+
+	_, err := List()
+	assert.ErrorIs(t, err, os.ErrPermission)
+}
+
+func TestList3(t *testing.T) {
+	home, err := os.MkdirTemp("", "manifest-test")
+	assert.NilError(t, err)
+
+	datadir.SetHomeDir(home)
+
+	dir, err := Store.Dir()
+	assert.NilError(t, err)
+
+	err = os.Mkdir(dir+"/whatever", 0644)
+	assert.NilError(t, err)
+
+	_, err = List()
+	assert.ErrorContains(t, err, "manifest store is corrupted: whatever is a directory")
+}
+
+func TestList4(t *testing.T) {
+	// ensure that an invalid json file returns an error
+	home, err := os.MkdirTemp("", "manifest-test")
+	assert.NilError(t, err)
+
+	datadir.SetHomeDir(home)
+
+	dir, err := Store.Dir()
+	assert.NilError(t, err)
+
+	err = os.WriteFile(dir+"/whatever.json", []byte("not JSON"), 0644)
+	assert.NilError(t, err)
+
+	_, err = List()
+	assert.ErrorContains(t, err, "invalid character")
+}
+
+func TestManifest_UnmarshalJSON2(t *testing.T) {
+	m := &Manifest{Version: "testing"}
+
+	err := m.UnmarshalJSON([]byte("not JSON"))
+	assert.ErrorContains(t, err, "invalid character")
+}
+
+func TestManifest_Get2(t *testing.T) {
+	m := &Manifest{Version: "testing"}
+
+	_, err := m.Get("does not exist")
+	assert.ErrorContains(t, err, "no resources found matching given key")
+
+}
+
+func TestManifest_Save2(t *testing.T) {
+	home, err := os.MkdirTemp("", "manifest-test")
+	assert.NilError(t, err)
+
+	datadir.SetHomeDir(home)
+
+	m := &Manifest{Version: "testing"}
+
+	dir, err := Store.Dir()
+	assert.NilError(t, err)
+
+	err = os.Mkdir(dir+"/testing.json", 0644)
+	assert.NilError(t, err)
+
+	err = m.Save()
+	assert.ErrorContains(t, err, "is a directory")
 }
