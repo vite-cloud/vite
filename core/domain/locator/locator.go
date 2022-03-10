@@ -12,10 +12,12 @@ import (
 	"github.com/vite-cloud/vite/core/domain/datadir"
 )
 
-// configStore is the storage used by locator to store cloned configs.
-const configStore = datadir.Store("locator")
-
-const configFile = "config.json"
+const (
+	// ConfigStore is the storage used by locator to store cloned configs.
+	ConfigStore = datadir.Store("locator")
+	// ConfigFile is the name of the config file for the locator.
+	ConfigFile = "config.json"
+)
 
 // Locator contains the configuration for the locator.
 type Locator struct {
@@ -51,7 +53,7 @@ func (l *Locator) Read(file string) ([]byte, error) {
 
 // git returns a Git object for the locator.
 func (l *Locator) git() (Git, error) {
-	dir, err := configStore.Dir()
+	dir, err := ConfigStore.Dir()
 	if err != nil {
 		return "", err
 	}
@@ -62,7 +64,7 @@ func (l *Locator) git() (Git, error) {
 }
 
 func (l *Locator) Save() error {
-	dir, err := configStore.Dir()
+	dir, err := ConfigStore.Dir()
 	if err != nil {
 		return err
 	}
@@ -72,12 +74,12 @@ func (l *Locator) Save() error {
 		return err
 	}
 
-	return os.WriteFile(filepath.Join(dir, configFile), contents, 0600)
+	return os.WriteFile(filepath.Join(dir, ConfigFile), contents, 0600)
 }
 
 // LoadFromStore loads a Locator from a config.json in store or fails if it does not exist.
 func LoadFromStore() (*Locator, error) {
-	f, err := configStore.Open(configFile, os.O_CREATE|os.O_RDONLY, 0600)
+	f, err := ConfigStore.Open(ConfigFile, os.O_CREATE|os.O_RDONLY, 0600)
 	if err != nil {
 		return nil, err
 	}

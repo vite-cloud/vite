@@ -3,13 +3,28 @@ package cmd
 import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/spf13/cobra"
 	"github.com/vite-cloud/vite/core/domain/locator"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
-	"regexp"
 )
 
+type wr struct {
+	orig terminal.FileWriter
+}
+
+func (w *wr) Write(p []byte) (n int, err error) {
+	fmt.Println(string(p))
+
+	return w.orig.Write(p)
+}
+
+func (w *wr) Fd() uintptr {
+	return w.orig.Fd()
+}
+
 func runSetupCommand(cli *cli.CLI) error {
+	fmt.Fprintln(cli.Out(), "Welcome to Vite!")
 	var qs = []*survey.Question{
 		{
 			Name: "provider",
@@ -33,29 +48,30 @@ func runSetupCommand(cli *cli.CLI) error {
 			Prompt: &survey.Input{
 				Message: "Enter your repository:",
 			},
-			Validate: func(ans interface{}) error {
-				re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+")
-				if !re.MatchString(ans.(string)) {
-					return fmt.Errorf("repository must be in format: username/repository")
-				}
-				return nil
-			},
+			//Validate: func(ans interface{}) error {
+			//	fmt.Println("INVALID")
+			//	re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+")
+			//	if !re.MatchString(ans.(string)) {
+			//		return fmt.Errorf("repository must be in format: username/repository")
+			//	}
+			//	return nil
+			//},
 		},
-		{
-			Name: "branch",
-			Prompt: &survey.Input{
-				Message: "Enter your branch:",
-				Default: "main",
-			},
-			Validate: survey.Required,
-		},
-		{
-			Name: "path",
-			Prompt: &survey.Input{
-				Message: "Enter a sub-path (optional):",
-				Default: "",
-			},
-		},
+		//	{
+		//		Name: "branch",
+		//		Prompt: &survey.Input{
+		//			Message: "Enter your branch:",
+		//			Default: "main",
+		//		},
+		//		Validate: survey.Required,
+		//	},
+		//	{
+		//		Name: "path",
+		//		Prompt: &survey.Input{
+		//			Message: "Enter a sub-path (optional):",
+		//			Default: "",
+		//		},
+		//	},
 	}
 
 	answers := struct {
@@ -66,7 +82,7 @@ func runSetupCommand(cli *cli.CLI) error {
 		Path       string
 	}{}
 
-	err := survey.Ask(qs, &answers, survey.WithStdio(cli.In(), cli.Out(), cli.Err()))
+	err := survey.Ask(qs, &answers, survey.WithStdio(cli.In(), &wr{cli.Out()}, cli.Err()))
 	if err != nil {
 		return err
 	}
@@ -84,8 +100,9 @@ func runSetupCommand(cli *cli.CLI) error {
 		return err
 	}
 
-	fmt.Fprintln(cli.Out(), "\nSetup successfully. You may now run `vite use` to select a commit to use.")
-
+	//fmt.Fprintln(cli.Out(), "\nSetup successfully. You may now run `vite use` to select a commit to use.")
+	//
+	//return nil
 	return nil
 }
 

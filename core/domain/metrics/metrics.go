@@ -10,6 +10,9 @@ import (
 	"time"
 )
 
+// Gatherer is the interface to collect metrics, which can be changed to mock in tests.
+var Gatherer gatherer = &SystemGatherer{}
+
 // Metrics holds the metrics about docker and the system.
 type Metrics struct {
 	SystemMetrics     *SystemMetrics
@@ -18,12 +21,11 @@ type Metrics struct {
 
 // SystemMetrics holds the metrics about the system.
 type SystemMetrics struct {
-	// Uptime is the system uptime in seconds.
-	Uptime float64
+	Uptime time.Duration
 
-	MemoryTotal uint64
-	MemoryUsed  uint64
-	MemoryFree  uint64
+	MemoryTotal ByteSize
+	MemoryUsed  ByteSize
+	MemoryFree  ByteSize
 
 	CPUCount int
 
@@ -32,8 +34,14 @@ type SystemMetrics struct {
 	CPUIdle   float64
 }
 
+type gatherer interface {
+	Gather() (*Metrics, error)
+}
+
+type SystemGatherer struct{}
+
 // Gather gathers metrics from docker and the system.
-func Gather() (*Metrics, error) {
+func (s *SystemGatherer) Gather() (*Metrics, error) {
 	metrics := &Metrics{
 		SystemMetrics: &SystemMetrics{},
 	}
@@ -43,16 +51,16 @@ func Gather() (*Metrics, error) {
 		return nil, err
 	}
 
-	metrics.SystemMetrics.MemoryTotal = memory.Total
-	metrics.SystemMetrics.MemoryUsed = memory.Used
-	metrics.SystemMetrics.MemoryFree = memory.Free
+	metrics.SystemMetrics.MemoryTotal = ByteSize(memory.Total)
+	metrics.SystemMetrics.MemoryUsed = ByteSize(memory.Used)
+	metrics.SystemMetrics.MemoryFree = ByteSize(memory.Free)
 
 	uptime, err := gouptime.Get()
 	if err != nil {
 		return nil, err
 	}
 
-	metrics.SystemMetrics.Uptime = uptime.Seconds()
+	metrics.SystemMetrics.Uptime = uptime
 
 	before, err := gocpu.Get()
 	if err != nil {
@@ -84,4 +92,16 @@ func Gather() (*Metrics, error) {
 	metrics.ContainersMetrics = stats
 
 	return metrics, nil
+}
+
+type TestGatherer struct {
+	Metrics *Metrics
+}
+
+func (t TestGatherer) Gather() (*Metrics, error) {
+	return t.Metrics, nil
+}
+
+func Gather() (*Metrics, error) {
+	return Gatherer.Gather()
 }

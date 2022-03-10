@@ -69,6 +69,7 @@ func TestClient_ContainerStart(t *testing.T) {
 		Name: name,
 	})
 	assert.NilError(t, err)
+	defer destroy(cli, body.ID)
 
 	logger := &log.MemoryWriter{}
 	log.SetLogger(logger)
@@ -94,6 +95,10 @@ func TestClient_ContainerStart(t *testing.T) {
 	assert.Equal(t, started[0], body.ID)
 }
 
+func destroy(cli *Client, id string) {
+	_ = cli.ContainerStop(context.Background(), id)
+}
+
 func TestClient_ContainerStop(t *testing.T) {
 	ctx, cli, raw := createTestEnv(t)
 
@@ -106,6 +111,7 @@ func TestClient_ContainerStop(t *testing.T) {
 		Name: name,
 	})
 	assert.NilError(t, err)
+	defer destroy(cli, body.ID)
 
 	err = cli.ContainerStart(ctx, body.ID)
 	assert.NilError(t, err)

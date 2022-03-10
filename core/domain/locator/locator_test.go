@@ -17,7 +17,7 @@ func TestLocator_Read(t *testing.T) {
 
 	datadir.UseTestHome(t)
 
-	dir, err := configStore.Dir()
+	dir, err := ConfigStore.Dir()
 	assert.NilError(t, err)
 
 	builder := newLocalRepo(t, filepath.Join(dir, "main-foo-bar"))

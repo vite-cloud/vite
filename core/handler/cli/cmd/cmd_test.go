@@ -55,6 +55,7 @@ func (e *Expect) Write(s string) *Expect {
 type CommandTest struct {
 	Test         func(console *Expect)
 	NewCommand   func(cli *cli.CLI) *cobra.Command
+	Args         []string
 	ExpectsError func(t *testing.T, err error)
 	Prerun       func(t *testing.T)
 }
@@ -85,7 +86,7 @@ func (c CommandTest) Run(t *testing.T) {
 	}
 
 	cmd := c.NewCommand(cli.New(console.Tty(), console.Tty(), console.Tty()))
-	cmd.SetArgs(nil)
+	cmd.SetArgs(c.Args)
 
 	err = cmd.Execute()
 	if c.ExpectsError == nil {

@@ -10,6 +10,7 @@ import (
 
 // ContainerStats holds information about the memory and cpu usage of a container
 type ContainerStats struct {
+	Name            string
 	ID              string
 	MemoryUsed      uint64
 	MemoryAvailable uint64
@@ -56,6 +57,7 @@ func (c *Client) Stats(ctx context.Context, opts types.ContainerListOptions) ([]
 			}
 
 			metrics = append(metrics, &ContainerStats{
+				Name:            container.Names[0][1:],
 				ID:              container.ID,
 				MemoryUsed:      decoded.MemoryStats.Usage,
 				MemoryAvailable: decoded.MemoryStats.Limit,
