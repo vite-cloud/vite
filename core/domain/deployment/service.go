@@ -14,6 +14,7 @@ type Deployment struct {
 
 // Deploy deploys a service.
 func (d *Deployment) Deploy(ctx context.Context, service *config.Service) error {
+
 	return nil
 	//if service.HasDependencies() {
 	//	net, err := d.CreateServiceNetwork(service)

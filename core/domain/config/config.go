@@ -19,19 +19,25 @@ type Config struct {
 		Host string `yaml:"host"`
 	} `yaml:"control_plane"`
 }
+
 type Service struct {
-	Image string `yaml:"image"`
+	Name string
 
-	Hosts []string `yaml:"hosts"`
+	Image string
 
-	Env []string `yaml:"env"`
+	Hosts []string
+
+	Env []string
 
 	Hooks struct {
-		Prestart  []string `yaml:"prestart"`
-		Poststart []string `yaml:"poststart"`
-		Prestop   []string `yaml:"prestop"`
-		Poststop  []string `yaml:"poststop"`
-	} `yaml:"hooks"`
+		Prestart  []string
+		Poststart []string
+		Prestop   []string
+		Poststop  []string
+	}
+
+	// Requires is a list of services that must be running before this service
+	Requires []string
 }
 
 func Get(l *locator.Locator) (*Config, error) {

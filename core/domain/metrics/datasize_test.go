@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestMarshalText(t *testing.T) {
+func TestByteSize_String(t *testing.T) {
 	table := []struct {
 		in  ByteSize
 		out string
