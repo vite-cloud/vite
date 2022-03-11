@@ -41,8 +41,8 @@ func (s ServiceMap) Layered() ([][]*config.Service, error) {
 	root := &Node{}
 	unresolved := map[string]bool{}
 
-	for name := range s {
-		edge, err := s.graph(root, name, unresolved)
+	for _, service := range s {
+		edge, err := s.graph(root, service, unresolved)
 		if err != nil {
 			return nil, err
 		}
@@ -76,21 +76,21 @@ func (s ServiceMap) Layered() ([][]*config.Service, error) {
 	return reversed, nil
 }
 
-func (s ServiceMap) graph(parent *Node, name string, unresolved map[string]bool) (*Node, error) {
-	node := Node{
+func (s ServiceMap) graph(parent *Node, service *config.Service, unresolved map[string]bool) (*Node, error) {
+	node := &Node{
 		Parent:  parent,
-		Service: s[name],
+		Service: service,
 		Depth:   parent.Depth + 1,
 	}
 
-	unresolved[name] = true
+	unresolved[service.Name] = true
 
-	for _, require := range s[name].Requires {
+	for _, require := range service.Requires {
 		if unresolved[require] {
-			return nil, fmt.Errorf("circular dependency detected: %s -> %s", name, require)
+			return nil, fmt.Errorf("circular dependency detected: %s -> %s", service.Name, require)
 		}
 
-		edge, err := s.graph(&node, require, unresolved)
+		edge, err := s.graph(node, s[require], unresolved)
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +98,7 @@ func (s ServiceMap) graph(parent *Node, name string, unresolved map[string]bool)
 		node.AddEdge(edge)
 	}
 
-	unresolved[name] = false
+	unresolved[service.Name] = false
 
-	return &node, nil
+	return node, nil
 }
