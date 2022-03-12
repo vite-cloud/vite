@@ -68,7 +68,7 @@ func runSetupCommand(cli *cli.CLI) error {
 		Path       string
 	}{}
 
-	err := survey.Ask(qs, &answers, survey.WithStdio(cli.In(), &wr{cli.Out()}, cli.Err()))
+	err := survey.Ask(qs, &answers, survey.WithStdio(cli.In(), cli.Out(), cli.Err()))
 	if err != nil {
 		return err
 	}
