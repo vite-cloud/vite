@@ -1,6 +1,8 @@
 package runtime
 
-import "github.com/docker/docker/client"
+import (
+	"github.com/docker/docker/client"
+)
 
 // Client is used as a proxy to interact with the underlying Docker client.
 // It is mainly used to log actions performed by the daemon.

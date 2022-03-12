@@ -71,17 +71,17 @@ func (s *SystemGatherer) Gather() (*Metrics, error) {
 
 	metrics.SystemMetrics.Uptime = uptime
 
-	err = s.gatherMemory(metrics)
+	err = gatherMemory(metrics)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.gatherCpu(metrics)
+	err = gatherCPU(metrics)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.gatherDockerStats(metrics)
+	err = gatherDockerStats(metrics)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (s *SystemGatherer) Gather() (*Metrics, error) {
 	return metrics, nil
 }
 
-func (s *SystemGatherer) gatherMemory(metrics *Metrics) error {
+func gatherMemory(metrics *Metrics) error {
 	memory, err := gomemory.Get()
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func (s *SystemGatherer) gatherMemory(metrics *Metrics) error {
 	return nil
 }
 
-func (s *SystemGatherer) gatherCpu(metrics *Metrics) error {
+func gatherCPU(metrics *Metrics) error {
 	before, err := gocpu.Get()
 	if err != nil {
 		return err
@@ -123,7 +123,7 @@ func (s *SystemGatherer) gatherCpu(metrics *Metrics) error {
 	return nil
 }
 
-func (s *SystemGatherer) gatherDockerStats(metrics *Metrics) error {
+func gatherDockerStats(metrics *Metrics) error {
 	client, err := runtime.NewClient()
 	if err != nil {
 		return err
