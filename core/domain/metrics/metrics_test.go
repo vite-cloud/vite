@@ -45,10 +45,10 @@ func TestGatherMemory(t *testing.T) {
 	mb20 := MB * 20
 
 	assert.Assert(t, metrics.SystemMetrics.MemoryTotal == ByteSize(memory.Total))
-	assert.Assert(t, (metrics.SystemMetrics.MemoryUsed-metrics.SystemMetrics.MemoryUsed) <= mb20)
-	assert.Assert(t, (metrics.SystemMetrics.MemoryFree-metrics.SystemMetrics.MemoryFree) <= mb20)
+	assert.Assert(t, (metrics.SystemMetrics.MemoryUsed-metrics.SystemMetrics.MemoryUsed) <= mb20, "diff used memory (> 20MB): %f", metrics.SystemMetrics.MemoryUsed-metrics.SystemMetrics.MemoryUsed)
+	assert.Assert(t, (metrics.SystemMetrics.MemoryFree-metrics.SystemMetrics.MemoryFree) <= mb20, "diff free memory (> 20MB): %f", metrics.SystemMetrics.MemoryFree-metrics.SystemMetrics.MemoryFree)
 
-	assert.Assert(t, metrics.SystemMetrics.MemoryUsed+metrics.SystemMetrics.MemoryFree <= metrics.SystemMetrics.MemoryTotal)
+	assert.Assert(t, metrics.SystemMetrics.MemoryUsed+metrics.SystemMetrics.MemoryFree <= metrics.SystemMetrics.MemoryTotal, "used+free memory is larger than total memory")
 }
 
 func TestGatherCPU(t *testing.T) {
@@ -79,15 +79,15 @@ func TestGatherCPU(t *testing.T) {
 	assert.Assert(t, metrics.SystemMetrics.CPUUser < 100)
 	assert.Assert(t, metrics.SystemMetrics.CPUIdle < 100)
 
-	assert.Assert(t, user-metrics.SystemMetrics.CPUUser <= 5)
-	assert.Assert(t, system-metrics.SystemMetrics.CPUUser >= -5)
+	assert.Assert(t, user-metrics.SystemMetrics.CPUUser <= 5, "user diff: %f", user-metrics.SystemMetrics.CPUUser)
+	assert.Assert(t, system-metrics.SystemMetrics.CPUUser >= -5, "user diff: %f", system-metrics.SystemMetrics.CPUUser)
 
-	assert.Assert(t, system-metrics.SystemMetrics.CPUSystem <= 5)
-	assert.Assert(t, idle-metrics.SystemMetrics.CPUIdle >= -5)
+	assert.Assert(t, system-metrics.SystemMetrics.CPUSystem <= 5, "system diff: %f", system-metrics.SystemMetrics.CPUSystem)
+	assert.Assert(t, idle-metrics.SystemMetrics.CPUIdle >= -5, "system diff: %f", system-metrics.SystemMetrics.CPUSystem)
 
-	assert.Assert(t, idle-metrics.SystemMetrics.CPUIdle <= 5)
-	assert.Assert(t, user-metrics.SystemMetrics.CPUUser >= -5)
+	assert.Assert(t, idle-metrics.SystemMetrics.CPUIdle <= 5, "idle diff: %f", idle-metrics.SystemMetrics.CPUIdle)
+	assert.Assert(t, user-metrics.SystemMetrics.CPUUser >= -5, "idle diff: %f", idle-metrics.SystemMetrics.CPUIdle)
 
-	assert.Assert(t, 100-(user+system+idle) <= 5)
-	assert.Assert(t, 100-(user+system+idle) >= -5)
+	assert.Assert(t, 100-(user+system+idle) <= 5, "total diff: %f", 100-(user+system+idle))
+	assert.Assert(t, 100-(user+system+idle) >= -5, "total diff: %f", 100-(user+system+idle))
 }
