@@ -74,6 +74,7 @@ func TestFlatten(t *testing.T) {
 
 		for name, dependencies := range test.Services {
 			service := &config.Service{
+				Name:     name,
 				Requires: dependencies,
 			}
 

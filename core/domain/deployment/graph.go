@@ -50,17 +50,17 @@ func (s ServiceMap) Layered() ([][]*config.Service, error) {
 		root.AddEdge(edge)
 	}
 
-	nodeDepth := map[*Node]int{}
+	nodeDepth := map[*config.Service]int{}
 	depthNode := map[int][]*config.Service{}
 
 	root.Walk(func(n *Node) {
-		if nodeDepth[n] < n.Depth {
-			nodeDepth[n] = n.Depth
+		if nodeDepth[n.Service] < n.Depth {
+			nodeDepth[n.Service] = n.Depth
 		}
 	})
 
 	for node, depth := range nodeDepth {
-		depthNode[depth] = append(depthNode[depth], node.Service)
+		depthNode[depth] = append(depthNode[depth], node)
 	}
 
 	reversed := make([][]*config.Service, len(depthNode))
@@ -98,7 +98,7 @@ func (s ServiceMap) graph(parent *Node, service *config.Service, unresolved map[
 		node.AddEdge(edge)
 	}
 
-	unresolved[service.Name] = false
+	delete(unresolved, service.Name)
 
 	return node, nil
 }

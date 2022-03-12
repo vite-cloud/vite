@@ -40,6 +40,10 @@ type Service struct {
 	Requires []string
 }
 
+func (s *Service) String() string {
+	return s.Name
+}
+
 func Get(l *locator.Locator) (*Config, error) {
 	contents, err := l.Read("vite.yaml")
 	if err != nil {
