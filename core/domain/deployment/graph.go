@@ -37,16 +37,13 @@ func (n *Node) Walk(f func(n *Node)) {
 	}
 }
 
-// ServiceMap is a map of service names to nodes.
-type ServiceMap map[string]*config.Service
-
 // Layered returns the layers in which the services must be deployed.
-func (s ServiceMap) Layered() ([][]*config.Service, error) {
+func Layered(services map[string]*config.Service) ([][]*config.Service, error) {
 	root := &Node{}
 	unresolved := map[string]bool{}
 
-	for _, service := range s {
-		edge, err := s.graph(root, service, unresolved)
+	for _, service := range services {
+		edge, err := graph(root, service, unresolved)
 		if err != nil {
 			return nil, err
 		}
@@ -81,7 +78,7 @@ func (s ServiceMap) Layered() ([][]*config.Service, error) {
 }
 
 // graph builds recursively a node and its edges.
-func (s ServiceMap) graph(parent *Node, service *config.Service, unresolved map[string]bool) (*Node, error) {
+func graph(parent *Node, service *config.Service, unresolved map[string]bool) (*Node, error) {
 	node := &Node{
 		Parent:  parent,
 		Service: service,
@@ -91,11 +88,11 @@ func (s ServiceMap) graph(parent *Node, service *config.Service, unresolved map[
 	unresolved[service.Name] = true
 
 	for _, require := range service.Requires {
-		if unresolved[require] {
-			return nil, fmt.Errorf("circular dependency detected: %s -> %s", service.Name, require)
+		if unresolved[require.Name] {
+			return nil, fmt.Errorf("circular dependency detected: %s -> %s", service.Name, require.Name)
 		}
 
-		edge, err := s.graph(node, s[require], unresolved)
+		edge, err := graph(node, require, unresolved)
 		if err != nil {
 			return nil, err
 		}
