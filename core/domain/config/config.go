@@ -1,23 +1,31 @@
 package config
 
 import (
+	"github.com/docker/docker/api/types"
 	"github.com/vite-cloud/vite/core/domain/locator"
 	"gopkg.in/yaml.v2"
 )
 
 // Config holds vite's configuration.
 type Config struct {
-	Services map[string]*Service `yaml:"services"`
+	Services map[string]*Service
 
 	Proxy struct {
-		HTTP       string `yaml:"http"`
-		HTTPS      string `yaml:"https"`
-		SelfSigned bool   `yaml:"self_signed"`
-	} `yaml:"proxy"`
+		HTTP       string
+		HTTPS      string
+		SelfSigned bool
+	}
 
 	ControlPlane struct {
-		Host string `yaml:"host"`
-	} `yaml:"control_plane"`
+		Host string
+	}
+}
+
+type Hooks struct {
+	Prestart  []string
+	Poststart []string
+	Prestop   []string
+	Poststop  []string
 }
 
 type Service struct {
@@ -29,15 +37,12 @@ type Service struct {
 
 	Env []string
 
-	Hooks struct {
-		Prestart  []string
-		Poststart []string
-		Prestop   []string
-		Poststop  []string
-	}
+	Hooks Hooks
 
 	// Requires is a list of services that must be running before this service
-	Requires []string
+	Requires []*Service
+
+	Registry *types.AuthConfig `yaml:"registry"`
 }
 
 func (s *Service) String() string {
@@ -50,11 +55,11 @@ func Get(l *locator.Locator) (*Config, error) {
 		return nil, err
 	}
 
-	var config Config
-	err = yaml.Unmarshal(contents, &config)
+	var c configYAML
+	err = yaml.Unmarshal(contents, &c)
 	if err != nil {
 		return nil, err
 	}
 
-	return &config, nil
+	return c.toConfig()
 }
