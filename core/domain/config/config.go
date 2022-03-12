@@ -21,6 +21,7 @@ type Config struct {
 	}
 }
 
+// Hooks contains a service's hooks.
 type Hooks struct {
 	Prestart  []string
 	Poststart []string
@@ -28,6 +29,7 @@ type Hooks struct {
 	Poststop  []string
 }
 
+// Service contains the configuration about a service.
 type Service struct {
 	Name string
 
@@ -45,10 +47,7 @@ type Service struct {
 	Registry *types.AuthConfig `yaml:"registry"`
 }
 
-func (s *Service) String() string {
-	return s.Name
-}
-
+// Get returns the Config given a config locator.Locator.
 func Get(l *locator.Locator) (*Config, error) {
 	contents, err := l.Read("vite.yaml")
 	if err != nil {

@@ -34,10 +34,13 @@ type SystemMetrics struct {
 	CPUIdle   float64
 }
 
+// gatherer is an interface to collect metrics.
+// It is used to mock in tests.
 type gatherer interface {
 	Gather() (*Metrics, error)
 }
 
+// SystemGatherer collects metrics
 type SystemGatherer struct{}
 
 // Gather gathers metrics from docker and the system.
@@ -94,14 +97,17 @@ func (s *SystemGatherer) Gather() (*Metrics, error) {
 	return metrics, nil
 }
 
+// TestGatherer is a mock gatherer for tests.
 type TestGatherer struct {
 	Metrics *Metrics
 }
 
+// Gather returns the metrics set while testing.
 func (t TestGatherer) Gather() (*Metrics, error) {
 	return t.Metrics, nil
 }
 
+// Gather gathers metrics from docker and the system.
 func Gather() (*Metrics, error) {
 	return Gatherer.Gather()
 }

@@ -19,10 +19,12 @@ type Node struct {
 	Depth int
 }
 
+// AddEdge adds a node to the list of edges.
 func (n *Node) AddEdge(e *Node) {
 	n.Edges = append(n.Edges, e)
 }
 
+// Walk traverses the dependency graph in depth-first order.
 func (n *Node) Walk(f func(n *Node)) {
 	// We visit the current node only if it isn't the root node.
 	// The root node is a stub that has no service.
@@ -35,8 +37,10 @@ func (n *Node) Walk(f func(n *Node)) {
 	}
 }
 
+// ServiceMap is a map of service names to nodes.
 type ServiceMap map[string]*config.Service
 
+// Layered returns the layers in which the services must be deployed.
 func (s ServiceMap) Layered() ([][]*config.Service, error) {
 	root := &Node{}
 	unresolved := map[string]bool{}
@@ -76,6 +80,7 @@ func (s ServiceMap) Layered() ([][]*config.Service, error) {
 	return reversed, nil
 }
 
+// graph builds recursively a node and its edges.
 func (s ServiceMap) graph(parent *Node, service *config.Service, unresolved map[string]bool) (*Node, error) {
 	node := &Node{
 		Parent:  parent,

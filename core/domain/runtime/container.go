@@ -9,8 +9,11 @@ import (
 	"github.com/vite-cloud/vite/core/domain/manifest"
 )
 
-const CreatedContainerManifestKey = "CreatedContainer"
-const StartedContainerManifestKey = "StartedContainer"
+// resource tags available in the manifest
+const (
+	CreatedContainerManifestKey = "CreatedContainer"
+	StartedContainerManifestKey = "StartedContainer"
+)
 
 // ContainerCreateOptions defines the options for creating a container
 type ContainerCreateOptions struct {

@@ -7,6 +7,7 @@ import (
 	"github.com/vite-cloud/vite/core/handler/cli/cmd"
 )
 
+// New returns a new CLI
 func New() *cli.CLI {
 	c := cli.New(os.Stdout, os.Stdin, os.Stderr)
 

@@ -3,26 +3,12 @@ package cmd
 import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/spf13/cobra"
 	"github.com/vite-cloud/vite/core/domain/locator"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 )
 
-type wr struct {
-	orig terminal.FileWriter
-}
-
-func (w *wr) Write(p []byte) (n int, err error) {
-	fmt.Println(string(p))
-
-	return w.orig.Write(p)
-}
-
-func (w *wr) Fd() uintptr {
-	return w.orig.Fd()
-}
-
+// runSetupCommand handles the `setup` command.
 func runSetupCommand(cli *cli.CLI) error {
 	fmt.Fprintln(cli.Out(), "Welcome to Vite!")
 	var qs = []*survey.Question{
@@ -106,6 +92,7 @@ func runSetupCommand(cli *cli.CLI) error {
 	return nil
 }
 
+// NewSetupCommand creates a new `setup` command.
 func NewSetupCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "setup",

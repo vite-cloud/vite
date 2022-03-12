@@ -69,6 +69,8 @@ func Dir() (string, error) {
 	return dataDir, nil
 }
 
+// UseTestHome is for unit testing only. It sets the dataDir to a temporary
+// directory that is cleaned up after the test.
 func UseTestHome(t *testing.T) string {
 	home, err := os.MkdirTemp("", "")
 	if err != nil {

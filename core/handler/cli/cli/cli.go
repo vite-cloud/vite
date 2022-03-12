@@ -83,12 +83,14 @@ func (c *CLI) Run(args []string) int {
 	return 0
 }
 
+// Add adds the given commands to the CLI.
 func (c *CLI) Add(commands ...*cobra.Command) *CLI {
 	c.commands = append(c.commands, commands...)
 
 	return c
 }
 
+// New returns a new CLI with the given standard IO.
 func New(out Stdout, in Stdin, err io.Writer) *CLI {
 	return &CLI{
 		out: out,
@@ -97,11 +99,14 @@ func New(out Stdout, in Stdin, err io.Writer) *CLI {
 	}
 }
 
+// StatusError is an error type that contains an exit code.
+// It is used to exit with a custom exit code.
 type StatusError struct {
 	Status     string
 	StatusCode int
 }
 
+// Error implements the error interface.
 func (s *StatusError) Error() string {
 	return s.Status
 }

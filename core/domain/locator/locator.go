@@ -63,6 +63,7 @@ func (l *Locator) git() (Git, error) {
 	return Git(path), nil
 }
 
+// Save the locator to the config store.
 func (l *Locator) Save() error {
 	dir, err := ConfigStore.Dir()
 	if err != nil {

@@ -9,6 +9,7 @@ import (
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 )
 
+// runMedicCommand handles the `medic` command.
 func runMedicCommand(cmd *cobra.Command, args []string) error {
 	l, err := locator.LoadFromStore()
 	if err != nil {
@@ -25,6 +26,7 @@ func runMedicCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// NewMedicCommand creates a new `medic` command.
 func NewMedicCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "medic",

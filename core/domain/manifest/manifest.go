@@ -15,6 +15,9 @@ const Store = datadir.Store("manifest")
 
 type contextKey string
 
+// ContextKey is the key used to store the manifest in a context.
+// It prevents overlapping with other libraries that might set a "manifest" key
+// in the same context.
 var ContextKey = contextKey("manifest")
 
 // Manifest is a set of tagged resources for a given deployment.

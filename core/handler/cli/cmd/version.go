@@ -6,6 +6,7 @@ import (
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 )
 
+// NewVersionCommand creates a new `version` command.
 func NewVersionCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
