@@ -2,150 +2,48 @@ package runtime
 
 import (
 	"context"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/vite-cloud/vite/core/domain/log"
 	"github.com/vite-cloud/vite/core/domain/manifest"
 	"gotest.tools/v3/assert"
+	"sort"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
 
 const testImage = "nginx:1.21.5"
 
-func TestClient_ContainerCreate(t *testing.T) {
-	ctx, cli, raw := createTestEnv(t)
+type testCtx struct {
+	t             *testing.T
+	ctx           context.Context
+	cli           *Client
+	raw           *client.Client
+	logger        *log.MemoryWriter
+	containerName string
+}
 
-	name := uniqueContainerName()
-
-	err := cli.ImagePull(ctx, testImage, ImagePullOptions{})
-	assert.NilError(t, err)
-
-	logger := &log.MemoryWriter{}
-	log.SetLogger(logger)
-
-	body, err := cli.ContainerCreate(ctx, testImage, ContainerCreateOptions{
-		Name: name,
-		Env: []string{
-			"A=B",
-			"B=\"hello world\"",
+func TestClient(t *testing.T) {
+	tests := []struct {
+		name string
+		test func(ctx *testCtx)
+	}{
+		{
+			name: "test container start",
+			test: testContainerStart,
 		},
-	})
-	assert.NilError(t, err)
-
-	ins, err := raw.ContainerInspect(ctx, body.ID)
-	assert.NilError(t, err)
-
-	assert.Equal(t, ins.Name, "/"+name)
-	assert.Equal(t, ins.Config.Image, testImage)
-	assert.Assert(t, len(ins.Config.Env) >= 2)
-	assert.Assert(t, contains(ins.Config.Env, "A=B"))
-	assert.Assert(t, contains(ins.Config.Env, "B=\"hello world\""))
-	assert.Assert(t, ins.HostConfig.RestartPolicy.IsAlways())
-
-	assert.Equal(t, logger.Len(), 1)
-	assert.Equal(t, logger.Last().Message, "created container")
-	assert.Equal(t, logger.Last().Level, log.DebugLevel)
-	assert.Equal(t, logger.Last().Fields["id"], body.ID)
-	assert.Equal(t, logger.Last().Fields["image"], testImage)
-	assert.Equal(t, logger.Last().Fields["with_registry"], false)
-
-	created, err := ctx.Value(manifest.ContextKey).(*manifest.Manifest).Get(CreatedContainerManifestKey)
-	assert.NilError(t, err)
-
-	assert.Equal(t, len(created), 1)
-	assert.Equal(t, created[0], body.ID)
-}
-
-func TestClient_ContainerStart(t *testing.T) {
-	ctx, cli, raw := createTestEnv(t)
-
-	name := uniqueContainerName()
-
-	err := cli.ImagePull(ctx, testImage, ImagePullOptions{})
-	assert.NilError(t, err)
-
-	body, err := cli.ContainerCreate(ctx, testImage, ContainerCreateOptions{
-		Name: name,
-	})
-	assert.NilError(t, err)
-	defer destroy(cli, body.ID)
-
-	logger := &log.MemoryWriter{}
-	log.SetLogger(logger)
-
-	err = cli.ContainerStart(ctx, body.ID)
-	assert.NilError(t, err)
-
-	ins, err := raw.ContainerInspect(ctx, body.ID)
-	assert.NilError(t, err)
-
-	assert.Equal(t, ins.ID, body.ID)
-	assert.Equal(t, ins.State.Status, "running")
-
-	assert.Equal(t, logger.Len(), 1)
-	assert.Equal(t, logger.Last().Message, "started container")
-	assert.Equal(t, logger.Last().Level, log.DebugLevel)
-	assert.Equal(t, logger.Last().Fields["id"], body.ID)
-
-	started, err := ctx.Value(manifest.ContextKey).(*manifest.Manifest).Get(StartedContainerManifestKey)
-	assert.NilError(t, err)
-
-	assert.Equal(t, len(started), 1)
-	assert.Equal(t, started[0], body.ID)
-}
-
-func destroy(cli *Client, id string) {
-	_ = cli.ContainerStop(context.Background(), id)
-}
-
-func TestClient_ContainerStop(t *testing.T) {
-	ctx, cli, raw := createTestEnv(t)
-
-	name := uniqueContainerName()
-
-	err := cli.ImagePull(ctx, testImage, ImagePullOptions{})
-	assert.NilError(t, err)
-
-	body, err := cli.ContainerCreate(ctx, testImage, ContainerCreateOptions{
-		Name: name,
-	})
-	assert.NilError(t, err)
-	defer destroy(cli, body.ID)
-
-	err = cli.ContainerStart(ctx, body.ID)
-	assert.NilError(t, err)
-
-	logger := &log.MemoryWriter{}
-	log.SetLogger(logger)
-
-	err = cli.ContainerStop(ctx, body.ID)
-	assert.NilError(t, err)
-
-	ins, err := raw.ContainerInspect(ctx, body.ID)
-	assert.NilError(t, err)
-
-	assert.Equal(t, ins.ID, body.ID)
-	assert.Equal(t, ins.State.Status, "exited")
-
-	assert.Equal(t, logger.Len(), 1)
-	assert.Equal(t, logger.Last().Message, "stopped container")
-	assert.Equal(t, logger.Last().Level, log.DebugLevel)
-	assert.Equal(t, logger.Last().Fields["id"], body.ID)
-}
-
-func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
+		{
+			name: "test container create",
+			test: testContainerCreate,
+		},
+		{
+			name: "test container stop",
+			test: testContainerStop,
+		},
 	}
-	return false
-}
-
-func createTestEnv(t *testing.T) (context.Context, *Client, *client.Client) {
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, manifest.ContextKey, &manifest.Manifest{})
 
 	cli, err := NewClient()
 	assert.NilError(t, err)
@@ -153,9 +51,141 @@ func createTestEnv(t *testing.T) (context.Context, *Client, *client.Client) {
 	raw, err := client.NewClientWithOpts(client.FromEnv)
 	assert.NilError(t, err)
 
-	return ctx, cli, raw
+	err = cli.ImagePull(context.Background(), testImage, ImagePullOptions{})
+	assert.NilError(t, err)
+
+	for _, test := range tests {
+		test := test
+
+		t.Run(test.name, func(t *testing.T) {
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, manifest.ContextKey, &manifest.Manifest{})
+
+			logger := &log.MemoryWriter{}
+			log.SetLogger(logger)
+
+			test.test(&testCtx{
+				t:             t,
+				cli:           cli,
+				raw:           raw,
+				ctx:           ctx,
+				logger:        logger,
+				containerName: "test_" + strconv.Itoa(int(time.Now().UnixMilli())),
+			})
+		})
+	}
+
+	testContainers, err := raw.ContainerList(context.Background(), types.ContainerListOptions{
+		Filters: filters.NewArgs(
+			filters.Arg("name", "test_"),
+		),
+	})
+	assert.NilError(t, err)
+
+	var wg sync.WaitGroup
+	for _, container := range testContainers {
+		container := container
+
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
+			_ = raw.ContainerStop(context.Background(), container.ID, nil)
+
+			err = raw.ContainerRemove(context.Background(), container.ID, types.ContainerRemoveOptions{
+				Force: true,
+			})
+			assert.NilError(t, err)
+		}()
+	}
+	wg.Wait()
 }
 
-func uniqueContainerName() string {
-	return "test_" + strconv.Itoa(int(time.Now().UnixMilli()))
+func testContainerCreate(tc *testCtx) {
+	body, err := tc.cli.ContainerCreate(tc.ctx, testImage, ContainerCreateOptions{
+		Name: tc.containerName,
+		Env: []string{
+			"A=B",
+			"B=\"hello world\"",
+		},
+	})
+	assert.NilError(tc.t, err)
+
+	ins, err := tc.raw.ContainerInspect(tc.ctx, body.ID)
+	assert.NilError(tc.t, err)
+
+	assert.Equal(tc.t, ins.Name, "/"+tc.containerName)
+	assert.Equal(tc.t, ins.Config.Image, testImage)
+	assert.Assert(tc.t, len(ins.Config.Env) >= 2)
+
+	sort.Strings(ins.Config.Env)
+
+	assert.Equal(tc.t, ins.Config.Env[0], "A=B")
+	assert.Equal(tc.t, ins.Config.Env[1], "B=\"hello world\"")
+	assert.Assert(tc.t, ins.HostConfig.RestartPolicy.IsAlways())
+
+	assert.Equal(tc.t, tc.logger.Len(), 1)
+	assert.Equal(tc.t, tc.logger.Last().Message, "created container")
+	assert.Equal(tc.t, tc.logger.Last().Level, log.DebugLevel)
+	assert.Equal(tc.t, tc.logger.Last().Fields["id"], body.ID)
+	assert.Equal(tc.t, tc.logger.Last().Fields["image"], testImage)
+	assert.Equal(tc.t, tc.logger.Last().Fields["with_registry"], false)
+
+	created, err := tc.ctx.Value(manifest.ContextKey).(*manifest.Manifest).Get(CreatedContainerManifestKey)
+	assert.NilError(tc.t, err)
+
+	assert.Equal(tc.t, len(created), 1)
+	assert.Equal(tc.t, created[0], body.ID)
+}
+
+func testContainerStart(tc *testCtx) {
+	body, err := tc.cli.ContainerCreate(tc.ctx, testImage, ContainerCreateOptions{
+		Name: tc.containerName,
+	})
+	assert.NilError(tc.t, err)
+
+	err = tc.cli.ContainerStart(tc.ctx, body.ID)
+	assert.NilError(tc.t, err)
+
+	ins, err := tc.raw.ContainerInspect(tc.ctx, body.ID)
+	assert.NilError(tc.t, err)
+
+	assert.Equal(tc.t, ins.ID, body.ID)
+	assert.Equal(tc.t, ins.State.Status, "running")
+
+	assert.Equal(tc.t, tc.logger.Len(), 2)
+	assert.Equal(tc.t, tc.logger.Last().Message, "started container")
+	assert.Equal(tc.t, tc.logger.Last().Level, log.DebugLevel)
+	assert.Equal(tc.t, tc.logger.Last().Fields["id"], body.ID)
+
+	started, err := tc.ctx.Value(manifest.ContextKey).(*manifest.Manifest).Get(StartedContainerManifestKey)
+	assert.NilError(tc.t, err)
+
+	assert.Equal(tc.t, len(started), 1)
+	assert.Equal(tc.t, started[0], body.ID)
+}
+
+func testContainerStop(tc *testCtx) {
+	body, err := tc.cli.ContainerCreate(tc.ctx, testImage, ContainerCreateOptions{
+		Name: tc.containerName,
+	})
+	assert.NilError(tc.t, err)
+
+	err = tc.cli.ContainerStart(tc.ctx, body.ID)
+	assert.NilError(tc.t, err)
+
+	err = tc.cli.ContainerStop(tc.ctx, body.ID)
+	assert.NilError(tc.t, err)
+
+	ins, err := tc.raw.ContainerInspect(tc.ctx, body.ID)
+	assert.NilError(tc.t, err)
+
+	assert.Equal(tc.t, ins.ID, body.ID)
+	assert.Equal(tc.t, ins.State.Status, "exited")
+
+	assert.Equal(tc.t, tc.logger.Len(), 3)
+	assert.Equal(tc.t, tc.logger.Last().Message, "stopped container")
+	assert.Equal(tc.t, tc.logger.Last().Level, log.DebugLevel)
+	assert.Equal(tc.t, tc.logger.Last().Fields["id"], body.ID)
 }
