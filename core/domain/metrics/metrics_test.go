@@ -70,11 +70,6 @@ func TestGatherCPU(t *testing.T) {
 	assert.NilError(t, err)
 
 	assert.Equal(t, metrics.SystemMetrics.CPUCount, after.CPUCount)
-
-	user := float64(after.User-before.User) / float64(after.CPUCount)
-	system := float64(after.System-before.System) / float64(after.CPUCount)
-	idle := float64(after.Idle-before.Idle) / float64(after.CPUCount)
-
 	assert.Assert(t, metrics.SystemMetrics.CPUSystem < 100)
 	assert.Assert(t, metrics.SystemMetrics.CPUUser < 100)
 	assert.Assert(t, metrics.SystemMetrics.CPUIdle < 100)
