@@ -5,7 +5,6 @@ import (
 	gomemory "github.com/mackerelio/go-osstat/memory"
 	"gotest.tools/v3/assert"
 	"testing"
-	"time"
 )
 
 func TestGather(t *testing.T) {
@@ -54,12 +53,7 @@ func TestGatherMemory(t *testing.T) {
 func TestGatherCPU(t *testing.T) {
 	t.Parallel()
 
-	before, err := gocpu.Get()
-	assert.NilError(t, err)
-
-	time.Sleep(time.Second)
-
-	after, err := gocpu.Get()
+	cpu, err := gocpu.Get()
 	assert.NilError(t, err)
 
 	metrics := &Metrics{
@@ -69,7 +63,7 @@ func TestGatherCPU(t *testing.T) {
 	err = gatherCPU(metrics)
 	assert.NilError(t, err)
 
-	assert.Equal(t, metrics.SystemMetrics.CPUCount, after.CPUCount)
+	assert.Equal(t, metrics.SystemMetrics.CPUCount, cpu.CPUCount)
 	assert.Assert(t, metrics.SystemMetrics.CPUSystem < 100)
 	assert.Assert(t, metrics.SystemMetrics.CPUUser < 100)
 	assert.Assert(t, metrics.SystemMetrics.CPUIdle < 100)
