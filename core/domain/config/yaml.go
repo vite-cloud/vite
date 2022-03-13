@@ -184,13 +184,11 @@ func (c *configYAML) toConfigService(name string, s *serviceYAML) (*Service, err
 }
 
 func (c configYAML) toConfigRegistry(r *registryYAML) *types.AuthConfig {
-	registry := &types.AuthConfig{
+	return &types.AuthConfig{
 		Username:      r.Username,
 		Password:      r.Password,
 		ServerAddress: r.Host,
 		IdentityToken: r.IdentityToken,
 		RegistryToken: r.RegistryToken,
 	}
-
-	return registry
 }

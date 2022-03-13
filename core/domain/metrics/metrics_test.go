@@ -78,18 +78,4 @@ func TestGatherCPU(t *testing.T) {
 	assert.Assert(t, metrics.SystemMetrics.CPUSystem < 100)
 	assert.Assert(t, metrics.SystemMetrics.CPUUser < 100)
 	assert.Assert(t, metrics.SystemMetrics.CPUIdle < 100)
-
-	diff := 15.0
-
-	assert.Assert(t, user-metrics.SystemMetrics.CPUUser <= diff, "user diff: %f", user-metrics.SystemMetrics.CPUUser)
-	assert.Assert(t, system-metrics.SystemMetrics.CPUUser >= -diff, "user diff: %f", system-metrics.SystemMetrics.CPUUser)
-
-	assert.Assert(t, system-metrics.SystemMetrics.CPUSystem <= diff, "system diff: %f", system-metrics.SystemMetrics.CPUSystem)
-	assert.Assert(t, idle-metrics.SystemMetrics.CPUIdle >= -diff, "system diff: %f", system-metrics.SystemMetrics.CPUSystem)
-
-	assert.Assert(t, idle-metrics.SystemMetrics.CPUIdle <= diff, "idle diff: %f", idle-metrics.SystemMetrics.CPUIdle)
-	assert.Assert(t, user-metrics.SystemMetrics.CPUUser >= -diff, "idle diff: %f", idle-metrics.SystemMetrics.CPUIdle)
-
-	assert.Assert(t, 100-(user+system+idle) <= diff, "total diff: %f", 100-(user+system+idle))
-	assert.Assert(t, 100-(user+system+idle) >= -diff, "total diff: %f", 100-(user+system+idle))
 }

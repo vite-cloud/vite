@@ -190,6 +190,17 @@ func TestConfigYAML_ToConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "it fails if the registry is an invalid type",
+			yaml: &configYAML{
+				Services: map[string]*serviceYAML{
+					"example": {
+						Registry: 45.4,
+					},
+				},
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, test := range tests {
