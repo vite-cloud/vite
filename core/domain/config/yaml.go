@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/docker/docker/api/types"
+	"strings"
 )
 
 // configYAML is the YAML representation of the config.
@@ -22,6 +23,7 @@ type configYAML struct {
 
 	configRegistry map[string]*types.AuthConfig
 	configServices map[string]*Service
+	topLevelMap    map[*serviceYAML]bool
 }
 
 // serviceYAML is the YAML representation of a service
@@ -32,12 +34,7 @@ type serviceYAML struct {
 
 	Env []string `yaml:"env"`
 
-	Hooks struct {
-		Prestart  []string `yaml:"prestart"`
-		Poststart []string `yaml:"poststart"`
-		Prestop   []string `yaml:"prestop"`
-		Poststop  []string `yaml:"poststop"`
-	} `yaml:"hooks"`
+	Hooks Hooks `yaml:"hooks"`
 
 	Requires []string `yaml:"requires"`
 
@@ -60,8 +57,10 @@ type registryYAML struct {
 	RegistryToken string `yaml:"registry_token,omitempty"`
 }
 
-func (c configYAML) toConfig() (*Config, error) {
-	config := &Config{}
+func (c configYAML) ToConfig() (*Config, error) {
+	config := &Config{
+		Services: map[string]*Service{},
+	}
 
 	for name, service := range c.Services {
 		converted, err := c.toConfigService(name, service)
@@ -75,16 +74,55 @@ func (c configYAML) toConfig() (*Config, error) {
 	return config, nil
 }
 
+func (c *configYAML) isTopLevel(s *serviceYAML) bool {
+	if c.topLevelMap == nil {
+		c.topLevelMap = make(map[*serviceYAML]bool)
+	}
+
+	if _, ok := c.topLevelMap[s]; ok {
+		return c.topLevelMap[s]
+	}
+
+	var topLevel []*serviceYAML
+
+	for name, service := range c.Services {
+		tl := true
+		for _, require := range service.Requires {
+			if name == require {
+				tl = false
+				break
+			}
+		}
+
+		if tl {
+			topLevel = append(topLevel, service)
+		} else {
+			c.topLevelMap[service] = false
+		}
+	}
+
+	for _, tl := range topLevel {
+		c.topLevelMap[tl] = true
+	}
+
+	return c.topLevelMap[s]
+}
+
 func (c *configYAML) toConfigService(name string, s *serviceYAML) (*Service, error) {
+	if c.configServices == nil {
+		c.configServices = make(map[string]*Service)
+	}
+
 	if _, ok := c.configServices[name]; ok {
 		return c.configServices[name], nil
 	}
 
 	service := &Service{
-		Name:  name,
-		Image: s.Image,
-		Hosts: s.Hosts,
-		Env:   s.Env,
+		IsTopLevel: c.isTopLevel(s),
+		Name:       name,
+		Image:      s.Image,
+		Hosts:      s.Hosts,
+		Env:        s.Env,
 		Hooks: Hooks{
 			Prestart:  s.Hooks.Prestart,
 			Poststart: s.Hooks.Poststart,
@@ -93,6 +131,7 @@ func (c *configYAML) toConfigService(name string, s *serviceYAML) (*Service, err
 		},
 	}
 
+	// service.Registry
 	if s.Registry != nil {
 		switch s.Registry.(type) {
 		case string:
@@ -110,6 +149,7 @@ func (c *configYAML) toConfigService(name string, s *serviceYAML) (*Service, err
 		}
 	}
 
+	// service.Requires
 	for _, require := range s.Requires {
 		if _, ok := c.Services[require]; !ok {
 			return nil, fmt.Errorf("service %s not found, %s can not depend on it", require, name)
@@ -122,6 +162,21 @@ func (c *configYAML) toConfigService(name string, s *serviceYAML) (*Service, err
 
 		service.Requires = append(service.Requires, converted)
 	}
+
+	// service.Hosts
+	var hosts []string
+	for _, host := range s.Hosts {
+		host = strings.TrimPrefix(host, "http://")
+		host = strings.TrimPrefix(host, "https://")
+
+		if strings.HasPrefix(host, "~") {
+			hosts = append(hosts, host[1:])
+			hosts = append(hosts, "www."+host[1:])
+		} else {
+			hosts = append(hosts, host)
+		}
+	}
+	service.Hosts = hosts
 
 	c.configServices[name] = service
 
