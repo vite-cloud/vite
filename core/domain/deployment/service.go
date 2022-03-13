@@ -14,19 +14,17 @@ type Deployment struct {
 
 // Deploy deploys a service.
 func (d *Deployment) Deploy(ctx context.Context, service *config.Service) error {
+	if service.IsTopLevel && len(service.Requires) > 0 {
+		//id, err := d.Docker.NetworkCreate(ctx, fmt.Sprintf("%s_%s", service.Name, d.ID), runtime.NetworkCreateOptions{})
+		//if err != nil {
+		//	return err
+		//}
 
-	return nil
-	//if service.HasDependencies() {
-	//	net, err := d.CreateServiceNetwork(service)
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//	err = d.ConnectServiceNetwork(service, net)
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
+		//err = d.ConnectRequiredServices(service, net)
+		//if err != nil {
+		//	return err
+		//}
+	}
 	//
 	//err := d.PullImage(service.Image)
 	//if err != nil {

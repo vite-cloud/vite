@@ -74,7 +74,7 @@ func (c configYAML) ToConfig() (*Config, error) {
 	return config, nil
 }
 
-func (c *configYAML) isTopLevel(s *serviceYAML) bool {
+func (c *configYAML) hasDependents(s *serviceYAML) bool {
 	if c.topLevelMap == nil {
 		c.topLevelMap = make(map[*serviceYAML]bool)
 	}
@@ -118,7 +118,7 @@ func (c *configYAML) toConfigService(name string, s *serviceYAML) (*Service, err
 	}
 
 	service := &Service{
-		IsTopLevel: c.isTopLevel(s),
+		IsTopLevel: !c.hasDependents(s),
 		Name:       name,
 		Image:      s.Image,
 		Hosts:      s.Hosts,

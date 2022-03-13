@@ -3,10 +3,10 @@ package log
 import (
 	"fmt"
 	"gotest.tools/v3/assert"
+	"math/rand"
 	"os"
 	"strconv"
 	"testing"
-	"time"
 )
 
 func TestCompositeWriter_Write(t *testing.T) {
@@ -97,7 +97,7 @@ func TestMemoryWriter_Write(t *testing.T) {
 }
 
 func TestFileWriter_Write(t *testing.T) {
-	path := "/tmp/tmp-filew-" + strconv.Itoa(int(time.Now().UnixMilli()))
+	path := "/tmp/tmp-filew-" + strconv.FormatInt(rand.Int63(), 10)
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0600)
 	assert.NilError(t, err)
 

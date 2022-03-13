@@ -8,11 +8,11 @@ import (
 	"github.com/vite-cloud/vite/core/domain/log"
 	"github.com/vite-cloud/vite/core/domain/manifest"
 	"gotest.tools/v3/assert"
+	"math/rand"
 	"sort"
 	"strconv"
 	"sync"
 	"testing"
-	"time"
 )
 
 const testImage = "nginx:1.21.5"
@@ -70,7 +70,7 @@ func TestClient(t *testing.T) {
 				raw:           raw,
 				ctx:           ctx,
 				logger:        logger,
-				containerName: "test_" + strconv.Itoa(int(time.Now().UnixMilli())),
+				containerName: "test_" + strconv.FormatInt(rand.Int63(), 10),
 			})
 		})
 	}
