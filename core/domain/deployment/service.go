@@ -2,6 +2,7 @@ package deployment
 
 import (
 	"context"
+
 	"github.com/vite-cloud/vite/core/domain/config"
 	"github.com/vite-cloud/vite/core/domain/runtime"
 )
@@ -59,5 +60,5 @@ func (d *Deployment) Deploy(ctx context.Context, service *config.Service) error 
 	//	return err
 	//}
 	//
-	//return nil
+	return nil
 }

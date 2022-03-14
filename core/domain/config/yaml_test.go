@@ -1,9 +1,10 @@
 package config
 
 import (
+	"testing"
+
 	"github.com/docker/docker/api/types"
 	"gotest.tools/v3/assert"
-	"testing"
 )
 
 func TestConfigYAML_ToConfig(t *testing.T) {
@@ -200,6 +201,35 @@ func TestConfigYAML_ToConfig(t *testing.T) {
 				},
 			},
 			wantErr: true,
+		},
+		{
+			name: "a service can require another one",
+			yaml: &configYAML{
+				Services: map[string]*serviceYAML{
+					"first": {
+						Requires: []string{"second"},
+					},
+					"second": {},
+				},
+			},
+			want: &Config{
+				Services: map[string]*Service{
+					"first": {
+						IsTopLevel: true,
+						Name:       "first",
+						Requires: []*Service{
+							{
+								IsTopLevel: false,
+								Name:       "second",
+							},
+						},
+					},
+					"second": {
+						IsTopLevel: false,
+						Name:       "second",
+					},
+				},
+			},
 		},
 	}
 

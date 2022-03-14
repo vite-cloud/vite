@@ -2,8 +2,9 @@ package config
 
 import (
 	"fmt"
-	"github.com/docker/docker/api/types"
 	"strings"
+
+	"github.com/docker/docker/api/types"
 )
 
 // configYAML is the YAML representation of the config.
@@ -74,38 +75,16 @@ func (c configYAML) ToConfig() (*Config, error) {
 	return config, nil
 }
 
-func (c *configYAML) hasDependents(s *serviceYAML) bool {
-	if c.topLevelMap == nil {
-		c.topLevelMap = make(map[*serviceYAML]bool)
-	}
-
-	if _, ok := c.topLevelMap[s]; ok {
-		return c.topLevelMap[s]
-	}
-
-	var topLevel []*serviceYAML
-
-	for name, service := range c.Services {
-		tl := true
+func (c *configYAML) hasDependents(cmp string) bool {
+	for _, service := range c.Services {
 		for _, require := range service.Requires {
-			if name == require {
-				tl = false
-				break
+			if require == cmp {
+				return false
 			}
 		}
-
-		if tl {
-			topLevel = append(topLevel, service)
-		} else {
-			c.topLevelMap[service] = false
-		}
 	}
 
-	for _, tl := range topLevel {
-		c.topLevelMap[tl] = true
-	}
-
-	return c.topLevelMap[s]
+	return true
 }
 
 func (c *configYAML) toConfigService(name string, s *serviceYAML) (*Service, error) {
@@ -118,7 +97,7 @@ func (c *configYAML) toConfigService(name string, s *serviceYAML) (*Service, err
 	}
 
 	service := &Service{
-		IsTopLevel: !c.hasDependents(s),
+		IsTopLevel: c.hasDependents(name),
 		Name:       name,
 		Image:      s.Image,
 		Hosts:      s.Hosts,
