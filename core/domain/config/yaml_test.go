@@ -231,6 +231,31 @@ func TestConfigYAML_ToConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "it fails if service.Requires contains an unknown service",
+			yaml: &configYAML{
+				Services: map[string]*serviceYAML{
+					"example": {
+						Requires: []string{"something"},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "it fails if a dependency is wrong",
+			yaml: &configYAML{
+				Services: map[string]*serviceYAML{
+					"a": {
+						Requires: []string{"b"},
+					},
+					"b": {
+						Requires: []string{"c"}, // c does not exist
+					},
+				},
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -244,4 +269,51 @@ func TestConfigYAML_ToConfig(t *testing.T) {
 			assert.DeepEqual(t, test.want, got)
 		})
 	}
+}
+
+func TestConfigYAML_ToConfig2(t *testing.T) {
+	// it can handle circular dependency
+	config := &configYAML{
+		Services: map[string]*serviceYAML{
+			"a": {
+				Requires: []string{"b"},
+			},
+			"b": {
+				Requires: []string{"a"},
+			},
+		},
+	}
+	got, err := config.ToConfig()
+	assert.NilError(t, err)
+
+	assert.Assert(t, len(got.Services) == 2)
+
+	assert.Equal(t, got.Services["a"].Name, "a")
+	assert.Equal(t, len(got.Services["a"].Requires), 1)
+	assert.Equal(t, got.Services["a"].Requires[0], got.Services["b"])
+
+	assert.Equal(t, got.Services["b"].Name, "b")
+	assert.Equal(t, len(got.Services["b"].Requires), 1)
+	assert.Equal(t, got.Services["b"].Requires[0], got.Services["a"])
+}
+
+func TestConfigYAML_ToConfig3(t *testing.T) {
+	// it can require itself (a special case of circular dependency handling)
+	config := &configYAML{
+		Services: map[string]*serviceYAML{
+			"a": {
+				Requires: []string{"a"},
+			},
+		},
+	}
+
+	got, err := config.ToConfig()
+	assert.NilError(t, err)
+
+	assert.Assert(t, len(got.Services) == 1)
+
+	assert.Equal(t, got.Services["a"].Name, "a")
+	assert.Equal(t, len(got.Services["a"].Requires), 1)
+	assert.Equal(t, got.Services["a"].Requires[0], got.Services["a"])
+
 }

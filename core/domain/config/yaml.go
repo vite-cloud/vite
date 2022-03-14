@@ -24,7 +24,6 @@ type configYAML struct {
 
 	configRegistry map[string]*types.AuthConfig
 	configServices map[string]*Service
-	topLevelMap    map[*serviceYAML]bool
 }
 
 // serviceYAML is the YAML representation of a service
@@ -128,20 +127,6 @@ func (c *configYAML) toConfigService(name string, s *serviceYAML) (*Service, err
 		}
 	}
 
-	// service.Requires
-	for _, require := range s.Requires {
-		if _, ok := c.Services[require]; !ok {
-			return nil, fmt.Errorf("service %s not found, %s can not depend on it", require, name)
-		}
-
-		converted, err := c.toConfigService(require, c.Services[require])
-		if err != nil {
-			return nil, err
-		}
-
-		service.Requires = append(service.Requires, converted)
-	}
-
 	// service.Hosts
 	var hosts []string
 	for _, host := range s.Hosts {
@@ -157,9 +142,25 @@ func (c *configYAML) toConfigService(name string, s *serviceYAML) (*Service, err
 	}
 	service.Hosts = hosts
 
+	// prevent infinite recursion if a <-> b
+	// from now on, we need to use c.configServices[name] rather than service.
 	c.configServices[name] = service
 
-	return service, nil
+	// service.Requires
+	for _, require := range s.Requires {
+		if _, ok := c.Services[require]; !ok {
+			return nil, fmt.Errorf("service %s not found, %s can not depend on it", require, name)
+		}
+
+		converted, err := c.toConfigService(require, c.Services[require])
+		if err != nil {
+			return nil, err
+		}
+
+		c.configServices[name].Requires = append(c.configServices[name].Requires, converted)
+	}
+
+	return c.configServices[name], nil
 }
 
 func (c configYAML) toConfigRegistry(r *registryYAML) *types.AuthConfig {
