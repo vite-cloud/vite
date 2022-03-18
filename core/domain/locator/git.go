@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/vite-cloud/vite/core/domain/log"
 	"os"
 	"os/exec"
 )
@@ -12,13 +13,16 @@ import (
 // It holds the path to the repository path.
 type Git string
 
-// ErrRepositoryNotFound is returned when a repository does not exist at the given path.
-var ErrRepositoryNotFound = errors.New("repository not found")
+// related errors
+var (
+	ErrRepositoryNotFound = errors.New("repository not found")
+	ErrEmptyBranch        = errors.New("empty branch")
+)
 
 // Clone clones the given repository and branch.
 func (g Git) Clone(remote, branch string) error {
 	if branch == "" {
-		return fmt.Errorf("branch is empty")
+		return ErrEmptyBranch
 	}
 
 	cmd := exec.Command("git", "clone", "--branch", branch, remote, g.String())
@@ -44,6 +48,12 @@ func globalRun(cmd *exec.Cmd) ([]byte, error) {
 	err := cmd.Run()
 	out := buf.Bytes()
 
+	log.Log(log.DebugLevel, "ran git command", log.Fields{
+		"cmd":  cmd.Args,
+		"err":  err,
+		"code": cmd.ProcessState.ExitCode(),
+	})
+	
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", err, out)
 	}

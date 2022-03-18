@@ -6,11 +6,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/vite-cloud/vite/core/domain/locator"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
+	"regexp"
 )
 
 // runSetupCommand handles the `setup` command.
 func runSetupCommand(cli *cli.CLI) error {
-	fmt.Fprintln(cli.Out(), "Welcome to Vite!")
 	var qs = []*survey.Question{
 		{
 			Name: "provider",
@@ -34,30 +34,29 @@ func runSetupCommand(cli *cli.CLI) error {
 			Prompt: &survey.Input{
 				Message: "Enter your repository:",
 			},
-			//Validate: func(ans interface{}) error {
-			//	fmt.Println("INVALID")
-			//	re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+")
-			//	if !re.MatchString(ans.(string)) {
-			//		return fmt.Errorf("repository must be in format: username/repository")
-			//	}
-			//	return nil
-			//},
+			Validate: func(ans interface{}) error {
+				re := regexp.MustCompile("[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+")
+				if !re.MatchString(ans.(string)) {
+					return fmt.Errorf("repository must be in format: username/repository")
+				}
+				return nil
+			},
 		},
-		//	{
-		//		Name: "branch",
-		//		Prompt: &survey.Input{
-		//			Message: "Enter your branch:",
-		//			Default: "main",
-		//		},
-		//		Validate: survey.Required,
-		//	},
-		//	{
-		//		Name: "path",
-		//		Prompt: &survey.Input{
-		//			Message: "Enter a sub-path (optional):",
-		//			Default: "",
-		//		},
-		//	},
+		{
+			Name: "branch",
+			Prompt: &survey.Input{
+				Message: "Enter your branch:",
+				Default: "main",
+			},
+			Validate: survey.Required,
+		},
+		{
+			Name: "path",
+			Prompt: &survey.Input{
+				Message: "Enter a sub-path (optional):",
+				Default: "",
+			},
+		},
 	}
 
 	answers := struct {

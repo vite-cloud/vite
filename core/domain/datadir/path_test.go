@@ -3,10 +3,10 @@ package datadir
 import (
 	"github.com/docker/docker/pkg/homedir"
 	"gotest.tools/v3/assert"
-	"math/rand"
 	"os"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestDir(t *testing.T) {
@@ -36,7 +36,7 @@ func TestSetHomeDir(t *testing.T) {
 
 	assert.Equal(t, homeDir+"/"+dataDirName, dir)
 
-	newHome := "/tmp/vite-datadir-" + strconv.FormatInt(rand.Int63(), 10)
+	newHome := "/tmp/vite-datadir-" + strconv.Itoa(int(time.Now().UnixMilli()))
 
 	SetHomeDir(newHome)
 

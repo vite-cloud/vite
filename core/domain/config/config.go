@@ -1,6 +1,8 @@
 package config
 
 import (
+	"errors"
+	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/vite-cloud/vite/core/domain/locator"
 	"gopkg.in/yaml.v2"
@@ -49,9 +51,16 @@ type Service struct {
 }
 
 // Get returns the Config given a config locator.Locator.
-func Get(l *locator.Locator) (*Config, error) {
-	contents, err := l.Read("vite.yaml")
+func Get() (*Config, error) {
+	l, err := locator.LoadFromStore()
 	if err != nil {
+		return nil, err
+	}
+
+	contents, err := l.Read("vite.yaml")
+	if errors.Is(err, locator.ErrInvalidCommit) {
+		return nil, fmt.Errorf("could not read the config, no commit specified: run `vite use` to pick one")
+	} else if err != nil {
 		return nil, err
 	}
 

@@ -22,7 +22,6 @@ type configYAML struct {
 
 	ControlPlaneHost string `yaml:"control_plane_host"`
 
-	configRegistry map[string]*types.AuthConfig
 	configServices map[string]*Service
 }
 

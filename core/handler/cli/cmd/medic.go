@@ -5,18 +5,12 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/vite-cloud/vite/core/domain/config"
-	"github.com/vite-cloud/vite/core/domain/locator"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 )
 
 // runMedicCommand handles the `medic` command.
 func runMedicCommand(cmd *cobra.Command, args []string) error {
-	l, err := locator.LoadFromStore()
-	if err != nil {
-		return err
-	}
-
-	conf, err := config.Get(l)
+	conf, err := config.Get()
 	if err != nil {
 		return err
 	}

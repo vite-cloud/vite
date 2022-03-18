@@ -19,6 +19,9 @@ const (
 	ConfigFile = "config.json"
 )
 
+// ErrInvalidCommit is returned when the commit is invalid.
+var ErrInvalidCommit = errors.New("invalid commit")
+
 // Locator contains the configuration for the locator.
 type Locator struct {
 	Provider   Provider `json:"provider,omitempty"`
@@ -31,6 +34,10 @@ type Locator struct {
 
 // Read a file from the repository.
 func (l *Locator) Read(file string) ([]byte, error) {
+	if l.Commit == "" {
+		return nil, ErrInvalidCommit
+	}
+
 	git, err := l.git()
 	if err != nil {
 		return nil, err
@@ -38,6 +45,9 @@ func (l *Locator) Read(file string) ([]byte, error) {
 
 	if !git.RepoExists() {
 		err = git.Clone(l.Provider.URL(l.Protocol, l.Repository), l.Branch)
+		if errors.Is(err, ErrEmptyBranch) {
+			return nil, fmt.Errorf("could not clone repository %s, no branch specified (run `vite setup` again)", l.Provider.URL(l.Protocol, l.Repository))
+		}
 		if err != nil {
 			return nil, err
 		}

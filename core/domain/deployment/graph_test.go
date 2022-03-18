@@ -110,8 +110,8 @@ func service(name string, requires ...*config.Service) *config.Service {
 	s := &config.Service{
 		Name: name,
 	}
-	for _, r := range requires {
-		s.Requires = append(s.Requires, r)
-	}
+
+	s.Requires = append(s.Requires, requires...)
+
 	return s
 }

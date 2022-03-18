@@ -53,7 +53,16 @@ func (f Fields) Marshal(level level, message string) ([]byte, error) {
 	sort.Strings(keys)
 
 	for _, k := range keys {
-		err := enc.EncodeKeyval(k, f[k])
+		var err error
+		
+		switch f[k].(type) {
+		case []string:
+			// join strings with spaces
+			err = enc.EncodeKeyval(k, strings.Join(f[k].([]string), " "))
+		default:
+			err = enc.EncodeKeyval(k, f[k])
+		}
+
 		if err != nil {
 			return nil, err
 		}

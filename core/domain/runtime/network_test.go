@@ -6,9 +6,9 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/vite-cloud/vite/core/domain/manifest"
 	"gotest.tools/v3/assert"
-	"math/rand"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestClient_NetworkCreate(t *testing.T) {
@@ -23,7 +23,7 @@ func TestClient_NetworkCreate(t *testing.T) {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, manifest.ContextKey, &manifest.Manifest{})
 
-	name := "test_" + strconv.FormatInt(rand.Int63(), 10)
+	name := "test_" + strconv.Itoa(int(time.Now().UnixMilli()))
 
 	res, err := cli.NetworkCreate(ctx, name, NetworkCreateOptions{})
 	assert.NilError(t, err)
