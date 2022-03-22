@@ -95,7 +95,7 @@ func (d *Diagnostic) diagnoseService(service *config.Service) {
 
 		d.ErrorIf(
 			host == d.Config.ControlPlane.Host,
-			fmt.Sprintf("Service %s has the same host as the control plane", service.Name, host),
+			fmt.Sprintf("Service %s has the same host %s as the control plane", service.Name, host),
 			nil,
 		)
 	}
