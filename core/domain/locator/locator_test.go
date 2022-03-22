@@ -1,6 +1,9 @@
 package locator
 
 import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -18,7 +21,7 @@ func TestLocator_Read(t *testing.T) {
 
 	datadir.UseTestHome(t)
 
-	dir, err := ConfigStore.Dir()
+	dir, err := Store.Dir()
 	assert.NilError(t, err)
 
 	builder := newLocalRepo(t, filepath.Join(dir, "main-foo-bar"))
@@ -88,6 +91,48 @@ func TestLocator_Read5(t *testing.T) {
 	assert.ErrorContains(t, err, "path 'does-not-exist.yaml' does not exist")
 }
 
+func TestLocator_Read6(t *testing.T) {
+	datadir.SetHomeDir("/nop")
+
+	locator := Locator{
+		Commit: "ffffffffffffffffffffffffffffffffffffffff",
+	}
+
+	_, err := locator.Read("vite.yaml")
+	assert.ErrorIs(t, err, os.ErrPermission)
+}
+
+func TestLocator_Read7(t *testing.T) {
+	datadir.UseTestHome(t)
+
+	locator := Locator{
+		Commit:   "8897a7d08a1e791418904afdce369818c19d2c3e",
+		Branch:   "main",
+		Provider: Provider("not.example"),
+	}
+
+	_, err := locator.Read("vite.yaml")
+	assert.ErrorContains(t, err, "unable to look up not.example.com (port 9418) (Name or service not known)")
+}
+
+func TestLocator_Git(t *testing.T) {
+	datadir.SetHomeDir("/nop")
+
+	locator := Locator{}
+
+	_, err := locator.git()
+	assert.ErrorIs(t, err, os.ErrPermission)
+}
+
+func TestLocator_Save(t *testing.T) {
+	datadir.SetHomeDir("/nop")
+
+	locator := Locator{}
+
+	err := locator.Save()
+	assert.ErrorIs(t, err, os.ErrPermission)
+}
+
 func TestLoadFromStore(t *testing.T) {
 	datadir.UseTestHome(t)
 
@@ -113,11 +158,62 @@ func TestLoadFromStore(t *testing.T) {
 	assert.Equal(t, l.Provider.Name(), "github")
 }
 
-func TestLocator_Git(t *testing.T) {
+func TestLoadFromStore2(t *testing.T) {
 	datadir.SetHomeDir("/nop")
 
-	locator := Locator{}
-
-	_, err := locator.git()
+	_, err := LoadFromStore()
 	assert.ErrorIs(t, err, os.ErrPermission)
+}
+
+func TestLoadFromStore3(t *testing.T) {
+	datadir.UseTestHome(t)
+
+	_, err := LoadFromStore()
+	assert.Error(t, err, "config locator hasn't been configured yet, run `vite setup` first")
+}
+
+func TestLoadFromStore4(t *testing.T) {
+	datadir.UseTestHome(t)
+
+	f, err := Store.Open(ConfigFile, os.O_CREATE|os.O_WRONLY, 0600)
+	assert.NilError(t, err)
+
+	defer f.Close()
+
+	_, err = f.WriteString("invalid JSON")
+	assert.NilError(t, err)
+
+	_, err = LoadFromStore()
+	assert.Error(t, err, "invalid character 'i' looking for beginning of value")
+}
+
+func TestLocator_Checksum(t *testing.T) {
+	t.Parallel()
+
+	locator := Locator{
+		Provider:   Provider("foo"),
+		Protocol:   "ssh",
+		Repository: "foo/bar",
+		Branch:     "main",
+		Commit:     "fffffff",
+		Path:       "/sub/path",
+	}
+
+	data, err := json.Marshal(locator)
+	assert.NilError(t, err)
+
+	var values map[string]interface{}
+	err = json.Unmarshal(data, &values)
+
+	sum, err := base64.StdEncoding.DecodeString(locator.Checksum())
+	assert.NilError(t, err)
+
+	for k, v := range values {
+		if k == "protocol" {
+			continue
+		}
+
+		assert.Assert(t, bytes.Contains(sum, []byte(v.(string))), "sum: %s key: %s value: %s", sum, k, v)
+	}
+
 }

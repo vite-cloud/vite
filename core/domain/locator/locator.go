@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	// ConfigStore is the storage used by locator to store cloned configs.
-	ConfigStore = datadir.Store("locator")
+	// Store is the storage used by locator to store cloned configs.
+	Store = datadir.Store("locator")
 	// ConfigFile is the name of the config file for the locator.
 	ConfigFile = "config.json"
 )
@@ -24,13 +24,17 @@ const (
 var ErrInvalidCommit = errors.New("invalid commit")
 
 // Locator contains the configuration for the locator.
+// Do not 'omitempty' on fields in this struct, as we test if the Checksum
+// contains all the fields by marshaling it to JSON. Therefore, if you omit
+// empty fields, test may be false-negative.
 type Locator struct {
-	Provider   Provider `json:"provider,omitempty"`
-	Protocol   string   `json:"protocol,omitempty"`
-	Repository string   `json:"repository,omitempty"`
-	Branch     string   `json:"branch,omitempty"`
-	Commit     string   `json:"commit,omitempty"`
-	Path       string   `json:"path,omitempty"`
+	Provider   Provider `json:"provider"`
+	Protocol   string   `json:"protocol"`
+	Repository string   `json:"repository"`
+	Branch     string   `json:"branch"`
+	Commit     string   `json:"commit"`
+	Path       string   `json:"path"`
+	HELLOWORLD string
 }
 
 // Read a file from the repository.
@@ -64,31 +68,29 @@ func (l *Locator) Read(file string) ([]byte, error) {
 
 // git returns a Git object for the locator.
 func (l *Locator) git() (Git, error) {
-	dir, err := ConfigStore.Dir()
+	dir, err := Store.Dir()
 	if err != nil {
 		return "", err
 	}
 
 	path := dir + "/" + l.Branch + "-" + strings.Replace(l.Repository, "/", "-", -1)
-
 	return Git(path), nil
 }
 
 // Save the locator to the config store.
 func (l *Locator) Save() error {
-	dir, err := ConfigStore.Dir()
+	dir, err := Store.Dir()
 	if err != nil {
 		return err
 	}
 
 	contents, _ := json.Marshal(l)
-
 	return os.WriteFile(filepath.Join(dir, ConfigFile), contents, 0600)
 }
 
 // LoadFromStore loads a Locator from a config.json in store or fails if it does not exist.
 func LoadFromStore() (*Locator, error) {
-	f, err := ConfigStore.Open(ConfigFile, os.O_CREATE|os.O_RDONLY, 0600)
+	f, err := Store.Open(ConfigFile, os.O_CREATE|os.O_RDONLY, 0600)
 	if err != nil {
 		return nil, err
 	}
