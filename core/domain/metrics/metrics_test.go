@@ -41,12 +41,7 @@ func TestGatherMemory(t *testing.T) {
 	assert.Assert(t, metrics.SystemMetrics.MemoryUsed != 0)
 	assert.Assert(t, metrics.SystemMetrics.MemoryFree != 0)
 
-	mb20 := MB * 20
-
 	assert.Assert(t, metrics.SystemMetrics.MemoryTotal == ByteSize(memory.Total))
-	assert.Assert(t, (metrics.SystemMetrics.MemoryUsed-ByteSize(memory.Used)) <= mb20, "diff used memory (> 20MB): %f", metrics.SystemMetrics.MemoryUsed-ByteSize(memory.Used))
-	assert.Assert(t, (metrics.SystemMetrics.MemoryFree-ByteSize(memory.Free)) <= mb20, "diff free memory (> 20MB): %f", metrics.SystemMetrics.MemoryFree-ByteSize(memory.Free))
-
 	assert.Assert(t, metrics.SystemMetrics.MemoryUsed+metrics.SystemMetrics.MemoryFree <= metrics.SystemMetrics.MemoryTotal, "used+free memory is larger than total memory")
 }
 
