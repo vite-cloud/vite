@@ -7,6 +7,7 @@ import (
 	"github.com/vite-cloud/vite/core/domain/log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 // Git manages a given git repository.
@@ -53,7 +54,7 @@ func globalRun(cmd *exec.Cmd) ([]byte, error) {
 		"err":  err,
 		"code": cmd.ProcessState.ExitCode(),
 	})
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", err, out)
 	}
@@ -79,4 +80,51 @@ func (g Git) run(args ...string) ([]byte, error) {
 func (g Git) RepoExists() bool {
 	_, err := os.Stat(g.String())
 	return !errors.Is(err, os.ErrNotExist)
+}
+
+type CommitList []Commit
+
+type Commit struct {
+	Hash    string
+	Message string
+}
+
+// Commits returns the list of commits in the given branch.
+func (g Git) Commits(branch string) (CommitList, error) {
+	if branch == "" {
+		return nil, ErrEmptyBranch
+	}
+
+	out, err := g.run("log", "--pretty=%H%s", "--no-merges", branch)
+	if err != nil {
+		return nil, err
+	}
+
+	var commits CommitList
+
+	for _, line := range strings.Split(string(out), "\n") {
+		if line == "" {
+			continue
+		}
+
+		hash := line[:40]
+		message := line[40:]
+
+		commits = append(commits, Commit{
+			Hash:    hash,
+			Message: message,
+		})
+	}
+
+	return commits, nil
+}
+
+func (c CommitList) AsOptions() []string {
+	var options []string
+
+	for _, commit := range c {
+		options = append(options, fmt.Sprintf("%s %s", commit.Hash, commit.Message))
+	}
+
+	return options
 }

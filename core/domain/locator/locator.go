@@ -1,6 +1,7 @@
 package locator
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -105,4 +106,18 @@ func LoadFromStore() (*Locator, error) {
 	}
 
 	return &locator, nil
+}
+
+// Checksum returns the unique id of the locator, it may be used as a file name.
+func (l *Locator) Checksum() string {
+	return base64.StdEncoding.EncodeToString([]byte(l.Branch + l.Repository + l.Provider.Name() + l.Commit + l.Path))
+}
+
+func (l *Locator) Commits() (CommitList, error) {
+	git, err := l.git()
+	if err != nil {
+		return nil, err
+	}
+
+	return git.Commits(l.Branch)
 }

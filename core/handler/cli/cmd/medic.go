@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/vite-cloud/vite/core/domain/config"
+	"github.com/vite-cloud/vite/core/domain/medic"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 )
 
@@ -15,7 +15,9 @@ func runMedicCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("%+v\n", conf)
+	diagnosis := medic.Diagnose(conf)
+
+	fmt.Printf("%+v\n", diagnosis)
 
 	return nil
 }
