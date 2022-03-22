@@ -47,7 +47,7 @@ func (l *Locator) Read(file string) ([]byte, error) {
 	if !git.RepoExists() {
 		err = git.Clone(l.Provider.URL(l.Protocol, l.Repository), l.Branch)
 		if errors.Is(err, ErrEmptyBranch) {
-			return nil, fmt.Errorf("could not clone repository %s, no branch specified (run `vite setup` again)", l.Provider.URL(l.Protocol, l.Repository))
+			return nil, fmt.Errorf("could not clone repository %s: no branch specified (run `vite setup` again)", l.Provider.URL(l.Protocol, l.Repository))
 		}
 		if err != nil {
 			return nil, err
@@ -81,10 +81,7 @@ func (l *Locator) Save() error {
 		return err
 	}
 
-	contents, err := json.Marshal(l)
-	if err != nil {
-		return err
-	}
+	contents, _ := json.Marshal(l)
 
 	return os.WriteFile(filepath.Join(dir, ConfigFile), contents, 0600)
 }

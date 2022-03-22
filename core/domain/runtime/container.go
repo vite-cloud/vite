@@ -88,3 +88,20 @@ func (c Client) ContainerStop(ctx context.Context, id string) error {
 
 	return nil
 }
+
+// ContainerRemove removes a container
+func (c Client) ContainerRemove(ctx context.Context, id string) error {
+	err := c.client.ContainerRemove(ctx, id, types.ContainerRemoveOptions{
+		RemoveVolumes: true,
+		Force:         true,
+	})
+	if err != nil {
+		return err
+	}
+
+	log.Log(log.DebugLevel, "removed container", log.Fields{
+		"id": id,
+	})
+
+	return nil
+}

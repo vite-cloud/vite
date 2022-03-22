@@ -85,3 +85,16 @@ func Get() (*Config, error) {
 
 	return converted, nil
 }
+
+func (c *Config) Reload() error {
+	configCache = make(map[string]*Config)
+
+	reloaded, err := Get()
+	if err != nil {
+		return err
+	}
+
+	*c = *reloaded
+	
+	return nil
+}
