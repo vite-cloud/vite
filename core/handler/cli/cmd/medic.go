@@ -9,7 +9,7 @@ import (
 )
 
 // runMedicCommand handles the `medic` command.
-func runMedicCommand(cmd *cobra.Command, args []string) error {
+func runMedicCommand(cli *cli.CLI) error {
 	conf, err := config.Get()
 	if err != nil {
 		return err
@@ -17,7 +17,31 @@ func runMedicCommand(cmd *cobra.Command, args []string) error {
 
 	diagnosis := medic.Diagnose(conf)
 
-	fmt.Printf("%+v\n", diagnosis)
+	fmt.Fprintln(cli.Out(), "Errors:")
+
+	if len(diagnosis.Errors) == 0 {
+		fmt.Fprintln(cli.Out(), "  - no errors")
+	} else {
+		for _, err := range diagnosis.Errors {
+			fmt.Fprintf(cli.Out(), "  - %s\n", err.Title)
+			if err.Error != nil {
+				fmt.Fprintf(cli.Out(), "    %s\n", err.Error)
+			}
+		}
+	}
+
+	fmt.Fprintln(cli.Out(), "\nWarnings:")
+
+	if len(diagnosis.Warnings) == 0 {
+		fmt.Fprintln(cli.Out(), "  - no warnings")
+	} else {
+		for _, warn := range diagnosis.Warnings {
+			fmt.Fprintf(cli.Out(), "  - %s\n", warn.Title)
+			if warn.Advice != "" {
+				fmt.Fprintf(cli.Out(), "    %s\n", warn.Advice)
+			}
+		}
+	}
 
 	return nil
 }
@@ -27,7 +51,9 @@ func NewMedicCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "medic",
 		Short: "diagnose the configuration",
-		RunE:  runMedicCommand,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runMedicCommand(cli)
+		},
 	}
 
 	return cmd

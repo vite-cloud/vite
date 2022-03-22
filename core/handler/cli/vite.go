@@ -16,6 +16,7 @@ func New() *cli.CLI {
 		cmd.NewMedicCommand(c),
 		cmd.NewSetupCommand(c),
 		cmd.NewUseCommand(c),
+		cmd.NewSelfUpdateCommand(c),
 	)
 
 	return c
