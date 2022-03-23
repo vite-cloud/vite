@@ -16,7 +16,7 @@ func TestConfig_Reload(t *testing.T) {
 		Commit:     "8897a7d08a1e791418904afdce369818c19d2c3e",
 		Branch:     "main",
 		Provider:   locator.Provider("github"),
-		Protocol:   "ssh",
+		Protocol:   "https",
 		Repository: "felixdorn/config-test",
 	}
 

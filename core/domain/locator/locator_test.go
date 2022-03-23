@@ -67,7 +67,7 @@ func TestLocator_Read4(t *testing.T) {
 		Commit:     "8897a7d08a1e791418904afdce369818c19d2c3e",
 		Provider:   Provider("github"),
 		Branch:     "main",
-		Protocol:   "ssh",
+		Protocol:   "https",
 		Repository: "felixdorn/config-test",
 	}
 
@@ -83,7 +83,7 @@ func TestLocator_Read5(t *testing.T) {
 		Commit:     "8897a7d08a1e791418904afdce369818c19d2c3e",
 		Provider:   Provider("github"),
 		Branch:     "main",
-		Protocol:   "ssh",
+		Protocol:   "https",
 		Repository: "felixdorn/config-test",
 	}
 
