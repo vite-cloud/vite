@@ -215,5 +215,42 @@ func TestLocator_Checksum(t *testing.T) {
 
 		assert.Assert(t, bytes.Contains(sum, []byte(v.(string))), "sum: %s key: %s value: %s", sum, k, v)
 	}
+}
 
+func TestLocator_Commits(t *testing.T) {
+	datadir.UseTestHome(t)
+
+	locator := Locator{
+		Branch:     "main",
+		Repository: "foo/bar",
+	}
+
+	dir, err := Store.Dir()
+	assert.NilError(t, err)
+
+	second := newLocalRepo(t, dir+"/main-foo-bar").
+		WriteFile("hello-world", []byte{}, 0600).
+		Commit()
+
+	first := newLocalRepo(t, dir+"/main-foo-bar").
+		WriteFile("2hello-world", []byte{}, 0600).
+		Commit()
+
+	commits, err := locator.Commits()
+	assert.NilError(t, err)
+
+	assert.Equal(t, len(commits), 2)
+	assert.Equal(t, commits[0].Hash, first)
+	assert.Equal(t, commits[0].Message, "commit")
+	assert.Equal(t, commits[1].Hash, second)
+	assert.Equal(t, commits[1].Message, "commit")
+}
+
+func TestLocator_Commits2(t *testing.T) {
+	datadir.SetHomeDir("/nop")
+
+	locator := Locator{}
+
+	_, err := locator.Commits()
+	assert.ErrorIs(t, err, os.ErrPermission)
 }

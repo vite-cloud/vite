@@ -34,7 +34,6 @@ type Locator struct {
 	Branch     string   `json:"branch"`
 	Commit     string   `json:"commit"`
 	Path       string   `json:"path"`
-	HELLOWORLD string
 }
 
 // Read a file from the repository.
