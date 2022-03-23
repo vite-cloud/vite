@@ -228,21 +228,18 @@ func TestLocator_Commits(t *testing.T) {
 	dir, err := Store.Dir()
 	assert.NilError(t, err)
 
-	second := newLocalRepo(t, dir+"/main-foo-bar").
-		WriteFile("hello-world", []byte{}, 0600).
-		Commit()
+	repo := newLocalRepo(t, dir+"/main-foo-bar")
 
-	first := newLocalRepo(t, dir+"/main-foo-bar").
-		WriteFile("2hello-world", []byte{}, 0600).
-		Commit()
+	first := repo.WriteFile("hello-world", []byte{}, 0600).Commit()
+	second := repo.WriteFile("2hello-world", []byte{}, 0600).Commit()
 
 	commits, err := locator.Commits()
 	assert.NilError(t, err)
 
 	assert.Equal(t, len(commits), 2)
-	assert.Equal(t, commits[0].Hash, first)
+	assert.Equal(t, commits[0].Hash, second)
 	assert.Equal(t, commits[0].Message, "commit")
-	assert.Equal(t, commits[1].Hash, second)
+	assert.Equal(t, commits[1].Hash, first)
 	assert.Equal(t, commits[1].Message, "commit")
 }
 

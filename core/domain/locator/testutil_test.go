@@ -32,7 +32,7 @@ func newLocalRepo(t *testing.T, path string) *RepoBuilder {
 		t.Fatal(err)
 	}
 
-	runGit(t, path, "init")
+	runGit(t, path, "init", "-b", "main")
 
 	return &RepoBuilder{
 		t:    t,
