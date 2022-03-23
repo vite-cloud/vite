@@ -54,7 +54,7 @@ func (f Fields) Marshal(level level, message string) ([]byte, error) {
 
 	for _, k := range keys {
 		var err error
-		
+
 		switch f[k].(type) {
 		case []string:
 			// join strings with spaces

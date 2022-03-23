@@ -95,6 +95,6 @@ func (c *Config) Reload() error {
 	}
 
 	*c = *reloaded
-	
+
 	return nil
 }

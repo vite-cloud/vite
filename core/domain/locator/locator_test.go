@@ -204,6 +204,7 @@ func TestLocator_Checksum(t *testing.T) {
 
 	var values map[string]interface{}
 	err = json.Unmarshal(data, &values)
+	assert.NilError(t, err)
 
 	sum, err := base64.StdEncoding.DecodeString(locator.Checksum())
 	assert.NilError(t, err)

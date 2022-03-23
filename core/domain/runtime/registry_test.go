@@ -30,7 +30,7 @@ func TestClient_RegistryLogin(t *testing.T) {
 		assert.Equal(t, auth.Password, "password")
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"identitytoken": "token"}`))
+		_, _ = w.Write([]byte("{}"))
 	}))
 
 	raw, err := client.NewClientWithOpts(client.WithHost(server.URL))

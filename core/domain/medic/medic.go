@@ -161,11 +161,7 @@ func (d *Diagnostic) ensureDnsRecordsPointToHost() {
 	defer response.Body.Close()
 
 	raw, err := ioutil.ReadAll(response.Body)
-	d.ErrorIf(
-		err != nil,
-		fmt.Sprintf("Failed to read response body from http://checkip.amazonaws.com"),
-		err,
-	)
+	d.ErrorIf(err != nil, "Failed to read response body from http://checkip.amazonaws.com", err)
 
 	ip := strings.TrimSpace(string(raw))
 
