@@ -9,6 +9,7 @@ import (
 func (c *Client) RegistryLogin(ctx context.Context, auth types.AuthConfig) error {
 	_, err := c.client.RegistryLogin(ctx, auth)
 
+	c.client.HTTPClient()
 	log.Log(log.DebugLevel, "login to registry", log.Fields{
 		"host": auth.ServerAddress,
 	})

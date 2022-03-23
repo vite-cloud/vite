@@ -10,21 +10,29 @@ type Client struct {
 	client *client.Client
 }
 
-var clientInstance *Client
+type Opt func(*Client)
+
+func WithDockerClient(dockerClient *client.Client) Opt {
+	return func(c *Client) {
+		c.client = dockerClient
+	}
+}
 
 // NewClient creates a new docker client
-func NewClient() (*Client, error) {
-	if clientInstance != nil {
-		return clientInstance, nil
+func NewClient(opts ...Opt) (*Client, error) {
+	clientInstance := &Client{}
+
+	for _, opt := range opts {
+		opt(clientInstance)
 	}
 
-	docker, err := client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		return nil, err
-	}
+	if clientInstance.client == nil {
+		docker, err := client.NewClientWithOpts(client.FromEnv)
+		if err != nil {
+			return nil, err
+		}
 
-	clientInstance = &Client{
-		client: docker,
+		clientInstance.client = docker
 	}
 
 	return clientInstance, nil

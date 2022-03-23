@@ -10,13 +10,17 @@ import (
 
 // ContainerStats holds information about the memory and cpu usage of a container
 type ContainerStats struct {
-	Name            string
-	ID              string
+	Name string
+	ID   string
+
 	MemoryUsed      uint64
 	MemoryAvailable uint64
-	CPUCount        uint64
-	CPUDelta        uint64
-	CPUSystemDelta  uint64
+	MemoryUsage     float64 // percentage
+
+	CPUCount       int
+	CPUDelta       uint64
+	CPUSystemDelta uint64
+	CPUUsage       float64 // percentage
 }
 
 // Stats returns the stats of many containers
@@ -45,25 +49,40 @@ func (c *Client) Stats(ctx context.Context, opts types.ContainerListOptions) ([]
 				return
 			}
 
-			if stat.OSType != "linux" {
-				errs <- fmt.Errorf("unsupported OSType: %s", stat.OSType)
-				return
-			}
-
 			var decoded *types.StatsJSON
 			if err = json.NewDecoder(stat.Body).Decode(&decoded); err != nil {
 				errs <- err
 				return
 			}
 
+			var memoryCache uint64
+
+			if _, ok := decoded.MemoryStats.Stats["cache"]; ok {
+				memoryCache = decoded.MemoryStats.Stats["cache"]
+			}
+
+			memoryUsed := decoded.MemoryStats.Usage - memoryCache
+			memoryAvailable := decoded.MemoryStats.Limit
+
+			memoryUsage := float64(memoryUsed) / float64(memoryAvailable) * 100.0
+
+			cpuDelta := decoded.CPUStats.CPUUsage.TotalUsage - decoded.PreCPUStats.CPUUsage.TotalUsage
+			cpuSystemDelta := decoded.CPUStats.SystemUsage - decoded.PreCPUStats.SystemUsage
+			cpuCount := len(decoded.CPUStats.CPUUsage.PercpuUsage)
+
+			cpuUsage := float64(cpuDelta) / float64(cpuSystemDelta) * 100.0 * float64(cpuCount)
+
 			metrics = append(metrics, &ContainerStats{
 				Name:            container.Names[0][1:],
 				ID:              container.ID,
-				MemoryUsed:      decoded.MemoryStats.Usage,
-				MemoryAvailable: decoded.MemoryStats.Limit,
-				CPUCount:        decoded.CPUStats.CPUUsage.TotalUsage,
-				CPUDelta:        decoded.CPUStats.CPUUsage.UsageInUsermode,
-				CPUSystemDelta:  decoded.CPUStats.CPUUsage.UsageInKernelmode,
+				MemoryUsed:      memoryUsed,
+				MemoryAvailable: memoryAvailable,
+				MemoryUsage:     memoryUsage,
+
+				CPUCount:       cpuCount,
+				CPUDelta:       cpuDelta,
+				CPUSystemDelta: cpuSystemDelta,
+				CPUUsage:       cpuUsage,
 			})
 		}()
 	}
