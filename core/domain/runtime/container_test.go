@@ -32,16 +32,20 @@ func TestClient(t *testing.T) {
 		test func(ctx *testCtx)
 	}{
 		{
-			name: "test container start",
+			name: "it can start containers",
 			test: testContainerStart,
 		},
 		{
-			name: "test container create",
+			name: "it can create containers",
 			test: testContainerCreate,
 		},
 		{
-			name: "test container stop",
+			name: "it can stop containers",
 			test: testContainerStop,
+		},
+		{
+			name: "it can remove containers",
+			test: testContainerRemove,
 		},
 	}
 
@@ -186,6 +190,30 @@ func testContainerStop(tc *testCtx) {
 
 	assert.Equal(tc.t, tc.logger.Len(), 3)
 	assert.Equal(tc.t, tc.logger.Last().Message, "stopped container")
+	assert.Equal(tc.t, tc.logger.Last().Level, log.DebugLevel)
+	assert.Equal(tc.t, tc.logger.Last().Fields["id"], body.ID)
+}
+
+func testContainerRemove(tc *testCtx) {
+	body, err := tc.cli.ContainerCreate(tc.ctx, testImage, ContainerCreateOptions{
+		Name: tc.containerName,
+	})
+	assert.NilError(tc.t, err)
+
+	err = tc.cli.ContainerStart(tc.ctx, body.ID)
+	assert.NilError(tc.t, err)
+
+	err = tc.cli.ContainerStop(tc.ctx, body.ID)
+	assert.NilError(tc.t, err)
+
+	err = tc.cli.ContainerRemove(tc.ctx, body.ID)
+	assert.NilError(tc.t, err)
+
+	_, err = tc.raw.ContainerInspect(tc.ctx, body.ID)
+	assert.Error(tc.t, err, "Error: No such container: "+body.ID)
+
+	assert.Equal(tc.t, tc.logger.Len(), 4)
+	assert.Equal(tc.t, tc.logger.Last().Message, "removed container")
 	assert.Equal(tc.t, tc.logger.Last().Level, log.DebugLevel)
 	assert.Equal(tc.t, tc.logger.Last().Fields["id"], body.ID)
 }
