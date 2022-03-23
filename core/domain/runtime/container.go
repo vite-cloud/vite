@@ -13,6 +13,8 @@ import (
 const (
 	CreatedContainerManifestKey = "CreatedContainer"
 	StartedContainerManifestKey = "StartedContainer"
+	StoppedContainerManifestKey = "StoppedContainer"
+	RemovedContainerManifestKey = "RemovedContainer"
 )
 
 // ContainerCreateOptions defines the options for creating a container
@@ -86,6 +88,8 @@ func (c Client) ContainerStop(ctx context.Context, id string) error {
 		"id": id,
 	})
 
+	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(StoppedContainerManifestKey, id)
+
 	return nil
 }
 
@@ -102,6 +106,8 @@ func (c Client) ContainerRemove(ctx context.Context, id string) error {
 	log.Log(log.DebugLevel, "removed container", log.Fields{
 		"id": id,
 	})
+
+	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(RemovedContainerManifestKey, id)
 
 	return nil
 }

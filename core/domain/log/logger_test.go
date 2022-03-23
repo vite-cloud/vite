@@ -39,7 +39,7 @@ func TestLog2(t *testing.T) {
 	logDir, err := Store.Dir()
 	assert.NilError(t, err)
 
-	logFile := logDir + "/internal.log"
+	logFile := logDir + "/" + LogFile
 
 	contents, err := os.ReadFile(logFile)
 	assert.NilError(t, err)
@@ -69,12 +69,12 @@ func TestLog4(t *testing.T) {
 	dir, err := Store.Dir()
 	assert.NilError(t, err)
 
-	err = os.Mkdir(dir+"/internal.log", 0600)
+	err = os.Mkdir(dir+"/"+LogFile, 0600)
 	assert.NilError(t, err)
 
 	panics.Panic(t, func() {
 		Log(DebugLevel, "hello world", Fields{})
-	}, fmt.Sprintf("open %s: is a directory", dir+"/internal.log"))
+	}, fmt.Sprintf("open %s: is a directory", dir+"/"+LogFile))
 }
 
 func TestLog5(t *testing.T) {

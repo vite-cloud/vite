@@ -3,3 +3,10 @@
 [![Tests](https://github.com/vite-cloud/vite/actions/workflows/tests.yml/badge.svg)](https://github.com/vite-cloud/vite/actions/workflows/tests.yml)
 
 Check out [the documentation](//vite.cloud/docs) to get started.
+
+
+* `proxy run`
+* `proxy enable`
+* `proxy disable`
+* `proxy logs`
+* `logs`

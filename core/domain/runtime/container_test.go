@@ -192,6 +192,12 @@ func testContainerStop(tc *testCtx) {
 	assert.Equal(tc.t, tc.logger.Last().Message, "stopped container")
 	assert.Equal(tc.t, tc.logger.Last().Level, log.DebugLevel)
 	assert.Equal(tc.t, tc.logger.Last().Fields["id"], body.ID)
+
+	stopped, err := tc.ctx.Value(manifest.ContextKey).(*manifest.Manifest).Get(StoppedContainerManifestKey)
+	assert.NilError(tc.t, err)
+
+	assert.Equal(tc.t, len(stopped), 1)
+	assert.Equal(tc.t, stopped[0], body.ID)
 }
 
 func testContainerRemove(tc *testCtx) {
@@ -216,4 +222,10 @@ func testContainerRemove(tc *testCtx) {
 	assert.Equal(tc.t, tc.logger.Last().Message, "removed container")
 	assert.Equal(tc.t, tc.logger.Last().Level, log.DebugLevel)
 	assert.Equal(tc.t, tc.logger.Last().Fields["id"], body.ID)
+
+	removed, err := tc.ctx.Value(manifest.ContextKey).(*manifest.Manifest).Get(RemovedContainerManifestKey)
+	assert.NilError(tc.t, err)
+
+	assert.Equal(tc.t, len(removed), 1)
+	assert.Equal(tc.t, removed[0].(string), body.ID)
 }

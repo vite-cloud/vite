@@ -8,8 +8,11 @@ import (
 	"github.com/vite-cloud/vite/core/domain/manifest"
 )
 
-// CreateNetworkManifestKey resource tag available in the manifest
-const CreateNetworkManifestKey = "CreatedNetwork"
+// resource tags available in the manifest
+const (
+	CreatedNetworkManifestKey = "CreatedNetwork"
+	RemovedNetworkManifestKey = "RemovedNetwork"
+)
 
 type NetworkCreateOptions struct {
 	Driver string
@@ -34,7 +37,22 @@ func (c Client) NetworkCreate(ctx context.Context, name string, opts NetworkCrea
 		"config": opts.IPAM,
 	})
 
-	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(CreateNetworkManifestKey, res.ID)
+	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(CreatedNetworkManifestKey, res.ID)
 
 	return res.ID, nil
+}
+
+func (c Client) NetworkRemove(ctx context.Context, id string) error {
+	err := c.client.NetworkRemove(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	log.Log(log.DebugLevel, "removed network", log.Fields{
+		"id": id,
+	})
+
+	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(RemovedNetworkManifestKey, id)
+
+	return nil
 }

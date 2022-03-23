@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/vite-cloud/vite/core/handler/cli/cmd/proxy"
 	"os"
 
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
@@ -17,6 +18,9 @@ func New() *cli.CLI {
 		cmd.NewSetupCommand(c),
 		cmd.NewUseCommand(c),
 		cmd.NewSelfUpdateCommand(c),
+		cmd.NewLogsCommand(c),
+		
+		proxy.NewProxyCommand(c),
 	)
 
 	return c

@@ -119,3 +119,12 @@ func TestFileWriter_Write(t *testing.T) {
 
 	assert.Equal(t, "_stack=@ _time=@ foo=bar level=debug message=test\n", string(contents))
 }
+
+func TestFileWriter_Write2(t *testing.T) {
+	w := fileWriter{}
+
+	err := w.Write(DebugLevel, "test", Fields{
+		"invalid_value": []int{1, 2, 3},
+	})
+	assert.Error(t, err, "unsupported value type")
+}
