@@ -1,15 +1,17 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/vite-cloud/vite/core/domain/log"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
+	"os"
 )
 
 type logsOptions struct {
-	follow bool
-	n      int
+	stream   bool
+	backfill int
 }
 
 func runLogsCommand(cli *cli.CLI, opts logsOptions) error {
@@ -19,10 +21,14 @@ func runLogsCommand(cli *cli.CLI, opts logsOptions) error {
 	}
 
 	stream, err := log.Tail(dir+"/"+log.LogFile, log.TailOptions{
-		Stream:   opts.follow,
-		Backfill: opts.n,
+		Stream:   opts.stream,
+		Backfill: opts.backfill,
 	})
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("proxy has never been started, please start it first")
+		}
+
 		return err
 	}
 
@@ -44,8 +50,8 @@ func NewLogsCommand(cli *cli.CLI) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&opts.follow, "follow", "f", false, "follow logs")
-	cmd.Flags().IntVarP(&opts.n, "lines", "n", 10, "number of lines to show")
+	cmd.Flags().BoolVarP(&opts.stream, "follow", "f", false, "follow logs")
+	cmd.Flags().IntVarP(&opts.backfill, "backfill", "n", 10, "number of lines to show")
 
 	return cmd
 }

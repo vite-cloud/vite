@@ -80,7 +80,7 @@ func (c *CLI) Run(args []string) int {
 
 		return 0
 	} else if statusErr, ok := err.(*StatusError); ok {
-		fmt.Fprintln(c.Err(), statusErr.Status)
+		fmt.Fprintf(c.Err(), "Error: %s\n", statusErr.Status)
 
 		log.Log(log.ErrorLevel, "command failed", log.Fields{
 			"command": args[0],
@@ -90,7 +90,7 @@ func (c *CLI) Run(args []string) int {
 
 		return statusErr.StatusCode
 	} else {
-		fmt.Fprintln(c.Err(), err)
+		fmt.Fprintf(c.Err(), "Error: %s\n", err)
 
 		log.Log(log.ErrorLevel, "command failed", log.Fields{
 			"command": args[0],

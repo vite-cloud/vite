@@ -8,7 +8,7 @@ package cmd
 //		Test: func(console *Expect) {
 //			console.Expect("Select your provider:").Enter()
 //			console.Expect("Select your protocol:").Enter()
-//			/console.Expect("Enter your repository:").Write("vite/org\n")
+//			/console.Expect("Enter your repository:").Write("vite/org\backfill")
 //
 //			console.EOF()
 //		},
