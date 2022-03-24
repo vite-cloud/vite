@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/vite-cloud/vite/core/domain/log"
-	"github.com/vite-cloud/vite/core/domain/manifest"
 )
 
 // resource tags available in the manifest
@@ -25,6 +25,10 @@ type ContainerCreateOptions struct {
 	Registry *types.AuthConfig
 	// Env variables to set
 	Env []string
+
+	Labels map[string]string
+
+	Networking *network.NetworkingConfig
 }
 
 // fullImageName returns the full image name, including registry if any
@@ -39,13 +43,14 @@ func fullImageName(image string, registry *types.AuthConfig) string {
 // ContainerCreate creates a container
 func (c Client) ContainerCreate(ctx context.Context, image string, opts ContainerCreateOptions) (container.ContainerCreateCreatedBody, error) {
 	res, err := c.client.ContainerCreate(ctx, &container.Config{
-		Image: fullImageName(image, opts.Registry),
-		Env:   opts.Env,
+		Image:  fullImageName(image, opts.Registry),
+		Env:    opts.Env,
+		Labels: opts.Labels,
 	}, &container.HostConfig{
 		RestartPolicy: container.RestartPolicy{
 			Name: "always",
 		},
-	}, nil, nil, opts.Name)
+	}, opts.Networking, nil, opts.Name)
 	if err != nil {
 		return container.ContainerCreateCreatedBody{}, err
 	}
@@ -55,8 +60,6 @@ func (c Client) ContainerCreate(ctx context.Context, image string, opts Containe
 		"image":         image,
 		"with_registry": opts.Registry != nil,
 	})
-
-	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(CreatedContainerManifestKey, res.ID)
 
 	return res, nil
 }
@@ -72,7 +75,7 @@ func (c Client) ContainerStart(ctx context.Context, id string) error {
 		"id": id,
 	})
 
-	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(StartedContainerManifestKey, id)
+	//ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(StartedContainerManifestKey, id, id)
 
 	return nil
 }
@@ -88,7 +91,7 @@ func (c Client) ContainerStop(ctx context.Context, id string) error {
 		"id": id,
 	})
 
-	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(StoppedContainerManifestKey, id)
+	//ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(StoppedContainerManifestKey, id, id)
 
 	return nil
 }
@@ -107,7 +110,22 @@ func (c Client) ContainerRemove(ctx context.Context, id string) error {
 		"id": id,
 	})
 
-	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(RemovedContainerManifestKey, id)
+	//ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(RemovedContainerManifestKey, id, id)
 
 	return nil
+}
+
+func (c Client) ContainerExec(ctx context.Context, id string, command string) error {
+	ref, err := c.client.ContainerExecCreate(ctx, id, types.ExecConfig{
+		Cmd: []string{"sh", "-c", command},
+	})
+	if err != nil {
+		return err
+	}
+
+	return c.client.ContainerExecStart(ctx, ref.ID, types.ExecStartCheck{})
+}
+
+func (c Client) ContainerInspect(ctx context.Context, id string) (types.ContainerJSON, error) {
+	return c.client.ContainerInspect(ctx, id)
 }

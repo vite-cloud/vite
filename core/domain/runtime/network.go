@@ -5,17 +5,9 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
 	"github.com/vite-cloud/vite/core/domain/log"
-	"github.com/vite-cloud/vite/core/domain/manifest"
-)
-
-// resource tags available in the manifest
-const (
-	CreatedNetworkManifestKey = "CreatedNetwork"
-	RemovedNetworkManifestKey = "RemovedNetwork"
 )
 
 type NetworkCreateOptions struct {
-	Driver string
 	Labels map[string]string
 	IPAM   *network.IPAM
 }
@@ -23,9 +15,8 @@ type NetworkCreateOptions struct {
 func (c Client) NetworkCreate(ctx context.Context, name string, opts NetworkCreateOptions) (string, error) {
 	res, err := c.client.NetworkCreate(ctx, name, types.NetworkCreate{
 		CheckDuplicate: true,
-		Driver:         opts.Driver,
-		Labels:         opts.Labels,
 		IPAM:           opts.IPAM,
+		Labels:         opts.Labels,
 	})
 	if err != nil {
 		return "", err
@@ -36,8 +27,6 @@ func (c Client) NetworkCreate(ctx context.Context, name string, opts NetworkCrea
 		"id":     res.ID,
 		"config": opts.IPAM,
 	})
-
-	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(CreatedNetworkManifestKey, res.ID)
 
 	return res.ID, nil
 }
@@ -52,7 +41,19 @@ func (c Client) NetworkRemove(ctx context.Context, id string) error {
 		"id": id,
 	})
 
-	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(RemovedNetworkManifestKey, id)
+	return nil
+}
+
+func (c Client) NetworkConnect(ctx context.Context, networkId, containerID string) error {
+	err := c.client.NetworkConnect(ctx, networkId, containerID, nil)
+	if err != nil {
+		return err
+	}
+
+	log.Log(log.DebugLevel, "connected network", log.Fields{
+		"network":   networkId,
+		"container": containerID,
+	})
 
 	return nil
 }

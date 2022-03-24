@@ -12,17 +12,17 @@ import (
 func TestManifest_MarshalJSON(t *testing.T) {
 	data := manifestJSON{
 		Version: "testing",
-		Resources: map[string]any{
-			"hello": []string{"world"},
-			"foo":   []any{"bar", 4},
+		Resources: map[string][]LabeledValue{
+			"hello": {{"label", "world"}},
+			"foo":   {{"label1", "bar"}, {"label2", 4}},
 		},
 	}
 
 	m := &Manifest{Version: "testing"}
 
-	m.Add("hello", "world")
-	m.Add("foo", "bar")
-	m.Add("foo", 4)
+	m.Add("hello", "label", "world")
+	m.Add("foo", "label1", "bar")
+	m.Add("foo", "label2", 4)
 
 	got, err := json.Marshal(m)
 	assert.NilError(t, err)
@@ -35,18 +35,21 @@ func TestManifest_MarshalJSON(t *testing.T) {
 func TestManifest_Add(t *testing.T) {
 	m := &Manifest{Version: "testing"}
 
-	m.Add("hello", "world")
-	m.Add("foo", "bar")
-	m.Add("foo", 4)
+	m.Add("hello", "label", "world")
+	m.Add("foo", "label1", "bar")
+	m.Add("foo", "label2", 4)
 
 	got, ok := m.resources.Load("hello")
 	assert.Assert(t, ok)
-	assert.Equal(t, got.([]any)[0], "world")
+	assert.Equal(t, got.([]LabeledValue)[0].Label, "label")
+	assert.Equal(t, got.([]LabeledValue)[0].Value, "world")
 
 	got, ok = m.resources.Load("foo")
 	assert.Assert(t, ok)
-	assert.Equal(t, got.([]any)[0], "bar")
-	assert.Equal(t, got.([]any)[1], 4)
+	assert.Equal(t, got.([]LabeledValue)[0].Label, "label1")
+	assert.Equal(t, got.([]LabeledValue)[0].Value, "bar")
+	assert.Equal(t, got.([]LabeledValue)[1].Label, "label2")
+	assert.Equal(t, got.([]LabeledValue)[1].Value, 4)
 }
 
 func TestManifest_Save(t *testing.T) {
@@ -54,9 +57,9 @@ func TestManifest_Save(t *testing.T) {
 
 	m := &Manifest{Version: "testing"}
 
-	m.Add("hello", "world")
-	m.Add("foo", "bar")
-	m.Add("foo", 4)
+	m.Add("hello", "label", "world")
+	m.Add("foo", "label1", "bar")
+	m.Add("foo", "label2", 4)
 
 	err := m.Save()
 	assert.NilError(t, err)
@@ -76,18 +79,21 @@ func TestManifest_Save(t *testing.T) {
 func TestManifest_Get(t *testing.T) {
 	m := &Manifest{Version: "testing"}
 
-	m.Add("hello", "world")
-	m.Add("foo", "bar")
-	m.Add("foo", 4)
+	m.Add("hello", "label", "world")
+	m.Add("foo", "label1", "bar")
+	m.Add("foo", "label2", 4)
 
 	got, err := m.Get("hello")
 	assert.NilError(t, err)
-	assert.Equal(t, got[0], "world")
+	assert.Equal(t, got[0].Label, "label")
+	assert.Equal(t, got[0].Value, "world")
 
 	got, err = m.Get("foo")
 	assert.NilError(t, err)
-	assert.Equal(t, got[0], "bar")
-	assert.Equal(t, got[1], 4)
+	assert.Equal(t, got[0].Label, "label1")
+	assert.Equal(t, got[0].Value, "bar")
+	assert.Equal(t, got[1].Label, "label2")
+	assert.Equal(t, got[1].Value, 4)
 }
 
 func TestList(t *testing.T) {
@@ -95,9 +101,9 @@ func TestList(t *testing.T) {
 
 	m := &Manifest{Version: "testing"}
 
-	m.Add("hello", "world")
-	m.Add("foo", "bar")
-	m.Add("foo", 4)
+	m.Add("hello", "label", "world")
+	m.Add("foo", "label1", "bar")
+	m.Add("foo", "label2", 4)
 
 	err := m.Save()
 	assert.NilError(t, err)
@@ -106,14 +112,26 @@ func TestList(t *testing.T) {
 	assert.NilError(t, err)
 
 	assert.Equal(t, len(got), 1)
+
+	key, err := got[0].Get("hello")
+	assert.NilError(t, err)
+
+	assert.Equal(t, key[0].Label, "label")
+	assert.Equal(t, key[0].Value, "world")
+
+	key, err = got[0].Get("foo")
+	assert.NilError(t, err)
+
+	assert.Equal(t, key[0].Label, "label1")
+	assert.Equal(t, key[0].Value, "bar")
 }
 
 func TestManifest_UnmarshalJSON(t *testing.T) {
 	m := &Manifest{Version: "testing"}
 
-	m.Add("hello", "world")
-	m.Add("foo", "bar")
-	m.Add("foo", 4)
+	m.Add("hello", "label", "world")
+	m.Add("foo", "label1", "bar")
+	m.Add("foo", "label2", 4)
 
 	marshaled, err := json.Marshal(m)
 	assert.NilError(t, err)
@@ -124,12 +142,15 @@ func TestManifest_UnmarshalJSON(t *testing.T) {
 
 	got, ok := unmarshaled.resources.Load("hello")
 	assert.Assert(t, ok)
-	assert.Equal(t, got.([]any)[0], "world")
+	assert.Equal(t, got.([]LabeledValue)[0].Label, "label")
+	assert.Equal(t, got.([]LabeledValue)[0].Value, "world")
 
 	got, ok = unmarshaled.resources.Load("foo")
 	assert.Assert(t, ok)
-	assert.Equal(t, got.([]any)[0], "bar")
-	assert.Equal(t, got.([]any)[1], 4.0)
+	assert.Equal(t, got.([]LabeledValue)[0].Label, "label1")
+	assert.Equal(t, got.([]LabeledValue)[0].Value, "bar")
+	assert.Equal(t, got.([]LabeledValue)[1].Label, "label2")
+	assert.Equal(t, got.([]LabeledValue)[1].Value, 4.0)
 }
 
 func TestGet(t *testing.T) {
@@ -137,9 +158,9 @@ func TestGet(t *testing.T) {
 
 	m := &Manifest{Version: "testing"}
 
-	m.Add("hello", "world")
-	m.Add("foo", "bar")
-	m.Add("foo", 4)
+	m.Add("hello", "label", "world")
+	m.Add("foo", "label1", "bar")
+	m.Add("foo", "label2", 4)
 
 	err := m.Save()
 	assert.NilError(t, err)
@@ -151,12 +172,15 @@ func TestGet(t *testing.T) {
 
 	got, ok := found.resources.Load("hello")
 	assert.Assert(t, ok)
-	assert.Equal(t, got.([]any)[0], "world")
+	assert.Equal(t, got.([]LabeledValue)[0].Label, "label")
+	assert.Equal(t, got.([]LabeledValue)[0].Value, "world")
 
 	got, ok = found.resources.Load("foo")
 	assert.Assert(t, ok)
-	assert.Equal(t, got.([]any)[0], "bar")
-	assert.Equal(t, got.([]any)[1], 4.0)
+	assert.Equal(t, got.([]LabeledValue)[0].Label, "label1")
+	assert.Equal(t, got.([]LabeledValue)[0].Value, "bar")
+	assert.Equal(t, got.([]LabeledValue)[1].Label, "label2")
+	assert.Equal(t, got.([]LabeledValue)[1].Value, 4.0)
 }
 
 func TestDelete(t *testing.T) {
@@ -164,9 +188,9 @@ func TestDelete(t *testing.T) {
 
 	m := &Manifest{Version: "testing"}
 
-	m.Add("hello", "world")
-	m.Add("foo", "bar")
-	m.Add("foo", 4)
+	m.Add("hello", "label", "world")
+	m.Add("foo", "label1", "bar")
+	m.Add("foo", "label2", 4)
 
 	err := m.Save()
 	assert.NilError(t, err)
@@ -178,12 +202,15 @@ func TestDelete(t *testing.T) {
 
 	got, ok := found.resources.Load("hello")
 	assert.Assert(t, ok)
-	assert.Equal(t, got.([]any)[0], "world")
+	assert.Equal(t, got.([]LabeledValue)[0].Label, "label")
+	assert.Equal(t, got.([]LabeledValue)[0].Value, "world")
 
 	got, ok = found.resources.Load("foo")
 	assert.Assert(t, ok)
-	assert.Equal(t, got.([]any)[0], "bar")
-	assert.Equal(t, got.([]any)[1], 4.0)
+	assert.Equal(t, got.([]LabeledValue)[0].Label, "label1")
+	assert.Equal(t, got.([]LabeledValue)[0].Value, "bar")
+	assert.Equal(t, got.([]LabeledValue)[1].Label, "label2")
+	assert.Equal(t, got.([]LabeledValue)[1].Value, 4.0)
 
 	err = Delete("testing")
 	assert.NilError(t, err)

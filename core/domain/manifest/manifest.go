@@ -15,10 +15,17 @@ const Store = datadir.Store("manifest")
 
 type contextKey string
 
+type LabeledValue struct {
+	Label string
+	Value any
+}
+
 // ContextKey is the key used to store the manifest in a context.
 // It prevents overlapping with other libraries that might set a "manifest" key
 // in the same context.
 var ContextKey = contextKey("manifest")
+
+var ErrValueNotFound = errors.New("value not found")
 
 // Manifest is a set of tagged resources for a given deployment.
 type Manifest struct {
@@ -32,7 +39,7 @@ type Manifest struct {
 // manifestJSON is the marshalable representation of a Manifest as it does not rely on sync.Map.
 type manifestJSON struct {
 	Version   string
-	Resources map[string]any
+	Resources map[string][]LabeledValue
 }
 
 // Save writes the manifest to the Store.
@@ -56,35 +63,35 @@ func (m *Manifest) Save() error {
 }
 
 // Add adds a resource to the manifest under a given tag.
-func (m *Manifest) Add(key string, value any) {
+func (m *Manifest) Add(key, label string, value any) {
 	v, ok := m.resources.Load(key)
 	if !ok {
-		m.resources.Store(key, []any{value})
+		m.resources.Store(key, []LabeledValue{{label, value}})
 		return
 	}
 
-	m.resources.Store(key, append(v.([]any), value))
+	m.resources.Store(key, append(v.([]LabeledValue), LabeledValue{label, value}))
 }
 
 // Get returns the resources associated with a given tag.
-func (m *Manifest) Get(key string) ([]any, error) {
+func (m *Manifest) Get(key string) ([]LabeledValue, error) {
 	v, ok := m.resources.Load(key)
 	if !ok {
 		return nil, errors.New("no resources found matching given key")
 	}
 
-	return v.([]any), nil
+	return v.([]LabeledValue), nil
 }
 
 // MarshalJSON implements the json.Marshaler interface.
 // It takes care of converting the resource map to a marshalable map.
 func (m *Manifest) MarshalJSON() ([]byte, error) {
-	v := make(map[string]any)
+	v := make(map[string][]LabeledValue)
 
 	m.resources.Range(func(key, value any) bool {
 		// Add only accepts strings as key, therefore, it is
 		// safe to assume that the key is a string.
-		v[key.(string)] = value
+		v[key.(string)] = value.([]LabeledValue)
 		return true
 	})
 
@@ -114,6 +121,21 @@ func (m *Manifest) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+func (m *Manifest) Find(key, label string) (any, error) {
+	v, ok := m.resources.Load(key)
+	if !ok {
+		return nil, ErrValueNotFound
+	}
+
+	for _, lv := range v.([]LabeledValue) {
+		if lv.Label == label {
+			return lv.Value, nil
+		}
+	}
+
+	return nil, ErrValueNotFound
 }
 
 // List returns a list of all the manifests in the Store.
