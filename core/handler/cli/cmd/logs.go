@@ -13,15 +13,21 @@ type logsOptions struct {
 }
 
 func runLogsCommand(cli *cli.CLI, opts logsOptions) error {
-	t, err := log.Tail(opts.follow, opts.n)
+	dir, err := log.Store.Dir()
 	if err != nil {
 		return err
 	}
 
-	defer t.Cleanup()
+	stream, err := log.Tail(dir+"/"+log.LogFile, log.TailOptions{
+		Stream:   opts.follow,
+		Backfill: opts.n,
+	})
+	if err != nil {
+		return err
+	}
 
-	for line := range t.Lines {
-		fmt.Fprintln(cli.Out(), line.Text)
+	for line := range stream {
+		fmt.Fprintln(cli.Out(), line)
 	}
 
 	return nil

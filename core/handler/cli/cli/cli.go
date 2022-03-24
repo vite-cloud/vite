@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/vite-cloud/vite/core/domain/log"
 	"io"
 
 	"github.com/spf13/cobra"
@@ -72,15 +73,33 @@ func (c *CLI) Run(args []string) int {
 	vite.SetErr(c.Err())
 
 	err := vite.Execute()
-	if statusErr, ok := err.(*StatusError); ok {
+	if err == nil {
+		log.Log(log.InfoLevel, "command ran successfully", log.Fields{
+			"command": args[0],
+		})
+
+		return 0
+	} else if statusErr, ok := err.(*StatusError); ok {
 		fmt.Fprintln(c.Err(), statusErr.Status)
+
+		log.Log(log.ErrorLevel, "command failed", log.Fields{
+			"command": args[0],
+			"err":     statusErr.Status,
+			"code":    statusErr.StatusCode,
+		})
+
 		return statusErr.StatusCode
-	} else if err != nil {
+	} else {
 		fmt.Fprintln(c.Err(), err)
+
+		log.Log(log.ErrorLevel, "command failed", log.Fields{
+			"command": args[0],
+			"err":     err,
+			"code":    1,
+		})
+
 		return 1
 	}
-
-	return 0
 }
 
 // Add adds the given commands to the CLI.

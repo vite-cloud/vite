@@ -3,13 +3,14 @@ module github.com/vite-cloud/vite
 go 1.18
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.3
+	github.com/AlecAivazis/survey/v2 v2.3.4
 	github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2
 	github.com/c-robinson/iplib v1.0.3
-	github.com/docker/docker v20.10.13+incompatible
+	github.com/docker/docker v20.10.14+incompatible
 	github.com/go-logfmt/logfmt v0.5.1
 	github.com/google/go-github/v43 v43.0.0
 	github.com/hinshun/vt10x v0.0.0-20220301184237-5011da428d02
+	github.com/hpcloud/tail v1.0.0
 	github.com/kr/pty v1.1.8
 	github.com/mackerelio/go-osstat v0.2.1
 	github.com/magiconair/properties v1.8.6
@@ -20,7 +21,7 @@ require (
 
 require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect
-	github.com/containerd/containerd v1.6.1 // indirect
+	github.com/containerd/containerd v1.6.2 // indirect
 	github.com/creack/pty v1.1.17 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
@@ -29,7 +30,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/hpcloud/tail v1.0.0 // indirect
+	github.com/icza/backscanner v0.0.0-20210726202459-ac2ffc679f94 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
@@ -45,7 +46,7 @@ require (
 	golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20220322021311-435b647f9ef2 // indirect
+	google.golang.org/genproto v0.0.0-20220323144105-ec3c684e5b14 // indirect
 	google.golang.org/grpc v1.45.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
