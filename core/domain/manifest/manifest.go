@@ -28,6 +28,7 @@ var ContextKey = contextKey("manifest")
 var ErrValueNotFound = errors.New("value not found")
 
 // Manifest is a set of tagged resources for a given deployment.
+// The zero Manifest is empty and ready for use.
 type Manifest struct {
 	// Version is the version of the manifest's deployment.
 	Version string

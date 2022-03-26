@@ -14,7 +14,7 @@ func NewEnableCommand(cli *cli.CLI) *cobra.Command {
 		Use:   "enable",
 		Short: "enable proxy",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runRunCommand(cli)
+			return runEnableCommand(cli)
 		},
 	}
 

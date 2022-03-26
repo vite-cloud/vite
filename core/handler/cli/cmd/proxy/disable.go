@@ -14,7 +14,7 @@ func NewDisableCommand(cli *cli.CLI) *cobra.Command {
 		Use:   "disable",
 		Short: "disable proxy",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runRunCommand(cli)
+			return runDisableCommand(cli)
 		},
 	}
 

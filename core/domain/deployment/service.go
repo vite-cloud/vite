@@ -15,12 +15,25 @@ import (
 
 // Deployment holds the information needed to deploy a service.
 type Deployment struct {
-	ID     string
-	Docker *runtime.Client
+	ID       string
+	Docker   *runtime.Client
+	Manifest *manifest.Manifest
+	Bus      chan<- Event
+}
+
+func (d *Deployment) RunHooks(ctx context.Context, containerID string, commands []string) error {
+	for _, command := range commands {
+		err := d.Docker.ContainerExec(ctx, containerID, command)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Deploy deploys a service.
-func (d *Deployment) Deploy(ctx context.Context, service *config.Service) error {
+func (d *Deployment) Deploy(ctx context.Context, events chan<- Event, service *config.Service) error {
 	if service.IsTopLevel && len(service.Requires) > 0 {
 		subnetter, err := runtime.NewSubnetManager()
 		if err != nil {
@@ -30,6 +43,12 @@ func (d *Deployment) Deploy(ctx context.Context, service *config.Service) error 
 		subnet, err := subnetter.Next()
 		if err != nil {
 			return err
+		}
+
+		events <- Event{
+			ID:      AcquireSubnet,
+			Service: service,
+			Data:    fmt.Sprintf("Assigned subnet %s to the service's network", subnet.String()),
 		}
 
 		networkID, err := d.Docker.NetworkCreate(ctx, fmt.Sprintf("%s_%s", service.Name, d.ID), runtime.NetworkCreateOptions{
@@ -46,10 +65,15 @@ func (d *Deployment) Deploy(ctx context.Context, service *config.Service) error 
 			return err
 		}
 
-		ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add("network", service.Name, networkID)
+		events <- Event{
+			ID:      CreateNetwork,
+			Service: service,
+			Data:    fmt.Sprintf("Created network %s", networkID),
+		}
+		d.Manifest.Add("network", service.Name, networkID)
 
 		for _, require := range service.Requires {
-			id, err := ctx.Value(manifest.ContextKey).(*manifest.Manifest).Find("container", require.Name)
+			id, err := d.Manifest.Find("container", require.Name)
 			if err != nil {
 				return err
 			}
@@ -57,6 +81,13 @@ func (d *Deployment) Deploy(ctx context.Context, service *config.Service) error 
 			if err = d.Docker.NetworkConnect(ctx, networkID, id.(string)); err != nil {
 				return err
 			}
+
+			events <- Event{
+				ID:      ConnectDependency,
+				Service: service,
+				Data:    fmt.Sprintf("Connected service %s to the service's network", require.Name),
+			}
+
 		}
 	}
 
@@ -67,12 +98,18 @@ func (d *Deployment) Deploy(ctx context.Context, service *config.Service) error 
 		return err
 	}
 
+	events <- Event{
+		ID:      PullImage,
+		Service: service,
+		Data:    service.Image,
+	}
+
 	var networking *network.NetworkingConfig
 
 	// Connect the container to its network.
 	if service.IsTopLevel && len(service.Requires) > 0 {
 		// We can ignore the error as we know the network exists, as we created it above.
-		net, _ := ctx.Value(manifest.ContextKey).(*manifest.Manifest).Find("network", service.Name)
+		net, _ := d.Manifest.Find("network", service.Name)
 
 		networking = &network.NetworkingConfig{
 			EndpointsConfig: map[string]*network.EndpointSettings{
@@ -97,11 +134,21 @@ func (d *Deployment) Deploy(ctx context.Context, service *config.Service) error 
 		return err
 	}
 
-	ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add("created_containers", service.Name, ref)
+	events <- Event{
+		ID:      CreateContainer,
+		Service: service,
+	}
+	d.Manifest.Add("created_containers", service.Name, ref)
 
 	err = d.RunHooks(ctx, ref.ID, service.Hooks.Prestart)
 	if err != nil {
 		return err
+	}
+
+	events <- Event{
+		ID:      RunHook,
+		Service: service,
+		Data:    service.Hooks.Prestart,
 	}
 
 	err = d.Docker.ContainerStart(ctx, ref.ID)
@@ -109,9 +156,20 @@ func (d *Deployment) Deploy(ctx context.Context, service *config.Service) error 
 		return err
 	}
 
+	events <- Event{
+		ID:      StartContainer,
+		Service: service,
+	}
+
 	err = d.RunHooks(ctx, ref.ID, service.Hooks.Poststart)
 	if err != nil {
 		return err
+	}
+
+	events <- Event{
+		ID:      RunHook,
+		Service: service,
+		Data:    service.Hooks.Poststart,
 	}
 
 	err = d.EnsureContainerIsRunning(ctx, ref.ID)
@@ -120,17 +178,6 @@ func (d *Deployment) Deploy(ctx context.Context, service *config.Service) error 
 			return fmt.Errorf("%w (cleanup failed: %s)", err, err2)
 		}
 		return err
-	}
-
-	return nil
-}
-
-func (d *Deployment) RunHooks(ctx context.Context, containerID string, commands []string) error {
-	for _, command := range commands {
-		err := d.Docker.ContainerExec(ctx, containerID, command)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil

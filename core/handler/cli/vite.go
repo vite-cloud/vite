@@ -19,7 +19,8 @@ func New() *cli.CLI {
 		cmd.NewUseCommand(c),
 		cmd.NewSelfUpdateCommand(c),
 		cmd.NewLogsCommand(c),
-		
+		cmd.NewDeployCommand(c),
+
 		proxy.NewProxyCommand(c),
 	)
 

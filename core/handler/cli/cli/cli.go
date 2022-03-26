@@ -73,9 +73,15 @@ func (c *CLI) Run(args []string) int {
 	vite.SetErr(c.Err())
 
 	err := vite.Execute()
+
+	command := "vite"
+	if len(args) > 0 {
+		command = args[0]
+	}
+
 	if err == nil {
 		log.Log(log.InfoLevel, "command ran successfully", log.Fields{
-			"command": args[0],
+			"command": command,
 		})
 
 		return 0
@@ -83,7 +89,7 @@ func (c *CLI) Run(args []string) int {
 		fmt.Fprintf(c.Err(), "Error: %s\n", statusErr.Status)
 
 		log.Log(log.ErrorLevel, "command failed", log.Fields{
-			"command": args[0],
+			"command": command,
 			"err":     statusErr.Status,
 			"code":    statusErr.StatusCode,
 		})
@@ -93,7 +99,7 @@ func (c *CLI) Run(args []string) int {
 		fmt.Fprintf(c.Err(), "Error: %s\n", err)
 
 		log.Log(log.ErrorLevel, "command failed", log.Fields{
-			"command": args[0],
+			"command": command,
 			"err":     err,
 			"code":    1,
 		})

@@ -49,18 +49,26 @@ var DefaultSubnetBlocks = []iplib.Net4{
 	iplib.NewNet4(net.IPv4(192, 168, 0, 0), 16),
 }
 
+var subnetManagerInstance *subnetManager
+
 // NewSubnetManager creates a new subnet manager.
 func NewSubnetManager() (*subnetManager, error) {
+	if subnetManagerInstance != nil {
+		return subnetManagerInstance, nil
+	}
+
 	file, err := Store.Open(SubnetDataFile, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err
 	}
 
-	return &subnetManager{
+	subnetManagerInstance = &subnetManager{
 		mu:     &sync.Mutex{},
 		used:   file,
 		blocks: DefaultSubnetBlocks,
-	}, nil
+	}
+
+	return subnetManagerInstance, nil
 }
 
 // WithBlocks sets the list of subnet blocks to use.
