@@ -14,8 +14,9 @@ func NewProxyCommand(c *cli.CLI) *cobra.Command {
 	cmd.AddCommand(
 		NewRunCommand(c),
 		NewLogsCommand(c),
-		NewDisableCommand(c),
-		NewEnableCommand(c),
+		NewUpCommand(c),
+		NewStatusCommand(c),
+		NewDownCommand(c),
 	)
 
 	return cmd
