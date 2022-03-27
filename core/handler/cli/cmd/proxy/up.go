@@ -20,6 +20,15 @@ type upOptions struct {
 }
 
 func runUpCommand(cli *cli.CLI, opts *upOptions) error {
+	state, _, err := proxy.State()
+	if err != nil {
+		return err
+	}
+
+	if state != proxy.Absent {
+		return fmt.Errorf("proxy is already running (state: %s)", state)
+	}
+
 	if opts.user == "" {
 		u, err := user.Current()
 		if err != nil {
@@ -29,7 +38,7 @@ func runUpCommand(cli *cli.CLI, opts *upOptions) error {
 		opts.user = u.Username
 	}
 
-	config, err := proxy.ServiceConfig(opts.user)
+	config, err := proxy.DaemonConfig(opts.user)
 	if err != nil {
 		return err
 	}

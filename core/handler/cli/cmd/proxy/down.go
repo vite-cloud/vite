@@ -11,6 +11,16 @@ import (
 )
 
 func runDownCommand(cli *cli.CLI) error {
+	state, _, err := proxy.State()
+	if err != nil {
+		return err
+	}
+
+	if state == proxy.Absent {
+		fmt.Fprintln(cli.Out(), "Proxy was not running.")
+		return nil
+	}
+
 	for _, cmd := range proxy.DisableCmds {
 		fmt.Fprintf(cli.Out(), "- running %s\n", cmd)
 		out, err := exec.Command(cmd[0], cmd[1:]...).CombinedOutput()
@@ -23,7 +33,7 @@ func runDownCommand(cli *cli.CLI) error {
 		}
 	}
 
-	err := os.Remove(proxy.ServiceFile)
+	err = os.Remove(proxy.ServiceFile)
 	if err != nil {
 		return err
 	}

@@ -24,18 +24,18 @@ var DisableCmds = [][]string{
 	{"systemctl", "daemon-reload"},
 }
 
-type ServiceStatus int
+type DaemonStatus int
 
 const (
-	Absent ServiceStatus = iota
+	Absent DaemonStatus = iota
 	Running
 	Errored
 )
 
 //go:embed vite.service
-var serviceConfig string
+var daemonStatus string
 
-func (s ServiceStatus) String() string {
+func (s DaemonStatus) String() string {
 	switch s {
 	case Running:
 		return "running"
@@ -50,7 +50,7 @@ func (s ServiceStatus) String() string {
 
 const UptimeRegex = `(?m); (.+) ago\n`
 
-func State() (ServiceStatus, string, error) {
+func State() (DaemonStatus, string, error) {
 	out, err := exec.Command("systemctl", "status", "vite.service").Output()
 
 	re := regexp.MustCompile(UptimeRegex)
@@ -63,7 +63,13 @@ func State() (ServiceStatus, string, error) {
 		uptime = "errored"
 	}
 
-	if err != nil && err.(*exec.ExitError).ExitCode() != 3 {
+	if err != nil {
+		code := err.(*exec.ExitError).ExitCode()
+
+		if code == 3 || code == 4 {
+			return Absent, uptime, nil
+		}
+
 		return Absent, uptime, fmt.Errorf("%w: %s", err, out)
 	}
 
@@ -74,14 +80,13 @@ func State() (ServiceStatus, string, error) {
 	return Running, uptime, nil
 }
 
-func ServiceConfig(user string) ([]byte, error) {
-
+func DaemonConfig(user string) ([]byte, error) {
 	e, err := os.Executable()
 	if err != nil {
 		return nil, err
 	}
 
-	tmpl, err := template.New("vite.service").Parse(serviceConfig)
+	tmpl, err := template.New("vite.service").Parse(daemonStatus)
 	if err != nil {
 		return nil, err
 	}
