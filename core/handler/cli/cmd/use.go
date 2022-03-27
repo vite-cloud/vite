@@ -44,7 +44,8 @@ func runUseCommand(cli *cli.CLI) error {
 }
 func NewUseCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "use",
+		Use:   "use",
+		Short: "set the current commit",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runUseCommand(cli)
 		},

@@ -75,7 +75,7 @@ func runSelfUpdate(cli *cli.CLI, opts *selfUpdateOptions) error {
 func NewSelfUpdateCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "self-update",
-		Short: "Update vite",
+		Short: "update vite",
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts := &selfUpdateOptions{hasVersion: len(args) > 0}

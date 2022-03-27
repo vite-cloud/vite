@@ -8,7 +8,7 @@ import (
 func NewProxyCommand(c *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "proxy",
-		Short: "Proxy commands",
+		Short: "manage proxy",
 	}
 
 	cmd.AddCommand(

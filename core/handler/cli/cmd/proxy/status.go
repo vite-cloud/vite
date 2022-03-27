@@ -21,7 +21,7 @@ func runStatusCommand(cli *cli.CLI) error {
 func NewStatusCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "proxy's status",
+		Short: "get proxy status",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runStatusCommand(cli)
 		},

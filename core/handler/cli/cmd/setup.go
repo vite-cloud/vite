@@ -95,7 +95,7 @@ func runSetupCommand(cli *cli.CLI) error {
 func NewSetupCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "setup",
-		Short: "Setup vite",
+		Short: "setup vite",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runSetupCommand(cli)
 		},

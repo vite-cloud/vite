@@ -8,8 +8,8 @@ import (
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 )
 
-// runMedicCommand handles the `medic` command.
-func runMedicCommand(cli *cli.CLI) error {
+// runDiagnoseCommand handles the `diagnose` command.
+func runDiagnoseCommand(cli *cli.CLI) error {
 	conf, err := config.Get()
 	if err != nil {
 		return err
@@ -46,13 +46,13 @@ func runMedicCommand(cli *cli.CLI) error {
 	return nil
 }
 
-// NewMedicCommand creates a new `medic` command.
-func NewMedicCommand(cli *cli.CLI) *cobra.Command {
+// NewDiagnoseCommand creates a new `diagnose` command.
+func NewDiagnoseCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "medic",
+		Use:   "diagnose",
 		Short: "diagnose the configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runMedicCommand(cli)
+			return runDiagnoseCommand(cli)
 		},
 	}
 

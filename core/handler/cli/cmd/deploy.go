@@ -47,7 +47,8 @@ func runDeployCommand(cli *cli.CLI) error {
 
 func NewDeployCommand(cli *cli.CLI) *cobra.Command {
 	return &cobra.Command{
-		Use: "deploy",
+		Use:   "deploy",
+		Short: "deploy services",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runDeployCommand(cli)
 		},

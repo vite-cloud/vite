@@ -13,8 +13,7 @@ func New() *cli.CLI {
 	c := cli.New(os.Stdout, os.Stdin, os.Stderr)
 
 	c.Add(
-		cmd.NewVersionCommand(c),
-		cmd.NewMedicCommand(c),
+		cmd.NewDiagnoseCommand(c),
 		cmd.NewSetupCommand(c),
 		cmd.NewUseCommand(c),
 		cmd.NewSelfUpdateCommand(c),

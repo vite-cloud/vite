@@ -44,7 +44,7 @@ func NewLogsCommand(cli *cli.CLI) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "logs",
-		Short: "read proxy logs",
+		Short: "read logs",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runLogsCommand(cli, opts)
 		},

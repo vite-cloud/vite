@@ -20,7 +20,7 @@ func runRunCommand(cli *cli.CLI) error {
 func NewRunCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "run",
-		Short:  "run proxy",
+		Short:  "run the proxy",
 		Hidden: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runRunCommand(cli)
