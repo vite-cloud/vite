@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"github.com/vite-cloud/vite/core/domain/manifest"
 	"gotest.tools/v3/assert"
 	"strconv"
 	"testing"
@@ -22,7 +21,6 @@ func TestClient_NetworkCreate(t *testing.T) {
 	assert.NilError(t, err)
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, manifest.ContextKey, &manifest.Manifest{})
 
 	name := "test_" + strconv.Itoa(int(time.Now().UnixMilli()))
 
@@ -50,7 +48,6 @@ func TestClient_NetworkCreate2(t *testing.T) {
 	assert.NilError(t, err)
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, manifest.ContextKey, &manifest.Manifest{})
 
 	name := "test_" + strconv.Itoa(int(time.Now().UnixMilli()))
 

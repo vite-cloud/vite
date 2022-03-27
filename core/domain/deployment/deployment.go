@@ -2,11 +2,13 @@ package deployment
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
-	"github.com/vite-cloud/vite/core/domain/manifest"
+	"os"
+	"sync"
 	"time"
 
 	"github.com/vite-cloud/vite/core/domain/config"
@@ -15,10 +17,11 @@ import (
 
 // Deployment holds the information needed to deploy a service.
 type Deployment struct {
-	ID       string
-	Docker   *runtime.Client
-	Manifest *manifest.Manifest
-	Bus      chan<- Event
+	ID     string
+	Docker *runtime.Client
+
+	Bus       chan<- Event
+	resources sync.Map
 }
 
 func (d *Deployment) RunHooks(ctx context.Context, containerID string, commands []string) error {
@@ -70,10 +73,10 @@ func (d *Deployment) Deploy(ctx context.Context, events chan<- Event, service *c
 			Service: service,
 			Data:    fmt.Sprintf("Created network %s", networkID),
 		}
-		d.Manifest.Add("network", service.Name, networkID)
+		d.Add("network", service.Name, networkID)
 
 		for _, require := range service.Requires {
-			id, err := d.Manifest.Find("container", require.Name)
+			id, err := d.Find("container", require.Name)
 			if err != nil {
 				return err
 			}
@@ -109,7 +112,7 @@ func (d *Deployment) Deploy(ctx context.Context, events chan<- Event, service *c
 	// Connect the container to its network.
 	if service.IsTopLevel && len(service.Requires) > 0 {
 		// We can ignore the error as we know the network exists, as we created it above.
-		net, _ := d.Manifest.Find("network", service.Name)
+		net, _ := d.Find("network", service.Name)
 
 		networking = &network.NetworkingConfig{
 			EndpointsConfig: map[string]*network.EndpointSettings{
@@ -138,7 +141,7 @@ func (d *Deployment) Deploy(ctx context.Context, events chan<- Event, service *c
 		ID:      CreateContainer,
 		Service: service,
 	}
-	d.Manifest.Add("created_containers", service.Name, ref)
+	d.Add("created_containers", service.Name, ref)
 
 	err = d.RunHooks(ctx, ref.ID, service.Hooks.Prestart)
 	if err != nil {
@@ -246,4 +249,91 @@ func (d *Deployment) EnsureContainerIsRunning(ctx context.Context, containerID s
 			}
 		}
 	}
+}
+
+func (d *Deployment) Save() error {
+	dir, err := Store.Dir()
+	if err != nil {
+		return err
+	}
+
+	contents, err := json.Marshal(d)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(dir+"/"+d.ID+".json", contents, 0644)
+}
+
+// List returns a list of all the manifests in the Store.
+func List() ([]*Deployment, error) {
+	var manifests []*Deployment
+
+	dir, err := Store.Dir()
+	if err != nil {
+		return nil, err
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			return nil, fmt.Errorf("manifest store is corrupted: %s is a directory", entry.Name())
+		}
+
+		f, err := Store.Open(entry.Name(), os.O_RDONLY, 0)
+		if err != nil {
+			return nil, err
+		}
+
+		defer f.Close()
+
+		var m Deployment
+
+		err = json.NewDecoder(f).Decode(&m)
+		if err != nil {
+			return nil, err
+		}
+
+		manifests = append(manifests, &m)
+	}
+
+	return manifests, nil
+}
+
+// Delete removes the manifest from the Store and returns an error if it fails.
+// It does not return an error if the manifest does not exist.
+func Delete(version string) error {
+	dir, err := Store.Dir()
+	if err != nil {
+		return err
+	}
+
+	path := dir + "/" + version + ".json"
+
+	if _, err = os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	return os.Remove(path)
+}
+
+// Get returns the manifest for a given version or os.ErrNotExist if it does not exist.
+func Get(version string) (*Deployment, error) {
+	f, err := Store.Open(version+".json", os.O_RDONLY, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	defer f.Close()
+
+	var m Deployment
+
+	err = json.NewDecoder(f).Decode(&m)
+	return &m, err
 }

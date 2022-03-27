@@ -6,7 +6,6 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/vite-cloud/vite/core/domain/log"
-	"github.com/vite-cloud/vite/core/domain/manifest"
 	"gotest.tools/v3/assert"
 	"sort"
 	"strconv"
@@ -62,9 +61,6 @@ func TestClient(t *testing.T) {
 		test := test
 
 		t.Run(test.name, func(t *testing.T) {
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, manifest.ContextKey, &manifest.Manifest{})
-
 			logger := &log.MemoryWriter{}
 			log.SetLogger(logger)
 
@@ -72,7 +68,7 @@ func TestClient(t *testing.T) {
 				t:             t,
 				cli:           cli,
 				raw:           raw,
-				ctx:           ctx,
+				ctx:           context.Background(),
 				logger:        logger,
 				containerName: "test_" + strconv.Itoa(int(time.Now().UnixMilli())),
 			})

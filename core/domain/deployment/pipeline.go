@@ -3,7 +3,7 @@ package deployment
 import (
 	"context"
 	"github.com/vite-cloud/vite/core/domain/config"
-	"github.com/vite-cloud/vite/core/domain/manifest"
+	"github.com/vite-cloud/vite/core/domain/datadir"
 	"github.com/vite-cloud/vite/core/domain/runtime"
 	"strconv"
 	"sync"
@@ -22,6 +22,8 @@ const (
 	CreateNetwork        = "CreateNetwork"
 )
 
+const Store = datadir.Store("deployments")
+
 func Deploy(events chan<- Event, services map[string]*config.Service) error {
 	layers, err := Layered(services)
 	if err != nil {
@@ -34,10 +36,9 @@ func Deploy(events chan<- Event, services map[string]*config.Service) error {
 	}
 
 	depl := Deployment{
-		ID:       strconv.FormatInt(time.Now().UnixNano(), 10),
-		Docker:   docker,
-		Bus:      events,
-		Manifest: &manifest.Manifest{},
+		ID:     strconv.FormatInt(time.Now().UnixNano(), 10),
+		Docker: docker,
+		Bus:    events,
 	}
 
 	errored := false
