@@ -12,8 +12,6 @@ import (
 	"os/user"
 )
 
-var ErrMustBeRoot = errors.New("you must have root privileges to create a daemon")
-
 type upOptions struct {
 	verbose bool
 	user    string
@@ -49,19 +47,11 @@ func runUpCommand(cli *cli.CLI, opts *upOptions) error {
 	}
 
 	if err = os.Remove(proxy.ServiceFile); err != nil && !errors.Is(err, os.ErrNotExist) {
-		if errors.Is(err, os.ErrPermission) {
-			return ErrMustBeRoot
-		}
-
 		return err
 	}
 
 	err = os.WriteFile(proxy.ServiceFile, config, 0644)
 	if err != nil {
-		if errors.Is(err, os.ErrPermission) {
-			return ErrMustBeRoot
-		}
-
 		return err
 	}
 
@@ -87,8 +77,9 @@ func NewUpCommand(cli *cli.CLI) *cobra.Command {
 	opts := &upOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "up",
-		Short: "start proxy",
+		Use:               "up",
+		Short:             "start proxy",
+		PersistentPreRunE: NeedsSystemdAccess,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runUpCommand(cli, opts)
 		},

@@ -35,7 +35,7 @@ func runDeployCommand(cli *cli.CLI) error {
 			break
 		}
 
-		fmt.Fprintf(cli.Out(), "%s: %v\n", event.Label(), event.Data)
+		fmt.Fprintf(cli.Out(), "%s(%s): %v\n", event.Label(), event.ID, event.Data)
 
 		if event.IsError() {
 			break

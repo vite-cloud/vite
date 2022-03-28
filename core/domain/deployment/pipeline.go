@@ -11,6 +11,7 @@ import (
 )
 
 const (
+	StartEvent           = "StartEvent"
 	StartLayerDeployment = "StartLayerDeployment"
 	PullImage            = "PullImage"
 	CreateContainer      = "CreateContainer"
@@ -25,11 +26,6 @@ const (
 const Store = datadir.Store("deployments")
 
 func Deploy(events chan<- Event, services map[string]*config.Service) error {
-	layers, err := Layered(services)
-	if err != nil {
-		return err
-	}
-
 	docker, err := runtime.NewClient()
 	if err != nil {
 		return err
@@ -39,6 +35,16 @@ func Deploy(events chan<- Event, services map[string]*config.Service) error {
 		ID:     strconv.FormatInt(time.Now().UnixNano(), 10),
 		Docker: docker,
 		Bus:    events,
+	}
+
+	events <- Event{
+		ID:   StartEvent,
+		Data: depl.ID,
+	}
+
+	layers, err := Layered(services)
+	if err != nil {
+		return err
 	}
 
 	errored := false
