@@ -73,7 +73,7 @@ func runUpCommand(cli *cli.CLI, opts *upOptions) error {
 	return nil
 }
 
-func NewUpCommand(cli *cli.CLI) *cobra.Command {
+func newUpCommand(cli *cli.CLI) *cobra.Command {
 	opts := &upOptions{}
 
 	cmd := &cobra.Command{

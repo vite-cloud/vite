@@ -40,7 +40,7 @@ func runLogsCommand(cli *cli.CLI, opts logsOptions) error {
 	return nil
 }
 
-func NewLogsCommand(cli *cli.CLI) *cobra.Command {
+func newLogsCommand(cli *cli.CLI) *cobra.Command {
 	opts := logsOptions{}
 
 	cmd := &cobra.Command{

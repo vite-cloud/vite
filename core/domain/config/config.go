@@ -21,6 +21,8 @@ type Config struct {
 	ControlPlane struct {
 		Host string
 	}
+
+	Locator *locator.Locator
 }
 
 // Service contains the configuration about a service.
@@ -80,6 +82,8 @@ func Get() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	converted.Locator = l
 
 	configCache[l.Checksum()] = converted
 

@@ -18,7 +18,7 @@ func runStatusCommand(cli *cli.CLI) error {
 	return nil
 }
 
-func NewStatusCommand(cli *cli.CLI) *cobra.Command {
+func newStatusCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "get proxy status",

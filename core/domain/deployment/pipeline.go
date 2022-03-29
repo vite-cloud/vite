@@ -25,24 +25,34 @@ const (
 
 const Store = datadir.Store("deployments")
 
-func Deploy(events chan<- Event, services map[string]*config.Service) error {
+func Deploy(events chan<- Event, conf *config.Config) error {
 	docker, err := runtime.NewClient()
 	if err != nil {
 		return err
 	}
 
 	depl := Deployment{
-		ID:     strconv.FormatInt(time.Now().UnixNano(), 10),
-		Docker: docker,
-		Bus:    events,
+		ID:      strconv.FormatInt(time.Now().Unix(), 10),
+		Docker:  docker,
+		Bus:     events,
+		Locator: conf.Locator,
 	}
+	defer func(depl *Deployment) {
+		err = depl.Save()
+		if err != nil {
+			events <- Event{
+				ID:   ErrorEvent,
+				Data: err,
+			}
+		}
+	}(&depl)
 
 	events <- Event{
 		ID:   StartEvent,
 		Data: depl.ID,
 	}
 
-	layers, err := Layered(services)
+	layers, err := Layered(conf.Services)
 	if err != nil {
 		return err
 	}

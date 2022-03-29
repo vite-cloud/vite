@@ -15,11 +15,11 @@ func NewProxyCommand(c *cli.CLI) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		NewRunCommand(c),
-		NewLogsCommand(c),
-		NewUpCommand(c),
-		NewStatusCommand(c),
-		NewDownCommand(c),
+		newRunCommand(c),
+		newLogsCommand(c),
+		newUpCommand(c),
+		newStatusCommand(c),
+		newDownCommand(c),
 	)
 
 	return cmd

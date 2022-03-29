@@ -33,7 +33,7 @@ func runDownCommand(cli *cli.CLI) error {
 	return nil
 }
 
-func NewDownCommand(cli *cli.CLI) *cobra.Command {
+func newDownCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "down",
 		Short:             "stop proxy",

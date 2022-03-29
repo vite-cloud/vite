@@ -17,7 +17,7 @@ func runRunCommand(cli *cli.CLI) error {
 	return server.ListenAndServe()
 }
 
-func NewRunCommand(cli *cli.CLI) *cobra.Command {
+func newRunCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "run",
 		Short:  "run the proxy",

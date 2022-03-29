@@ -17,7 +17,7 @@ func runDeployCommand(cli *cli.CLI) error {
 	events := make(chan deployment.Event)
 
 	go func() {
-		err = deployment.Deploy(events, conf.Services)
+		err = deployment.Deploy(events, conf)
 		if err != nil {
 			events <- deployment.Event{
 				ID:   deployment.ErrorEvent,

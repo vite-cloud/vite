@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
+	"github.com/vite-cloud/vite/core/domain/locator"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -16,9 +18,11 @@ import (
 )
 
 // Deployment holds the information needed to deploy a service.
+// When updating fields, make sure to also update deploymentJSON accordingly.
 type Deployment struct {
-	ID     string
-	Docker *runtime.Client
+	ID      string
+	Docker  *runtime.Client
+	Locator *locator.Locator
 
 	Bus       chan<- Event
 	resources sync.Map
@@ -306,13 +310,13 @@ func List() ([]*Deployment, error) {
 
 // Delete removes the manifest from the Store and returns an error if it fails.
 // It does not return an error if the manifest does not exist.
-func Delete(version string) error {
+func Delete(id string) error {
 	dir, err := Store.Dir()
 	if err != nil {
 		return err
 	}
 
-	path := dir + "/" + version + ".json"
+	path := dir + "/" + id + ".json"
 
 	if _, err = os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		return nil
@@ -324,8 +328,8 @@ func Delete(version string) error {
 }
 
 // Get returns the manifest for a given version or os.ErrNotExist if it does not exist.
-func Get(version string) (*Deployment, error) {
-	f, err := Store.Open(version+".json", os.O_RDONLY, 0)
+func Get(id string) (*Deployment, error) {
+	f, err := Store.Open(id+".json", os.O_RDONLY, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -336,4 +340,106 @@ func Get(version string) (*Deployment, error) {
 
 	err = json.NewDecoder(f).Decode(&m)
 	return &m, err
+}
+
+type LabeledValue struct {
+	Label string
+	Value any
+}
+
+var ErrValueNotFound = errors.New("value not found")
+
+// deploymentJSON is the marshalable representation of a Manifest as it does not rely on sync.Map.
+type deploymentJSON struct {
+	ID        string
+	Resources map[string][]LabeledValue
+	Locator   *locator.Locator
+}
+
+// Add adds a resource to the manifest under a given tag.
+func (d *Deployment) Add(key, label string, value any) {
+	v, ok := d.resources.Load(key)
+	if !ok {
+		d.resources.Store(key, []LabeledValue{{label, value}})
+		return
+	}
+
+	d.resources.Store(key, append(v.([]LabeledValue), LabeledValue{label, value}))
+}
+
+// Get returns the resources associated with a given tag.
+func (d *Deployment) Get(key string) ([]LabeledValue, error) {
+	v, ok := d.resources.Load(key)
+	if !ok {
+		return nil, errors.New("no resources found matching given key")
+	}
+
+	return v.([]LabeledValue), nil
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+// It takes care of converting the resource map to a marshalable map.
+func (d *Deployment) MarshalJSON() ([]byte, error) {
+	return json.Marshal(deploymentJSON{
+		ID:        d.ID,
+		Resources: d.All(),
+		Locator:   d.Locator,
+	})
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+// It takes care of converting the resources map to a sync.Map.
+// Avoid using ints to the map, as they will be converted to float64s.
+// Use strings instead.
+func (d *Deployment) UnmarshalJSON(data []byte) error {
+	var manifestJSON deploymentJSON
+
+	err := json.Unmarshal(data, &manifestJSON)
+	if err != nil {
+		return err
+	}
+
+	d.ID = manifestJSON.ID
+	d.Locator = manifestJSON.Locator
+
+	for k, v := range manifestJSON.Resources {
+		d.resources.Store(k, v)
+	}
+
+	return nil
+}
+
+func (d *Deployment) Find(key, label string) (any, error) {
+	v, ok := d.resources.Load(key)
+	if !ok {
+		return nil, ErrValueNotFound
+	}
+
+	for _, lv := range v.([]LabeledValue) {
+		if lv.Label == label {
+			return lv.Value, nil
+		}
+	}
+
+	return nil, ErrValueNotFound
+}
+
+func (d *Deployment) All() map[string][]LabeledValue {
+	v := make(map[string][]LabeledValue)
+
+	d.resources.Range(func(key, value any) bool {
+		// Add only accepts strings as key, therefore, it is
+		// safe to assume that the key is a string.
+		v[key.(string)] = value.([]LabeledValue)
+		return true
+	})
+
+	return v
+}
+
+func (d *Deployment) Time() time.Time {
+	sec, _ := strconv.Atoi(d.ID[:10])
+	nsec, _ := strconv.Atoi(d.ID[10:])
+
+	return time.Unix(int64(sec), int64(nsec))
 }
