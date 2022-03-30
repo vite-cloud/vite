@@ -3,6 +3,9 @@ package router
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"regexp"
 	"strings"
 	"sync"
@@ -21,7 +24,24 @@ func New(dep *deployment.Deployment) *Router {
 	return &Router{deployment: dep, mu: sync.Mutex{}}
 }
 
+func (r *Router) Proxy(w http.ResponseWriter, req *http.Request) {
+	ip, _ := r.IPFor(req.Host)
+	if ip == "" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	httputil.NewSingleHostReverseProxy(&url.URL{
+		Scheme: "http",
+		Host:   ip,
+	}).ServeHTTP(w, req)
+}
+
 func (r *Router) IPFor(host string) (string, error) {
+	if ip, ok := r.ips.Load(host); ok {
+		return ip.(string), nil
+	}
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -39,6 +59,8 @@ func (r *Router) IPFor(host string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	r.ips.Store(host, ins.NetworkSettings.IPAddress)
 
 	return ins.NetworkSettings.IPAddress, nil
 }
