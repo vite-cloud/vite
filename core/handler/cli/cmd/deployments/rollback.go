@@ -13,7 +13,7 @@ func runRollbackCommand(cli *cli.CLI, id string) error {
 		return err
 	}
 
-	err = dep.Locator.Save()
+	err = dep.Config.Locator.Save()
 	if err != nil {
 		return err
 	}

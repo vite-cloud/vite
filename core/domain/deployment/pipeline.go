@@ -2,12 +2,13 @@ package deployment
 
 import (
 	"context"
-	"github.com/vite-cloud/vite/core/domain/config"
-	"github.com/vite-cloud/vite/core/domain/datadir"
-	"github.com/vite-cloud/vite/core/domain/runtime"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/vite-cloud/vite/core/domain/config"
+	"github.com/vite-cloud/vite/core/domain/datadir"
+	"github.com/vite-cloud/vite/core/domain/runtime"
 )
 
 const (
@@ -32,10 +33,10 @@ func Deploy(events chan<- Event, conf *config.Config) error {
 	}
 
 	depl := Deployment{
-		ID:      strconv.FormatInt(time.Now().Unix(), 10),
-		Docker:  docker,
-		Bus:     events,
-		Locator: conf.Locator,
+		ID:     strconv.FormatInt(time.Now().Unix(), 10),
+		Docker: docker,
+		Bus:    events,
+		Config: conf,
 	}
 	defer func(depl *Deployment) {
 		err = depl.Save()

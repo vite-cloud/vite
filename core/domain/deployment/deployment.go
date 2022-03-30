@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/network"
-	"github.com/vite-cloud/vite/core/domain/locator"
 	"os"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/network"
 
 	"github.com/vite-cloud/vite/core/domain/config"
 	"github.com/vite-cloud/vite/core/domain/runtime"
@@ -20,9 +20,9 @@ import (
 // Deployment holds the information needed to deploy a service.
 // When updating fields, make sure to also update deploymentJSON accordingly.
 type Deployment struct {
-	ID      string
-	Docker  *runtime.Client
-	Locator *locator.Locator
+	ID     string
+	Docker *runtime.Client
+	Config *config.Config
 
 	Bus       chan<- Event
 	resources sync.Map
@@ -353,7 +353,7 @@ var ErrValueNotFound = errors.New("value not found")
 type deploymentJSON struct {
 	ID        string
 	Resources map[string][]LabeledValue
-	Locator   *locator.Locator
+	Config    *config.Config
 }
 
 // Add adds a resource to the manifest under a given tag.
@@ -383,7 +383,7 @@ func (d *Deployment) MarshalJSON() ([]byte, error) {
 	return json.Marshal(deploymentJSON{
 		ID:        d.ID,
 		Resources: d.All(),
-		Locator:   d.Locator,
+		Config:    d.Config,
 	})
 }
 
@@ -400,7 +400,7 @@ func (d *Deployment) UnmarshalJSON(data []byte) error {
 	}
 
 	d.ID = manifestJSON.ID
-	d.Locator = manifestJSON.Locator
+	d.Config = manifestJSON.Config
 
 	for k, v := range manifestJSON.Resources {
 		d.resources.Store(k, v)
