@@ -310,13 +310,13 @@ func List() ([]*Deployment, error) {
 
 // Delete removes the manifest from the Store and returns an error if it fails.
 // It does not return an error if the manifest does not exist.
-func Delete(id string) error {
+func Delete(ID string) error {
 	dir, err := Store.Dir()
 	if err != nil {
 		return err
 	}
 
-	path := dir + "/" + id + ".json"
+	path := dir + "/" + ID + ".json"
 
 	if _, err = os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		return nil
@@ -328,8 +328,8 @@ func Delete(id string) error {
 }
 
 // Get returns the manifest for a given version or os.ErrNotExist if it does not exist.
-func Get(id string) (*Deployment, error) {
-	f, err := Store.Open(id+".json", os.O_RDONLY, 0)
+func Get(ID string) (*Deployment, error) {
+	f, err := Store.Open(ID+".json", os.O_RDONLY, 0)
 	if err != nil {
 		return nil, err
 	}

@@ -65,40 +65,36 @@ func (c Client) ContainerCreate(ctx context.Context, image string, opts Containe
 }
 
 // ContainerStart starts a container
-func (c Client) ContainerStart(ctx context.Context, id string) error {
-	err := c.client.ContainerStart(ctx, id, types.ContainerStartOptions{})
+func (c Client) ContainerStart(ctx context.Context, ID string) error {
+	err := c.client.ContainerStart(ctx, ID, types.ContainerStartOptions{})
 	if err != nil {
 		return err
 	}
 
 	log.Log(log.DebugLevel, "started container", log.Fields{
-		"id": id,
+		"id": ID,
 	})
-
-	//ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(StartedContainerManifestKey, id, id)
 
 	return nil
 }
 
 // ContainerStop stops a container
-func (c Client) ContainerStop(ctx context.Context, id string) error {
-	err := c.client.ContainerStop(ctx, id, nil)
+func (c Client) ContainerStop(ctx context.Context, ID string) error {
+	err := c.client.ContainerStop(ctx, ID, nil)
 	if err != nil {
 		return err
 	}
 
 	log.Log(log.DebugLevel, "stopped container", log.Fields{
-		"id": id,
+		"id": ID,
 	})
-
-	//ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(StoppedContainerManifestKey, id, id)
 
 	return nil
 }
 
 // ContainerRemove removes a container
-func (c Client) ContainerRemove(ctx context.Context, id string) error {
-	err := c.client.ContainerRemove(ctx, id, types.ContainerRemoveOptions{
+func (c Client) ContainerRemove(ctx context.Context, ID string) error {
+	err := c.client.ContainerRemove(ctx, ID, types.ContainerRemoveOptions{
 		RemoveVolumes: true,
 		Force:         true,
 	})
@@ -107,25 +103,33 @@ func (c Client) ContainerRemove(ctx context.Context, id string) error {
 	}
 
 	log.Log(log.DebugLevel, "removed container", log.Fields{
-		"id": id,
+		"id": ID,
 	})
-
-	//ctx.Value(manifest.ContextKey).(*manifest.Manifest).Add(RemovedContainerManifestKey, id, id)
 
 	return nil
 }
 
-func (c Client) ContainerExec(ctx context.Context, id string, command string) error {
-	ref, err := c.client.ContainerExecCreate(ctx, id, types.ExecConfig{
+func (c Client) ContainerExec(ctx context.Context, ID string, command string) error {
+	ref, err := c.client.ContainerExecCreate(ctx, ID, types.ExecConfig{
 		Cmd: []string{"sh", "-c", command},
 	})
 	if err != nil {
 		return err
 	}
 
-	return c.client.ContainerExecStart(ctx, ref.ID, types.ExecStartCheck{})
+	err = c.client.ContainerExecStart(ctx, ref.ID, types.ExecStartCheck{})
+	if err != nil {
+		return err
+	}
+
+	log.Log(log.DebugLevel, "exec command", log.Fields{
+		"id":      ID,
+		"command": command,
+	})
+
+	return nil
 }
 
-func (c Client) ContainerInspect(ctx context.Context, id string) (types.ContainerJSON, error) {
-	return c.client.ContainerInspect(ctx, id)
+func (c Client) ContainerInspect(ctx context.Context, ID string) (types.ContainerJSON, error) {
+	return c.client.ContainerInspect(ctx, ID)
 }

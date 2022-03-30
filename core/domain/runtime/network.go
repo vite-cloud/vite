@@ -31,27 +31,27 @@ func (c Client) NetworkCreate(ctx context.Context, name string, opts NetworkCrea
 	return res.ID, nil
 }
 
-func (c Client) NetworkRemove(ctx context.Context, id string) error {
-	err := c.client.NetworkRemove(ctx, id)
+func (c Client) NetworkRemove(ctx context.Context, ID string) error {
+	err := c.client.NetworkRemove(ctx, ID)
 	if err != nil {
 		return err
 	}
 
 	log.Log(log.DebugLevel, "removed network", log.Fields{
-		"id": id,
+		"id": ID,
 	})
 
 	return nil
 }
 
-func (c Client) NetworkConnect(ctx context.Context, networkId, containerID string) error {
-	err := c.client.NetworkConnect(ctx, networkId, containerID, nil)
+func (c Client) NetworkConnect(ctx context.Context, networkID, containerID string) error {
+	err := c.client.NetworkConnect(ctx, networkID, containerID, nil)
 	if err != nil {
 		return err
 	}
 
 	log.Log(log.DebugLevel, "connected network", log.Fields{
-		"network":   networkId,
+		"network":   networkID,
 		"container": containerID,
 	})
 

@@ -5,7 +5,7 @@ import (
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 )
 
-func runShowCommand(cli *cli.CLI, deployment string) error {
+func runShowCommand(cli *cli.CLI, ID string) error {
 	return nil
 }
 

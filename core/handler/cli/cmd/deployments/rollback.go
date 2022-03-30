@@ -7,8 +7,8 @@ import (
 	"github.com/vite-cloud/vite/core/handler/cli/cmd"
 )
 
-func runRollbackCommand(cli *cli.CLI, id string) error {
-	dep, err := deployment.Get(id)
+func runRollbackCommand(cli *cli.CLI, ID string) error {
+	dep, err := deployment.Get(ID)
 	if err != nil {
 		return err
 	}
