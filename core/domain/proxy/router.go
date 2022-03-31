@@ -1,8 +1,9 @@
-package router
+package proxy
 
 import (
 	"context"
 	"fmt"
+	"github.com/vite-cloud/vite/core/domain/log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -20,21 +21,20 @@ type Router struct {
 	mu         sync.Mutex
 }
 
-func New(dep *deployment.Deployment) *Router {
-	return &Router{deployment: dep, mu: sync.Mutex{}}
-}
-
 func (r *Router) Proxy(w http.ResponseWriter, req *http.Request) {
-	ip, _ := r.IPFor(req.Host)
-	if ip == "" {
+	targetIP, _ := r.IPFor(req.Host)
+	if targetIP == "" {
 		w.WriteHeader(http.StatusNotFound)
+		LogR(req, log.InfoLevel, "host not found")
 		return
 	}
 
 	httputil.NewSingleHostReverseProxy(&url.URL{
 		Scheme: "http",
-		Host:   ip,
+		Host:   targetIP,
 	}).ServeHTTP(w, req)
+
+	LogR(req, log.InfoLevel, "served")
 }
 
 func (r *Router) IPFor(host string) (string, error) {
@@ -89,4 +89,12 @@ func hostMatches(host string, pattern string) (bool, error) {
 	}
 
 	return re.MatchString(host), nil
+}
+func (r *Router) Accepts(host string) (bool, error) {
+	_, err := r.serviceFor(host)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

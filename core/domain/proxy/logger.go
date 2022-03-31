@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"github.com/vite-cloud/vite/core/domain/log"
+	"net/http"
 	"os"
 )
 
@@ -52,4 +53,16 @@ func Log(level log.Level, message string, fields log.Fields) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func LogR(req *http.Request, level log.Level, message string) {
+	fields := log.Fields{
+		"method": req.Method,
+		"path":   req.URL.Path,
+		"host":   req.Host,
+	}
+
+	// todo: get the correct IP (which is very hard as we need different strategies if the request is coming from a proxy (Cloudflare...) or internet directly)
+
+	Log(level, message, fields)
 }

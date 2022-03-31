@@ -1,4 +1,4 @@
-package router
+package proxy
 
 import (
 	"encoding/json"
