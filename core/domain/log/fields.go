@@ -30,7 +30,7 @@ func (f Fields) stack() string {
 }
 
 // Marshal returns a logfmt-compatible string representation of the fields.
-func (f Fields) Marshal(level level, message string) ([]byte, error) {
+func (f Fields) Marshal(level Level, message string) ([]byte, error) {
 	if _, ok := f["_stack"]; !ok {
 		f["_stack"] = f.stack()
 	}

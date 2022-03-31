@@ -4,7 +4,7 @@ import "testing"
 
 func TestLevel_String(t *testing.T) {
 	tests := []struct {
-		level level
+		level Level
 		want  string
 	}{
 		{DebugLevel, "debug"},
@@ -12,8 +12,8 @@ func TestLevel_String(t *testing.T) {
 		{WarnLevel, "warn"},
 		{ErrorLevel, "error"},
 		{FatalLevel, "fatal"},
-		{level(15), "unknown"},
-		{level(-1), "unknown"},
+		{Level(15), "unknown"},
+		{Level(-1), "unknown"},
 	}
 
 	for _, tt := range tests {

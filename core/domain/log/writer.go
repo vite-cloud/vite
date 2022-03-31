@@ -4,34 +4,34 @@ import (
 	"os"
 )
 
-// writer is the log writer interface.
-type writer interface {
-	Write(level level, message string, fields Fields) error
+// Writer is the log Writer interface.
+type Writer interface {
+	Write(level Level, message string, fields Fields) error
 }
 
-// fileWriter is the file log writer.
-type fileWriter struct {
-	file *os.File
+// FileWriter is the file log Writer.
+type FileWriter struct {
+	File *os.File
 }
 
 // Write writes the log message to the file.
-func (f *fileWriter) Write(level level, message string, fields Fields) error {
+func (f *FileWriter) Write(level Level, message string, fields Fields) error {
 	marshalled, err := fields.Marshal(level, message)
 	if err != nil {
 		return err
 	}
 
-	_, err = f.file.Write(marshalled)
+	_, err = f.File.Write(marshalled)
 	return err
 }
 
 // compositeWriter logs a given message to multiple writers.
 type compositeWriter struct {
-	writers []writer
+	writers []Writer
 }
 
 // Write writes the log message to all writers.
-func (c *compositeWriter) Write(level level, message string, fields Fields) error {
+func (c *compositeWriter) Write(level Level, message string, fields Fields) error {
 	for _, writer := range c.writers {
 		err := writer.Write(level, message, fields)
 		if err != nil {
@@ -44,7 +44,7 @@ func (c *compositeWriter) Write(level level, message string, fields Fields) erro
 
 // TestEvent contains the log values for testing.
 type TestEvent struct {
-	Level   level
+	Level   Level
 	Message string
 	Fields  Fields
 }
@@ -56,7 +56,7 @@ type MemoryWriter struct {
 }
 
 // Write writes the log message to the memory.
-func (m *MemoryWriter) Write(level level, message string, fields Fields) error {
+func (m *MemoryWriter) Write(level Level, message string, fields Fields) error {
 	m.Events = append(m.Events, TestEvent{level, message, fields})
 	return nil
 }

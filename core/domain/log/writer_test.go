@@ -10,7 +10,7 @@ import (
 )
 
 func TestCompositeWriter_Write(t *testing.T) {
-	writers := []writer{
+	writers := []Writer{
 		&MemoryWriter{},
 		&MemoryWriter{},
 	}
@@ -32,12 +32,12 @@ func TestCompositeWriter_Write(t *testing.T) {
 
 type failingWriter struct{}
 
-func (f failingWriter) Write(level level, message string, fields Fields) error {
+func (f failingWriter) Write(level Level, message string, fields Fields) error {
 	return fmt.Errorf("failed")
 }
 
 func TestCompositeWriter_Write2(t *testing.T) {
-	w := &compositeWriter{[]writer{
+	w := &compositeWriter{[]Writer{
 		&failingWriter{},
 	}}
 
@@ -103,8 +103,8 @@ func TestFileWriter_Write(t *testing.T) {
 
 	defer file.Close()
 
-	w := fileWriter{
-		file: file,
+	w := FileWriter{
+		File: file,
 	}
 
 	err = w.Write(DebugLevel, "test", Fields{
@@ -121,7 +121,7 @@ func TestFileWriter_Write(t *testing.T) {
 }
 
 func TestFileWriter_Write2(t *testing.T) {
-	w := fileWriter{}
+	w := FileWriter{}
 
 	err := w.Write(DebugLevel, "test", Fields{
 		"invalid_value": []int{1, 2, 3},

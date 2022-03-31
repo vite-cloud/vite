@@ -6,7 +6,7 @@ import (
 )
 
 // logger contains an instance of the global logger.
-var logger writer
+var logger Writer
 
 const (
 	// Store is the unique name of the logger store
@@ -16,17 +16,17 @@ const (
 )
 
 // SetLogger sets the global logger to a given writer.
-func SetLogger(w writer) {
+func SetLogger(w Writer) {
 	logger = w
 }
 
 // GetLogger returns the global logger.
-func GetLogger() writer {
+func GetLogger() Writer {
 	return logger
 }
 
 // defaultLogger creates a default logger.
-func defaultLogger() (writer, error) {
+func defaultLogger() (Writer, error) {
 	dir, err := Store.Dir()
 	if err != nil {
 		return nil, err
@@ -37,11 +37,11 @@ func defaultLogger() (writer, error) {
 		return nil, err
 	}
 
-	return &fileWriter{file}, nil
+	return &FileWriter{file}, nil
 }
 
 // Log logs an internal event to the global logger
-func Log(level level, message string, fields Fields) {
+func Log(level Level, message string, fields Fields) {
 	if logger == nil {
 		w, err := defaultLogger()
 		if err != nil {

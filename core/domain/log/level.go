@@ -1,11 +1,11 @@
 package log
 
-// level is a log level from 0 to 4
-type level int
+// Level is a log Level from 0 to 4
+type Level int
 
 // Log levels
 const (
-	DebugLevel level = iota
+	DebugLevel Level = iota
 	InfoLevel
 	WarnLevel
 	ErrorLevel
@@ -20,7 +20,7 @@ const (
 // - ErrorLevel -> "error"
 // - FatalLevel -> "fatal"
 // If the level is invalid, it returns "unknown"
-func (l level) String() string {
+func (l Level) String() string {
 	switch l {
 	case DebugLevel:
 		return "debug"
