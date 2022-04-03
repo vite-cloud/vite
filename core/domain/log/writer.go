@@ -1,7 +1,7 @@
 package log
 
 import (
-	"os"
+	"io"
 )
 
 // Writer is the log Writer interface.
@@ -11,7 +11,7 @@ type Writer interface {
 
 // FileWriter is the file log Writer.
 type FileWriter struct {
-	File *os.File
+	File io.Writer
 }
 
 // Write writes the log message to the file.
@@ -25,14 +25,14 @@ func (f *FileWriter) Write(level Level, message string, fields Fields) error {
 	return err
 }
 
-// compositeWriter logs a given message to multiple writers.
-type compositeWriter struct {
-	writers []Writer
+// CompositeWriter logs a given message to multiple writers.
+type CompositeWriter struct {
+	Writers []Writer
 }
 
 // Write writes the log message to all writers.
-func (c *compositeWriter) Write(level Level, message string, fields Fields) error {
-	for _, writer := range c.writers {
+func (c *CompositeWriter) Write(level Level, message string, fields Fields) error {
+	for _, writer := range c.Writers {
 		err := writer.Write(level, message, fields)
 		if err != nil {
 			return err

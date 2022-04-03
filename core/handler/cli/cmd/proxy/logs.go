@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/vite-cloud/vite/core/domain/log"
-	"github.com/vite-cloud/vite/core/domain/proxy"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 	"os"
 )
@@ -21,7 +20,7 @@ func runLogsCommand(cli *cli.CLI, opts logsOptions) error {
 		return err
 	}
 
-	stream, err := log.Tail(dir+"/"+proxy.LogFile, log.TailOptions{
+	stream, err := log.Tail(dir+"/proxy.log", log.TailOptions{
 		Stream:   opts.stream,
 		Backfill: opts.backfill,
 	})

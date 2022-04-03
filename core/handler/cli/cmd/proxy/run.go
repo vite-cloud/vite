@@ -1,10 +1,10 @@
 package proxy
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/vite-cloud/vite/core/domain/config"
 	"github.com/vite-cloud/vite/core/domain/deployment"
+	"github.com/vite-cloud/vite/core/domain/log"
 	server "github.com/vite-cloud/vite/core/domain/proxy"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 	"strconv"
@@ -30,7 +30,7 @@ func runRunCommand(cli *cli.CLI, opts *runOpts) error {
 		return err
 	}
 
-	proxy, err := server.New(depl)
+	proxy, err := server.New(cli.Out(), depl)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func runRunCommand(cli *cli.CLI, opts *runOpts) error {
 		return err
 	}
 
-	fmt.Fprintf(cli.Out(), "Running reverse proxy HTTP:%s and HTTPS:%s\n", conf.Proxy.HTTP, conf.Proxy.HTTPS)
+	proxy.Logger.Log(log.DebugLevel, "starting", log.Fields{"http_port": conf.Proxy.HTTP, "https_port": conf.Proxy.HTTPS})
 
 	proxy.Run(conf.Proxy.HTTP, conf.Proxy.HTTPS)
 

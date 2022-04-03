@@ -8,6 +8,7 @@ import (
 	"github.com/vite-cloud/vite/core/domain/deployment"
 	"github.com/vite-cloud/vite/core/domain/log"
 	"golang.org/x/crypto/acme/autocert"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -17,18 +18,43 @@ const (
 	Store = datadir.Store("certs")
 )
 
+type Logger struct {
+	writer log.Writer
+}
+
+func (l Logger) Log(level log.Level, message string, fields log.Fields) {
+	err := l.writer.Write(level, message, fields)
+	if err != nil {
+		panic(err)
+	}
+}
+
 type Proxy struct {
 	Router      *Router
 	CertManager *autocert.Manager
+	Logger      *Logger
 }
 
-func New(deployment *deployment.Deployment) (*Proxy, error) {
+func New(stdout io.Writer, deployment *deployment.Deployment) (*Proxy, error) {
 	dir, err := Store.Dir()
 	if err != nil {
 		return nil, err
 	}
 
-	router := &Router{deployment: deployment}
+	logFile, err := log.Store.Open("proxy.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	l := &Logger{
+		writer: &log.CompositeWriter{
+			Writers: []log.Writer{
+				&log.FileWriter{File: logFile},
+				&log.FileWriter{File: stdout},
+			},
+		},
+	}
+	router := &Router{deployment: deployment, logger: l}
+
 	return &Proxy{
 		Router: router,
 		CertManager: &autocert.Manager{
@@ -47,6 +73,7 @@ func New(deployment *deployment.Deployment) (*Proxy, error) {
 			},
 			Cache: autocert.DirCache(dir),
 		},
+		Logger: l,
 	}, nil
 }
 
@@ -54,7 +81,7 @@ func (p *Proxy) Run(HTTP string, HTTPS string) {
 	handlerHTTP := newServer(HTTP, func(w http.ResponseWriter, r *http.Request) {
 		p.CertManager.HTTPHandler(nil).ServeHTTP(w, r)
 
-		LogR(r, log.DebugLevel, "redirect to https")
+		p.Logger.LogR(r, log.DebugLevel, "redirect to https")
 	})
 
 	handler := newServer(HTTPS, p.Router.Proxy)
@@ -67,34 +94,24 @@ func (p *Proxy) Run(HTTP string, HTTPS string) {
 
 	finisher := Finisher{
 		Keepers: []*Keeper{
-			{
-				Name:    "http",
-				Timeout: time.Second * 10,
-				Server:  handlerHTTP,
-			},
-			{
-				Name:    "https",
-				Timeout: time.Second * 10,
-				Server:  handler,
-			},
+			{"http", handlerHTTP, time.Second * 10},
+			{"https", handler, time.Second * 10},
 		},
+		logger: p.Logger,
 	}
 
 	go func() {
 		err := handlerHTTP.ListenAndServe()
 		if err != nil {
 			if err == http.ErrServerClosed {
-				Log(log.InfoLevel, "server shutdown", log.Fields{
+				p.Logger.Log(log.InfoLevel, "server shutdown", log.Fields{
 					"name": "http",
 				})
 				return
 			}
-			Log(log.ErrorLevel, "http server error", log.Fields{
+			p.Logger.Log(log.ErrorLevel, "http server error", log.Fields{
 				"error": err,
 			})
-
-			// todo: use cli.Out()
-			fmt.Println(err)
 			os.Exit(1)
 		}
 	}()
@@ -103,18 +120,15 @@ func (p *Proxy) Run(HTTP string, HTTPS string) {
 		err := handler.ListenAndServeTLS("", "")
 		if err != nil {
 			if err == http.ErrServerClosed {
-				Log(log.InfoLevel, "server shutdown", log.Fields{
+				p.Logger.Log(log.InfoLevel, "server shutdown", log.Fields{
 					"name": "https",
 				})
 				return
 			}
 
-			Log(log.ErrorLevel, "https server error", log.Fields{
+			p.Logger.Log(log.ErrorLevel, "https server error", log.Fields{
 				"error": err,
 			})
-
-			// todo: use cli.Out()
-			fmt.Println(err)
 			os.Exit(1)
 		}
 	}()
@@ -132,4 +146,12 @@ func newServer(port string, handler http.HandlerFunc) *http.Server {
 		// todo: compat with std log library
 		//ErrorLog:       GetLogger(),
 	}
+}
+
+func (l *Logger) LogR(r *http.Request, level log.Level, message string) {
+	l.Log(level, message, log.Fields{
+		"host":   r.Host,
+		"method": r.Method,
+		"path":   r.URL.Path,
+	})
 }

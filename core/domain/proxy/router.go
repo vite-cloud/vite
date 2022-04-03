@@ -19,13 +19,14 @@ type Router struct {
 	deployment *deployment.Deployment
 	ips        sync.Map
 	mu         sync.Mutex
+	logger     *Logger
 }
 
 func (r *Router) Proxy(w http.ResponseWriter, req *http.Request) {
 	targetIP, _ := r.IPFor(req.Host)
 	if targetIP == "" {
 		w.WriteHeader(http.StatusNotFound)
-		LogR(req, log.InfoLevel, "host not found")
+		r.logger.LogR(req, log.InfoLevel, "host not found")
 		return
 	}
 
@@ -34,7 +35,7 @@ func (r *Router) Proxy(w http.ResponseWriter, req *http.Request) {
 		Host:   targetIP,
 	}).ServeHTTP(w, req)
 
-	LogR(req, log.InfoLevel, "served")
+	r.logger.LogR(req, log.InfoLevel, "served")
 }
 
 func (r *Router) IPFor(host string) (string, error) {

@@ -15,7 +15,7 @@ func TestCompositeWriter_Write(t *testing.T) {
 		&MemoryWriter{},
 	}
 
-	w := &compositeWriter{writers}
+	w := &CompositeWriter{writers}
 	err := w.Write(DebugLevel, "test", Fields{
 		"foo": "bar",
 	})
@@ -37,7 +37,7 @@ func (f failingWriter) Write(level Level, message string, fields Fields) error {
 }
 
 func TestCompositeWriter_Write2(t *testing.T) {
-	w := &compositeWriter{[]Writer{
+	w := &CompositeWriter{[]Writer{
 		&failingWriter{},
 	}}
 

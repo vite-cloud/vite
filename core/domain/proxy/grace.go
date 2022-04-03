@@ -21,6 +21,7 @@ type Keeper struct {
 
 type Finisher struct {
 	Keepers []*Keeper
+	logger  *Logger
 }
 
 func (f Finisher) Wait() {
@@ -35,12 +36,12 @@ func (f Finisher) Wait() {
 			defer cancel()
 
 			if err := keeper.Server.Shutdown(ctx); err != nil {
-				Log(log.ErrorLevel, "graceful shutdown failed", log.Fields{
+				f.logger.Log(log.ErrorLevel, "graceful shutdown failed", log.Fields{
 					"name": keeper.Name,
 					"err":  err,
 				})
 			} else {
-				Log(log.InfoLevel, "graceful shutdown", log.Fields{
+				f.logger.Log(log.InfoLevel, "graceful shutdown", log.Fields{
 					"name": keeper.Name,
 				})
 			}
