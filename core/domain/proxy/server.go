@@ -9,6 +9,7 @@ import (
 	"github.com/vite-cloud/vite/core/domain/log"
 	"golang.org/x/crypto/acme/autocert"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -64,23 +65,61 @@ func (p *Proxy) Run(HTTP string, HTTPS string) {
 		},
 	}
 
+	finisher := Finisher{
+		Keepers: []*Keeper{
+			{
+				Name:    "http",
+				Timeout: time.Second * 10,
+				Server:  handlerHTTP,
+			},
+			{
+				Name:    "https",
+				Timeout: time.Second * 10,
+				Server:  handler,
+			},
+		},
+	}
+
 	go func() {
 		err := handlerHTTP.ListenAndServe()
 		if err != nil {
+			if err == http.ErrServerClosed {
+				Log(log.InfoLevel, "server shutdown", log.Fields{
+					"name": "http",
+				})
+				return
+			}
 			Log(log.ErrorLevel, "http server error", log.Fields{
 				"error": err,
 			})
+
+			// todo: use cli.Out()
+			fmt.Println(err)
+			os.Exit(1)
 		}
 	}()
 
 	go func() {
 		err := handler.ListenAndServeTLS("", "")
 		if err != nil {
+			if err == http.ErrServerClosed {
+				Log(log.InfoLevel, "server shutdown", log.Fields{
+					"name": "https",
+				})
+				return
+			}
+
 			Log(log.ErrorLevel, "https server error", log.Fields{
 				"error": err,
 			})
+
+			// todo: use cli.Out()
+			fmt.Println(err)
+			os.Exit(1)
 		}
 	}()
+
+	finisher.Wait()
 }
 
 func newServer(port string, handler http.HandlerFunc) *http.Server {

@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -328,8 +330,8 @@ func Delete(ID string) error {
 }
 
 // Get returns the manifest for a given version or os.ErrNotExist if it does not exist.
-func Get(ID string) (*Deployment, error) {
-	f, err := Store.Open(ID+".json", os.O_RDONLY, 0)
+func Get(ID int) (*Deployment, error) {
+	f, err := Store.Open(strconv.Itoa(ID)+".json", os.O_RDONLY, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -437,9 +439,57 @@ func (d *Deployment) All() map[string][]LabeledValue {
 	return v
 }
 
+// Time returns the time the deployment was created.
+// todo: Add a Time property on the deployment manifest rather than using the deployment ID that
+// todo: happens to be the creation time.
 func (d *Deployment) Time() time.Time {
 	sec, _ := strconv.Atoi(d.ID[:10])
 	nsec, _ := strconv.Atoi(d.ID[10:])
 
 	return time.Unix(int64(sec), int64(nsec))
+}
+
+func IDs() ([]int, error) {
+	dir, err := Store.Dir()
+	if err != nil {
+		return nil, err
+	}
+
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	var ids []int
+
+	for _, f := range files {
+		if !f.IsDir() {
+			id, err := strconv.Atoi(f.Name()[:len(f.Name())-5])
+			if err != nil {
+				return nil, err
+			}
+
+			ids = append(ids, id)
+		}
+	}
+
+	// sort
+	sort.Slice(ids, func(i, j int) bool {
+		return ids[i] < ids[j]
+	})
+
+	return ids, nil
+}
+
+func Latest() (int, error) {
+	ids, err := IDs()
+	if err != nil {
+		return 0, err
+	}
+
+	if len(ids) == 0 {
+		return 0, errors.New("no deployments found")
+	}
+
+	return ids[len(ids)-1], nil
 }

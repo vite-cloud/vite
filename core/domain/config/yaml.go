@@ -70,6 +70,14 @@ func (c configYAML) ToConfig() (*Config, error) {
 		config.Services[name] = converted
 	}
 
+	if config.Proxy.HTTPS == "" {
+		config.Proxy.HTTPS = "443"
+	}
+
+	if config.Proxy.HTTP == "" {
+		config.Proxy.HTTP = "80"
+	}
+
 	return config, nil
 }
 
