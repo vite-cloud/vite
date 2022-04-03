@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"sync"
@@ -46,6 +47,16 @@ func Diagnose(config *config.Config) *Diagnostic {
 	)
 
 	diagnostic.ensureDnsRecordsPointToHost()
+
+	_, err = url.Parse(config.ControlPlane.Host)
+	ok := diagnostic.ErrorIf(
+		err != nil,
+		"Invalid control plane host",
+		err,
+	)
+	if ok {
+		return diagnostic
+	}
 
 	return diagnostic
 }
