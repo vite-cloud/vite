@@ -7,6 +7,7 @@ import (
 	"github.com/vite-cloud/vite/core/domain/datadir"
 	"github.com/vite-cloud/vite/core/domain/deployment"
 	"github.com/vite-cloud/vite/core/domain/log"
+	"github.com/vite-cloud/vite/core/domain/plane"
 	"golang.org/x/crypto/acme/autocert"
 	"io"
 	"net/http"
@@ -53,7 +54,7 @@ func New(stdout io.Writer, deployment *deployment.Deployment) (*Proxy, error) {
 			},
 		},
 	}
-	router := &Router{deployment: deployment, logger: l}
+	router := &Router{deployment: deployment, logger: l, API: plane.New()}
 
 	return &Proxy{
 		Router: router,

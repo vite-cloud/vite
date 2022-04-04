@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/vite-cloud/vite/core/domain/log"
 	"net/http"
 	"net/http/httputil"
@@ -20,9 +21,15 @@ type Router struct {
 	ips        sync.Map
 	mu         sync.Mutex
 	logger     *Logger
+	API        *gin.Engine
 }
 
 func (r *Router) Proxy(w http.ResponseWriter, req *http.Request) {
+	if req.Host == r.deployment.Config.ControlPlane.Host {
+		r.logger.LogR(req, log.DebugLevel, "proxy to control plane")
+		r.API.ServeHTTP(w, req)
+		return
+	}
 	targetIP, _ := r.IPFor(req.Host)
 	if targetIP == "" {
 		w.WriteHeader(http.StatusNotFound)
@@ -98,4 +105,8 @@ func (r *Router) Accepts(host string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (r *Router) ServeAPI(w http.ResponseWriter, req *http.Request) {
+
 }
