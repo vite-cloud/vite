@@ -32,7 +32,8 @@ func (r *Router) Proxy(w http.ResponseWriter, req *http.Request) {
 	}
 	targetIP, _ := r.IPFor(req.Host)
 	if targetIP == "" {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusBadGateway)
+		w.Write([]byte("Upstream did not respond."))
 		r.logger.LogR(req, log.InfoLevel, "host not found")
 		return
 	}

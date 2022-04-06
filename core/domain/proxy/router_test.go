@@ -7,6 +7,7 @@ import (
 	"github.com/vite-cloud/vite/core/domain/deployment"
 	"github.com/vite-cloud/vite/core/domain/runtime"
 	"gotest.tools/v3/assert"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -35,7 +36,7 @@ func TestRouter_IPFor(t *testing.T) {
 	docker, err := runtime.NewClient(runtime.WithDockerClient(cli))
 	assert.NilError(t, err)
 
-	router := New(&deployment.Deployment{
+	serv, err := New(io.Discard, &deployment.Deployment{
 		Docker: docker,
 		Config: &config.Config{
 			Services: map[string]*config.Service{
@@ -47,9 +48,10 @@ func TestRouter_IPFor(t *testing.T) {
 			},
 		},
 	})
-	router.deployment.Add("created_containers", "test", "container-id")
+	assert.NilError(t, err)
+	serv.Router.deployment.Add("created_containers", "test", "container-id")
 
-	ip, err := router.IPFor("example.com")
+	ip, err := serv.Router.IPFor("example.com")
 	assert.NilError(t, err)
 	assert.Equal(t, ip, "container-ip")
 }

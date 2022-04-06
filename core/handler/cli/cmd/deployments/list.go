@@ -30,8 +30,7 @@ func runListCommand(cli *cli.CLI) error {
 }
 
 func fmtTime(t time.Time) any {
-	// create a duration
-	d := time.Now().Sub(t)
+	d := time.Since(t)
 
 	// if less than a minute
 	if d < time.Minute {

@@ -1,6 +1,9 @@
 package plane
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/vite-cloud/vite/core/static"
+)
 
 const ApiV1Prefix = "/api/v1"
 
@@ -12,7 +15,11 @@ func New() *gin.Engine {
 
 	router.GET(ApiV1Prefix+"/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"version": "1.0.0",
+			"version":  static.Version,
+			"commit":   static.Commit,
+			"os":       static.OS,
+			"gov":      static.GoVersion,
+			"built_at": static.BuiltAt,
 		})
 	})
 

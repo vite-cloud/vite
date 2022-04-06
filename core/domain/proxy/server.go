@@ -10,6 +10,7 @@ import (
 	"github.com/vite-cloud/vite/core/domain/plane"
 	"golang.org/x/crypto/acme/autocert"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -18,17 +19,6 @@ import (
 const (
 	Store = datadir.Store("certs")
 )
-
-type Logger struct {
-	writer log.Writer
-}
-
-func (l Logger) Log(level log.Level, message string, fields log.Fields) {
-	err := l.writer.Write(level, message, fields)
-	if err != nil {
-		panic(err)
-	}
-}
 
 type Proxy struct {
 	Router      *Router
@@ -78,9 +68,17 @@ func New(stdout io.Writer, deployment *deployment.Deployment) (*Proxy, error) {
 	}, nil
 }
 
-func (p *Proxy) Run(HTTP string, HTTPS string) {
+func (p *Proxy) Run(HTTP string, HTTPS string, unsecure bool) {
 	handlerHTTP := newServer(HTTP, func(w http.ResponseWriter, r *http.Request) {
-		p.CertManager.HTTPHandler(nil).ServeHTTP(w, r)
+		p.CertManager.HTTPHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != "GET" && r.Method != "HEAD" {
+				http.Error(w, "Use HTTPS", http.StatusBadRequest)
+				return
+			}
+
+			target := "https://" + replacePort(r.Host, HTTPS) + r.URL.RequestURI()
+			http.Redirect(w, r, target, http.StatusFound)
+		})).ServeHTTP(w, r)
 
 		p.Logger.LogR(r, log.DebugLevel, "redirect to https")
 	})
@@ -89,6 +87,9 @@ func (p *Proxy) Run(HTTP string, HTTPS string) {
 	handler.TLSConfig = &tls.Config{
 		MinVersion: tls.VersionTLS13,
 		GetCertificate: func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
+			if unsecure {
+				return GetAutoCert()
+			}
 			return p.CertManager.GetCertificate(info)
 		},
 	}
@@ -137,6 +138,25 @@ func (p *Proxy) Run(HTTP string, HTTPS string) {
 	finisher.Wait()
 }
 
+type Logger struct {
+	writer log.Writer
+}
+
+func (l Logger) Log(level log.Level, message string, fields log.Fields) {
+	err := l.writer.Write(level, message, fields)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (l *Logger) LogR(r *http.Request, level log.Level, message string) {
+	l.Log(level, message, log.Fields{
+		"host":   r.Host,
+		"method": r.Method,
+		"path":   r.URL.Path,
+	})
+}
+
 func newServer(port string, handler http.HandlerFunc) *http.Server {
 	return &http.Server{
 		Addr:           ":" + port,
@@ -149,10 +169,10 @@ func newServer(port string, handler http.HandlerFunc) *http.Server {
 	}
 }
 
-func (l *Logger) LogR(r *http.Request, level log.Level, message string) {
-	l.Log(level, message, log.Fields{
-		"host":   r.Host,
-		"method": r.Method,
-		"path":   r.URL.Path,
-	})
+func replacePort(url string, newPort string) string {
+	host, _, err := net.SplitHostPort(url)
+	if err != nil {
+		return url
+	}
+	return net.JoinHostPort(host, newPort)
 }
