@@ -13,9 +13,8 @@ type Config struct {
 	Services map[string]*Service
 
 	Proxy struct {
-		HTTP       string
-		HTTPS      string
-		SelfSigned bool
+		HTTP  string
+		HTTPS string
 	}
 
 	ControlPlane struct {

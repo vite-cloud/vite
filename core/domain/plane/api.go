@@ -15,11 +15,11 @@ func New() *gin.Engine {
 
 	router.GET(ApiV1Prefix+"/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"version":  static.Version,
-			"commit":   static.Commit,
-			"os":       static.OS,
-			"gov":      static.GoVersion,
-			"built_at": static.BuiltAt,
+			"version":    static.Version,
+			"commit":     static.Commit,
+			"os":         static.OS,
+			"go_version": static.GoVersion,
+			"built_at":   static.BuiltAt,
 		})
 	})
 

@@ -11,7 +11,7 @@ import (
 )
 
 type runOpts struct {
-	ID       int
+	ID       int64
 	hasID    bool
 	HTTP     string
 	HTTPS    string
@@ -59,7 +59,7 @@ func newRunCommand(cli *cli.CLI) *cobra.Command {
 					return err
 				}
 
-				opts.ID = id
+				opts.ID = int64(id)
 			}
 
 			conf, err := config.Get()

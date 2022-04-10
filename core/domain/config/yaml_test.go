@@ -261,12 +261,12 @@ func TestConfigYAML_ToConfig(t *testing.T) {
 	for _, test := range tests {
 		test := test
 
-		t.Run(test.name, func(t *testing.T) {
+		t.Run("service only:"+test.name, func(t *testing.T) {
 			t.Parallel()
 
 			got, err := test.yaml.ToConfig()
 			assert.Assert(t, (err != nil) == test.wantErr, "unexpected err: %v", err)
-			assert.DeepEqual(t, test.want, got)
+			assert.DeepEqual(t, test.want.Services, got.Services)
 		})
 	}
 }

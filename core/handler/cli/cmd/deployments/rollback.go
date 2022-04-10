@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func runRollbackCommand(cli *cli.CLI, ID int) error {
+func runRollbackCommand(cli *cli.CLI, ID int64) error {
 	dep, err := deployment.Get(ID)
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func newRollbackCommand(cli *cli.CLI) *cobra.Command {
 				return err
 			}
 
-			return runRollbackCommand(cli, id)
+			return runRollbackCommand(cli, int64(id))
 		},
 	}
 

@@ -11,20 +11,19 @@ import (
 func TestGet(t *testing.T) {
 	datadir.UseTestHome(t)
 
-	m := &Deployment{ID: "testing"}
+	d := &Deployment{ID: 1}
 
-	m.Add("hello", "label", "world")
-	m.Add("foo", "label1", "bar")
-	m.Add("foo", "label2", 4)
+	d.Add("hello", "label", "world")
+	d.Add("foo", "label1", "bar")
+	d.Add("foo", "label2", 4)
 
-	d := &Deployment{ID: "testing"}
 	err := d.Save()
 	assert.NilError(t, err)
 
-	found, err := Get("testing")
+	found, err := Get(1)
 	assert.NilError(t, err)
 
-	assert.Equal(t, found.ID, "testing")
+	assert.Equal(t, found.ID, 1)
 
 	got, ok := found.resources.Load("hello")
 	assert.Assert(t, ok)
@@ -42,20 +41,19 @@ func TestGet(t *testing.T) {
 func TestDelete(t *testing.T) {
 	datadir.UseTestHome(t)
 
-	m := &Deployment{ID: "testing"}
+	d := &Deployment{ID: 1}
 
-	m.Add("hello", "label", "world")
-	m.Add("foo", "label1", "bar")
-	m.Add("foo", "label2", 4)
+	d.Add("hello", "label", "world")
+	d.Add("foo", "label1", "bar")
+	d.Add("foo", "label2", 4)
 
-	d := &Deployment{ID: "testing"}
 	err := d.Save()
 	assert.NilError(t, err)
 
-	found, err := Get("testing")
+	found, err := Get(1)
 	assert.NilError(t, err)
 
-	assert.Equal(t, found.ID, "testing")
+	assert.Equal(t, found.ID, 1)
 
 	got, ok := found.resources.Load("hello")
 	assert.Assert(t, ok)
@@ -69,32 +67,25 @@ func TestDelete(t *testing.T) {
 	assert.Equal(t, got.([]LabeledValue)[1].Label, "label2")
 	assert.Equal(t, got.([]LabeledValue)[1].Value, 4.0)
 
-	err = Delete("testing")
+	err = Delete(1)
 	assert.NilError(t, err)
 
-	_, err = Get("testing")
+	_, err = Get(1)
 	assert.ErrorIs(t, err, os.ErrNotExist)
 }
 
 func TestDelete2(t *testing.T) {
 	datadir.SetHomeDir("/nop")
 
-	err := Delete("testing")
+	err := Delete(1)
 	assert.ErrorIs(t, err, os.ErrPermission)
 }
 
 func TestDelete3(t *testing.T) {
 	datadir.UseTestHome(t)
 
-	err := Delete("does_not_exist")
+	err := Delete(9999)
 	assert.NilError(t, err)
-}
-
-func TestDelete4(t *testing.T) {
-	datadir.UseTestHome(t)
-
-	err := Delete("\000x")
-	assert.ErrorContains(t, err, "invalid argument")
 }
 
 func TestList2(t *testing.T) {
@@ -133,13 +124,12 @@ func TestList4(t *testing.T) {
 func TestList(t *testing.T) {
 	datadir.UseTestHome(t)
 
-	m := &Deployment{ID: "testing"}
+	d := &Deployment{ID: 1}
 
-	m.Add("hello", "label", "world")
-	m.Add("foo", "label1", "bar")
-	m.Add("foo", "label2", 4)
+	d.Add("hello", "label", "world")
+	d.Add("foo", "label1", "bar")
+	d.Add("foo", "label2", 4)
 
-	d := &Deployment{ID: "testing"}
 	err := d.Save()
 	assert.NilError(t, err)
 
@@ -147,7 +137,7 @@ func TestList(t *testing.T) {
 	assert.NilError(t, err)
 
 	assert.Equal(t, len(got), 1)
-	assert.Equal(t, got[0].ID, "testing")
+	assert.Equal(t, got[0].ID, 1)
 
 	key, err := got[0].Get("hello")
 	assert.NilError(t, err)
@@ -164,20 +154,20 @@ func TestList(t *testing.T) {
 
 func TestDeployment_MarshalJSON(t *testing.T) {
 	data := deploymentJSON{
-		ID: "testing",
+		ID: 1,
 		Resources: map[string][]LabeledValue{
 			"hello": {{"label", "world"}},
 			"foo":   {{"label1", "bar"}, {"label2", 4}},
 		},
 	}
 
-	m := &Deployment{ID: "testing"}
+	d := &Deployment{ID: 1}
 
-	m.Add("hello", "label", "world")
-	m.Add("foo", "label1", "bar")
-	m.Add("foo", "label2", 4)
+	d.Add("hello", "label", "world")
+	d.Add("foo", "label1", "bar")
+	d.Add("foo", "label2", 4)
 
-	got, err := json.Marshal(m)
+	got, err := json.Marshal(d)
 	assert.NilError(t, err)
 
 	want, _ := json.Marshal(data)
@@ -186,18 +176,18 @@ func TestDeployment_MarshalJSON(t *testing.T) {
 }
 
 func TestDeployment_Add(t *testing.T) {
-	m := &Deployment{ID: "testing"}
+	d := &Deployment{ID: 1}
 
-	m.Add("hello", "label", "world")
-	m.Add("foo", "label1", "bar")
-	m.Add("foo", "label2", 4)
+	d.Add("hello", "label", "world")
+	d.Add("foo", "label1", "bar")
+	d.Add("foo", "label2", 4)
 
-	got, ok := m.resources.Load("hello")
+	got, ok := d.resources.Load("hello")
 	assert.Assert(t, ok)
 	assert.Equal(t, got.([]LabeledValue)[0].Label, "label")
 	assert.Equal(t, got.([]LabeledValue)[0].Value, "world")
 
-	got, ok = m.resources.Load("foo")
+	got, ok = d.resources.Load("foo")
 	assert.Assert(t, ok)
 	assert.Equal(t, got.([]LabeledValue)[0].Label, "label1")
 	assert.Equal(t, got.([]LabeledValue)[0].Value, "bar")
@@ -206,18 +196,18 @@ func TestDeployment_Add(t *testing.T) {
 }
 
 func TestDeployment_Get(t *testing.T) {
-	m := &Deployment{ID: "testing"}
+	d := &Deployment{ID: 1}
 
-	m.Add("hello", "label", "world")
-	m.Add("foo", "label1", "bar")
-	m.Add("foo", "label2", 4)
+	d.Add("hello", "label", "world")
+	d.Add("foo", "label1", "bar")
+	d.Add("foo", "label2", 4)
 
-	got, err := m.Get("hello")
+	got, err := d.Get("hello")
 	assert.NilError(t, err)
 	assert.Equal(t, got[0].Label, "label")
 	assert.Equal(t, got[0].Value, "world")
 
-	got, err = m.Get("foo")
+	got, err = d.Get("foo")
 	assert.NilError(t, err)
 	assert.Equal(t, got[0].Label, "label1")
 	assert.Equal(t, got[0].Value, "bar")
@@ -226,13 +216,13 @@ func TestDeployment_Get(t *testing.T) {
 }
 
 func TestDeployment_UnmarshalJSON(t *testing.T) {
-	m := &Deployment{ID: "testing"}
+	d := &Deployment{ID: 1}
 
-	m.Add("hello", "label", "world")
-	m.Add("foo", "label1", "bar")
-	m.Add("foo", "label2", 4)
+	d.Add("hello", "label", "world")
+	d.Add("foo", "label1", "bar")
+	d.Add("foo", "label2", 4)
 
-	marshaled, err := json.Marshal(m)
+	marshaled, err := json.Marshal(d)
 	assert.NilError(t, err)
 
 	var unmarshaled Deployment
@@ -253,16 +243,16 @@ func TestDeployment_UnmarshalJSON(t *testing.T) {
 }
 
 func TestDeployment_UnmarshalJSON2(t *testing.T) {
-	m := &Deployment{ID: "testing"}
+	d := &Deployment{ID: 1}
 
-	err := m.UnmarshalJSON([]byte("not JSON"))
+	err := d.UnmarshalJSON([]byte("not JSON"))
 	assert.ErrorContains(t, err, "invalid character")
 }
 
 func TestDeployment_Get2(t *testing.T) {
-	m := &Deployment{ID: "testing"}
+	d := &Deployment{ID: 1}
 
-	_, err := m.Get("does not exist")
+	_, err := d.Get("does not exist")
 	assert.ErrorContains(t, err, "no resources found matching given key")
 
 }

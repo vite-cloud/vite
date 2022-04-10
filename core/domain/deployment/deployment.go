@@ -22,7 +22,7 @@ import (
 // Deployment holds the information needed to deploy a service.
 // When updating fields, make sure to also update deploymentJSON accordingly.
 type Deployment struct {
-	ID     string
+	ID     int64
 	Docker *runtime.Client
 	Config *config.Config
 
@@ -60,7 +60,7 @@ func (d *Deployment) Deploy(ctx context.Context, events chan<- Event, service *c
 			Data:    fmt.Sprintf("Assigned subnet %s to the service's network", subnet.String()),
 		}
 
-		networkID, err := d.Docker.NetworkCreate(ctx, fmt.Sprintf("%s_%s", service.Name, d.ID), runtime.NetworkCreateOptions{
+		networkID, err := d.Docker.NetworkCreate(ctx, fmt.Sprintf("%s_%d", service.Name, d.ID), runtime.NetworkCreateOptions{
 			IPAM: &network.IPAM{
 				Driver: "default",
 				Config: []network.IPAMConfig{
@@ -130,12 +130,12 @@ func (d *Deployment) Deploy(ctx context.Context, events chan<- Event, service *c
 	}
 
 	ref, err := d.Docker.ContainerCreate(ctx, service.Image, runtime.ContainerCreateOptions{
-		Name:     d.ID + "_" + service.Name,
+		Name:     fmt.Sprintf("%d_%s", d.ID, service.Name),
 		Env:      service.Env,
 		Registry: service.Registry,
 		Labels: map[string]string{
 			"cloud.vite.service":    service.Name,
-			"cloud.vite.deployment": d.ID,
+			"cloud.vite.deployment": fmt.Sprintf("%d", d.ID),
 		},
 		Networking: networking,
 	})
@@ -268,7 +268,7 @@ func (d *Deployment) Save() error {
 		return err
 	}
 
-	return os.WriteFile(dir+"/"+d.ID+".json", contents, 0644)
+	return os.WriteFile(fmt.Sprintf("%s/%d.json", dir, d.ID), contents, 0644)
 }
 
 // List returns a list of all the manifests in the Store.
@@ -312,13 +312,13 @@ func List() ([]*Deployment, error) {
 
 // Delete removes the manifest from the Store and returns an error if it fails.
 // It does not return an error if the manifest does not exist.
-func Delete(ID string) error {
+func Delete(ID int64) error {
 	dir, err := Store.Dir()
 	if err != nil {
 		return err
 	}
 
-	path := dir + "/" + ID + ".json"
+	path := fmt.Sprintf("%s/%d.json", dir, ID)
 
 	if _, err = os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		return nil
@@ -330,8 +330,8 @@ func Delete(ID string) error {
 }
 
 // Get returns the manifest for a given version or os.ErrNotExist if it does not exist.
-func Get(ID int) (*Deployment, error) {
-	f, err := Store.Open(strconv.Itoa(ID)+".json", os.O_RDONLY, 0)
+func Get(ID int64) (*Deployment, error) {
+	f, err := Store.Open(fmt.Sprintf("%d.json", ID), os.O_RDONLY, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +353,7 @@ var ErrValueNotFound = errors.New("value not found")
 
 // deploymentJSON is the marshalable representation of a Manifest as it does not rely on sync.Map.
 type deploymentJSON struct {
-	ID        string
+	ID        int64
 	Resources map[string][]LabeledValue
 	Config    *config.Config
 }
@@ -443,13 +443,10 @@ func (d *Deployment) All() map[string][]LabeledValue {
 // todo: Add a Time property on the deployment manifest rather than using the deployment ID that
 // todo: happens to be the creation time.
 func (d *Deployment) Time() time.Time {
-	sec, _ := strconv.Atoi(d.ID[:10])
-	nsec, _ := strconv.Atoi(d.ID[10:])
-
-	return time.Unix(int64(sec), int64(nsec))
+	return time.Unix(0, int64(d.ID))
 }
 
-func IDs() ([]int, error) {
+func IDs() ([]int64, error) {
 	dir, err := Store.Dir()
 	if err != nil {
 		return nil, err
@@ -460,7 +457,7 @@ func IDs() ([]int, error) {
 		return nil, err
 	}
 
-	var ids []int
+	var ids []int64
 
 	for _, f := range files {
 		if !f.IsDir() {
@@ -469,7 +466,7 @@ func IDs() ([]int, error) {
 				return nil, err
 			}
 
-			ids = append(ids, id)
+			ids = append(ids, int64(id))
 		}
 	}
 
@@ -481,7 +478,7 @@ func IDs() ([]int, error) {
 	return ids, nil
 }
 
-func Latest() (int, error) {
+func Latest() (int64, error) {
 	ids, err := IDs()
 	if err != nil {
 		return 0, err

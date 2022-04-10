@@ -2,7 +2,6 @@ package deployment
 
 import (
 	"context"
-	"strconv"
 	"sync"
 	"time"
 
@@ -33,7 +32,7 @@ func Deploy(events chan<- Event, conf *config.Config) error {
 	}
 
 	depl := Deployment{
-		ID:     strconv.FormatInt(time.Now().Unix(), 10),
+		ID:     time.Now().UnixNano(),
 		Docker: docker,
 		Bus:    events,
 		Config: conf,

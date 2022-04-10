@@ -16,8 +16,6 @@ type configYAML struct {
 	Proxy struct {
 		HTTP  string `yaml:"http"`
 		HTTPS string `yaml:"https"`
-
-		SelfSigned bool `yaml:"self_signed"`
 	} `yaml:"proxy"`
 
 	ControlPlaneHost string `yaml:"control_plane_host"`
@@ -70,6 +68,10 @@ func (c configYAML) ToConfig() (*Config, error) {
 		config.Services[name] = converted
 	}
 
+	config.Proxy.HTTPS = c.Proxy.HTTPS
+	config.Proxy.HTTP = c.Proxy.HTTP
+	config.ControlPlane.Host = c.ControlPlaneHost
+	
 	if config.Proxy.HTTPS == "" {
 		config.Proxy.HTTPS = "443"
 	}

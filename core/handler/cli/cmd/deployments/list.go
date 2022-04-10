@@ -21,7 +21,7 @@ func runListCommand(cli *cli.CLI) error {
 	})
 
 	for _, dep := range deps {
-		fmt.Fprintf(cli.Out(), "- %s | %s\n", dep.ID, fmtTime(dep.Time()))
+		fmt.Fprintf(cli.Out(), "- %d | %s\n", dep.ID, fmtTime(dep.Time()))
 	}
 
 	fmt.Fprintf(cli.Out(), "\nFound %d deployments.\n", len(deps))
