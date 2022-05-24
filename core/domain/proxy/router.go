@@ -25,6 +25,7 @@ type Router struct {
 }
 
 func (r *Router) Proxy(w http.ResponseWriter, req *http.Request) {
+	fmt.Println(req.Host, r.deployment.Config.ControlPlane.Host)
 	if req.Host == r.deployment.Config.ControlPlane.Host {
 		r.logger.LogR(req, log.DebugLevel, "proxy to control plane")
 		r.API.ServeHTTP(w, req)

@@ -12,6 +12,23 @@ func New() *gin.Engine {
 
 	router := gin.New()
 	router.Use(gin.Recovery())
+	//router.Use(func(context *gin.Context) {
+	//	username, password, ok := context.Request.BasicAuth()
+	//	if !ok {
+	//		context.AbortWithStatusJSON(401, gin.H{
+	//			"error": "unauthorized",
+	//		})
+	//		return
+	//	}
+	//
+	//	if username != "token" {
+	//		context.AbortWithStatusJSON(401, gin.H{
+	//			"error": "unauthorized (accepts: token)",
+	//		})
+	//		return
+	//	}
+	//
+	//})
 
 	router.GET(ApiV1Prefix+"/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{
