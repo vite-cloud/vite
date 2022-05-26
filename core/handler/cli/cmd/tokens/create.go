@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
+	"github.com/vite-cloud/vite/core/domain/resource"
 	"github.com/vite-cloud/vite/core/domain/token"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 	"time"
@@ -12,7 +13,7 @@ import (
 func runCreateCommand(cli *cli.CLI) error {
 	tok := token.Token{
 		CreatedAt: time.Now(),
-		Value:     token.NewWithPrefix("tok"),
+		Value:     resource.NewIdWithPrefix("tok"),
 	}
 
 	label := survey.Input{
@@ -24,7 +25,9 @@ func runCreateCommand(cli *cli.CLI) error {
 		return err
 	}
 
-	err = tok.Save()
+	err = resource.Save[token.Token](token.Store, tok, func(t token.Token) string {
+		return t.Label
+	})
 	if err != nil {
 		return err
 	}

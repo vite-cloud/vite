@@ -11,7 +11,7 @@ import (
 func TestGet(t *testing.T) {
 	datadir.UseTestHome(t)
 
-	d := &Deployment{ID: 1}
+	d := &Deployment{id: 1}
 
 	d.Add("hello", "label", "world")
 	d.Add("foo", "label1", "bar")
@@ -41,7 +41,7 @@ func TestGet(t *testing.T) {
 func TestDelete(t *testing.T) {
 	datadir.UseTestHome(t)
 
-	d := &Deployment{ID: 1}
+	d := &Deployment{id: 1}
 
 	d.Add("hello", "label", "world")
 	d.Add("foo", "label1", "bar")
@@ -124,7 +124,7 @@ func TestList4(t *testing.T) {
 func TestList(t *testing.T) {
 	datadir.UseTestHome(t)
 
-	d := &Deployment{ID: 1}
+	d := &Deployment{id: 1}
 
 	d.Add("hello", "label", "world")
 	d.Add("foo", "label1", "bar")
@@ -161,7 +161,7 @@ func TestDeployment_MarshalJSON(t *testing.T) {
 		},
 	}
 
-	d := &Deployment{ID: 1}
+	d := &Deployment{id: 1}
 
 	d.Add("hello", "label", "world")
 	d.Add("foo", "label1", "bar")
@@ -176,7 +176,7 @@ func TestDeployment_MarshalJSON(t *testing.T) {
 }
 
 func TestDeployment_Add(t *testing.T) {
-	d := &Deployment{ID: 1}
+	d := &Deployment{id: 1}
 
 	d.Add("hello", "label", "world")
 	d.Add("foo", "label1", "bar")
@@ -196,7 +196,7 @@ func TestDeployment_Add(t *testing.T) {
 }
 
 func TestDeployment_Get(t *testing.T) {
-	d := &Deployment{ID: 1}
+	d := &Deployment{id: 1}
 
 	d.Add("hello", "label", "world")
 	d.Add("foo", "label1", "bar")
@@ -216,7 +216,7 @@ func TestDeployment_Get(t *testing.T) {
 }
 
 func TestDeployment_UnmarshalJSON(t *testing.T) {
-	d := &Deployment{ID: 1}
+	d := &Deployment{id: 1}
 
 	d.Add("hello", "label", "world")
 	d.Add("foo", "label1", "bar")
@@ -243,14 +243,14 @@ func TestDeployment_UnmarshalJSON(t *testing.T) {
 }
 
 func TestDeployment_UnmarshalJSON2(t *testing.T) {
-	d := &Deployment{ID: 1}
+	d := &Deployment{id: 1}
 
 	err := d.UnmarshalJSON([]byte("not JSON"))
 	assert.ErrorContains(t, err, "invalid character")
 }
 
 func TestDeployment_Get2(t *testing.T) {
-	d := &Deployment{ID: 1}
+	d := &Deployment{id: 1}
 
 	_, err := d.Get("does not exist")
 	assert.ErrorContains(t, err, "no resources found matching given key")

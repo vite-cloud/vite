@@ -2,6 +2,8 @@ package deployment
 
 import (
 	"context"
+	"github.com/vite-cloud/vite/core/domain/resource"
+	"strconv"
 	"sync"
 	"time"
 
@@ -32,13 +34,15 @@ func Deploy(events chan<- Event, conf *config.Config) error {
 	}
 
 	depl := Deployment{
-		ID:     time.Now().UnixNano(),
+		id:     strconv.FormatInt(time.Now().UnixNano(), 10),
 		Docker: docker,
 		Bus:    events,
 		Config: conf,
 	}
 	defer func(depl *Deployment) {
-		err = depl.Save()
+		err = resource.Save[*Deployment](Store, depl, func(d *Deployment) string {
+			return d.ID()
+		})
 		if err != nil {
 			events <- Event{
 				ID:   ErrorEvent,
@@ -49,7 +53,7 @@ func Deploy(events chan<- Event, conf *config.Config) error {
 
 	events <- Event{
 		ID:   StartEvent,
-		Data: depl.ID,
+		Data: depl.ID(),
 	}
 
 	layers, err := Layered(conf.Services)

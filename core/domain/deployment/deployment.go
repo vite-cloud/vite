@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"sort"
 	"strconv"
 	"sync"
@@ -22,12 +21,16 @@ import (
 // Deployment holds the information needed to deploy a service.
 // When updating fields, make sure to also update deploymentJSON accordingly.
 type Deployment struct {
-	ID     int64
+	id     string
 	Docker *runtime.Client
 	Config *config.Config
 
 	Bus       chan<- Event
 	resources sync.Map
+}
+
+func (d *Deployment) ID() string {
+	return d.id
 }
 
 func (d *Deployment) RunHooks(ctx context.Context, containerID string, commands []string) error {
@@ -60,7 +63,7 @@ func (d *Deployment) Deploy(ctx context.Context, events chan<- Event, service *c
 			Data:    fmt.Sprintf("Assigned subnet %s to the service's network", subnet.String()),
 		}
 
-		networkID, err := d.Docker.NetworkCreate(ctx, fmt.Sprintf("%s_%d", service.Name, d.ID), runtime.NetworkCreateOptions{
+		networkID, err := d.Docker.NetworkCreate(ctx, fmt.Sprintf("%s_%s", service.Name, d.ID()), runtime.NetworkCreateOptions{
 			IPAM: &network.IPAM{
 				Driver: "default",
 				Config: []network.IPAMConfig{
@@ -130,12 +133,12 @@ func (d *Deployment) Deploy(ctx context.Context, events chan<- Event, service *c
 	}
 
 	ref, err := d.Docker.ContainerCreate(ctx, service.Image, runtime.ContainerCreateOptions{
-		Name:     fmt.Sprintf("%d_%s", d.ID, service.Name),
+		Name:     fmt.Sprintf("%s_%s", d.ID(), service.Name),
 		Env:      service.Env,
 		Registry: service.Registry,
 		Labels: map[string]string{
 			"cloud.vite.service":    service.Name,
-			"cloud.vite.deployment": fmt.Sprintf("%d", d.ID),
+			"cloud.vite.deployment": fmt.Sprintf("%s", d.ID()),
 		},
 		Networking: networking,
 	})
@@ -257,93 +260,6 @@ func (d *Deployment) EnsureContainerIsRunning(ctx context.Context, containerID s
 	}
 }
 
-func (d *Deployment) Save() error {
-	dir, err := Store.Dir()
-	if err != nil {
-		return err
-	}
-
-	contents, err := json.Marshal(d)
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(fmt.Sprintf("%s/%d.json", dir, d.ID), contents, 0644)
-}
-
-// List returns a list of all the manifests in the Store.
-func List() ([]*Deployment, error) {
-	var manifests []*Deployment
-
-	dir, err := Store.Dir()
-	if err != nil {
-		return nil, err
-	}
-
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, entry := range entries {
-		if entry.IsDir() {
-			return nil, fmt.Errorf("manifest store is corrupted: %s is a directory", entry.Name())
-		}
-
-		f, err := Store.Open(entry.Name(), os.O_RDONLY, 0)
-		if err != nil {
-			return nil, err
-		}
-
-		defer f.Close()
-
-		var m Deployment
-
-		err = json.NewDecoder(f).Decode(&m)
-		if err != nil {
-			return nil, err
-		}
-
-		manifests = append(manifests, &m)
-	}
-
-	return manifests, nil
-}
-
-// Delete removes the manifest from the Store and returns an error if it fails.
-// It does not return an error if the manifest does not exist.
-func Delete(ID int64) error {
-	dir, err := Store.Dir()
-	if err != nil {
-		return err
-	}
-
-	path := fmt.Sprintf("%s/%d.json", dir, ID)
-
-	if _, err = os.Stat(path); errors.Is(err, os.ErrNotExist) {
-		return nil
-	} else if err != nil {
-		return err
-	}
-
-	return os.Remove(path)
-}
-
-// Get returns the manifest for a given version or os.ErrNotExist if it does not exist.
-func Get(ID int64) (*Deployment, error) {
-	f, err := Store.Open(fmt.Sprintf("%d.json", ID), os.O_RDONLY, 0)
-	if err != nil {
-		return nil, err
-	}
-
-	defer f.Close()
-
-	var m Deployment
-
-	err = json.NewDecoder(f).Decode(&m)
-	return &m, err
-}
-
 type LabeledValue struct {
 	Label string
 	Value any
@@ -353,7 +269,7 @@ var ErrValueNotFound = errors.New("value not found")
 
 // deploymentJSON is the marshalable representation of a Manifest as it does not rely on sync.Map.
 type deploymentJSON struct {
-	ID        int64
+	ID        string
 	Resources map[string][]LabeledValue
 	Config    *config.Config
 }
@@ -383,7 +299,7 @@ func (d *Deployment) Get(key string) ([]LabeledValue, error) {
 // It takes care of converting the resource map to a marshalable map.
 func (d *Deployment) MarshalJSON() ([]byte, error) {
 	return json.Marshal(deploymentJSON{
-		ID:        d.ID,
+		ID:        d.ID(),
 		Resources: d.All(),
 		Config:    d.Config,
 	})
@@ -401,7 +317,7 @@ func (d *Deployment) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	d.ID = manifestJSON.ID
+	d.id = manifestJSON.ID
 	d.Config = manifestJSON.Config
 
 	for k, v := range manifestJSON.Resources {
@@ -440,13 +356,15 @@ func (d *Deployment) All() map[string][]LabeledValue {
 }
 
 // Time returns the time the deployment was created.
-// todo: Add a Time property on the deployment manifest rather than using the deployment ID that
+// todo: Add a Time property on the deployment manifest rather than using the deployment id that
 // todo: happens to be the creation time.
 func (d *Deployment) Time() time.Time {
-	return time.Unix(0, int64(d.ID))
+	id, _ := strconv.ParseInt(d.ID(), 10, 64)
+
+	return time.Unix(0, id)
 }
 
-func IDs() ([]int64, error) {
+func retrieveIDs() ([]int64, error) {
 	dir, err := Store.Dir()
 	if err != nil {
 		return nil, err
@@ -479,7 +397,7 @@ func IDs() ([]int64, error) {
 }
 
 func Latest() (int64, error) {
-	ids, err := IDs()
+	ids, err := retrieveIDs()
 	if err != nil {
 		return 0, err
 	}

@@ -2,11 +2,13 @@ package tokens
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/vite-cloud/vite/core/domain/resource"
+	"github.com/vite-cloud/vite/core/domain/token"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 )
 
-func runListCommand(cli *cli.CLI) error {
-	return nil
+var manager = resource.Manager[token.Token]{
+	Store: token.Store,
 }
 
 func NewListCommand(cli *cli.CLI) *cobra.Command {
@@ -15,7 +17,7 @@ func NewListCommand(cli *cli.CLI) *cobra.Command {
 		Short: "list tokens",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runListCommand(cli)
+			return manager.ListCommand(cli)
 		},
 	}
 

@@ -6,6 +6,7 @@ import (
 	"github.com/vite-cloud/vite/core/domain/deployment"
 	"github.com/vite-cloud/vite/core/domain/log"
 	server "github.com/vite-cloud/vite/core/domain/proxy"
+	"github.com/vite-cloud/vite/core/domain/resource"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 	"strconv"
 )
@@ -28,7 +29,7 @@ func runRunCommand(cli *cli.CLI, opts *runOpts) error {
 		opts.ID = id
 	}
 
-	depl, err := deployment.Get(opts.ID)
+	depl, err := resource.Get[deployment.Deployment](deployment.Store, opts.ID)
 	if err != nil {
 		return err
 	}

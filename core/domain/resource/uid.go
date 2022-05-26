@@ -1,13 +1,13 @@
-package token
+package resource
 
 import "crypto/rand"
 
 // StdChars is a set of standard characters allowed in uniuri string.
 var StdChars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
 
-// NewWithPrefix returns a new random string of the provided length, consisting of
+// NewIdWithPrefix returns a new random string of the provided length, consisting of
 // standard characters.
-func NewWithPrefix(prefix string) string {
+func NewIdWithPrefix(prefix string) string {
 	return NewLenChars(prefix, 48+len(prefix)+1, StdChars)
 }
 

@@ -59,7 +59,7 @@ func (c *CLI) Run(args []string) int {
 		Version: fmt.Sprintf("%s, build %s", static.Version, static.Commit),
 	}
 
-	vite.SetVersionTemplate("Vite version {{.ID}}\n")
+	vite.SetVersionTemplate("Vite version {{.id}}\n")
 	vite.SetHelpCommand(&cobra.Command{
 		Use:    "__help",
 		Hidden: true,

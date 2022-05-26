@@ -136,7 +136,7 @@ func testContainerCreate(tc *testCtx) {
 	//assert.NilError(tc.t, err)
 	//
 	//assert.Equal(tc.t, len(created), 1)
-	//assert.Equal(tc.t, created[0], body.ID)
+	//assert.Equal(tc.t, created[0], body.id)
 }
 
 func testContainerStart(tc *testCtx) {
@@ -163,7 +163,7 @@ func testContainerStart(tc *testCtx) {
 	//assert.NilError(tc.t, err)
 	//
 	//assert.Equal(tc.t, len(started), 1)
-	//assert.Equal(tc.t, started[0], body.ID)
+	//assert.Equal(tc.t, started[0], body.id)
 }
 
 func testContainerStop(tc *testCtx) {
@@ -193,7 +193,7 @@ func testContainerStop(tc *testCtx) {
 	//assert.NilError(tc.t, err)
 	//
 	//assert.Equal(tc.t, len(stopped), 1)
-	//assert.Equal(tc.t, stopped[0], body.ID)
+	//assert.Equal(tc.t, stopped[0], body.id)
 }
 
 func testContainerRemove(tc *testCtx) {
@@ -223,5 +223,5 @@ func testContainerRemove(tc *testCtx) {
 	//assert.NilError(tc.t, err)
 	//
 	//assert.Equal(tc.t, len(removed), 1)
-	//assert.Equal(tc.t, removed[0].(string), body.ID)
+	//assert.Equal(tc.t, removed[0].(string), body.id)
 }

@@ -3,13 +3,14 @@ package deployments
 import (
 	"github.com/spf13/cobra"
 	"github.com/vite-cloud/vite/core/domain/deployment"
+	"github.com/vite-cloud/vite/core/domain/resource"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 	"github.com/vite-cloud/vite/core/handler/cli/cmd"
 	"strconv"
 )
 
 func runRollbackCommand(cli *cli.CLI, ID int64) error {
-	dep, err := deployment.Get(ID)
+	dep, err := resource.Get[deployment.Deployment](deployment.Store, ID)
 	if err != nil {
 		return err
 	}
