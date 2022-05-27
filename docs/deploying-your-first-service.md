@@ -3,10 +3,12 @@
 As you're using the OSS version of Vite, we'll assume that you have a running container registry with an image of your
 app already. If not, we're working on some guides to help you get started. In the meantime, you can
 check [vite.cloud](https://vite.cloud) that manages all of that for you (including creating dockerfiles).
----
-A service represents your application, at the core, it's a name and an image on a registry with some configuration
-options. Let's create a service called `my-app` with the image `my-app:latest` and the following configuration:
 
+---
+
+A service represents your application, at the core, it's a name and an image on a registry with some configuration
+options. Let's create a service called `my_nginx` with the image `nginx:1.15.8` for the domain `example.com`. 
+That would result in the following:
 ```yaml
 services:
   my_nginx:
@@ -15,18 +17,12 @@ services:
       - example.com
 ```
 
-> We've specified a specific version of the image instead of simply using `latest`. Using `latest`
-> as a version, unless its meaning is explicitly defined, may lead to unexpected behavior or be an open window for
-> supply
-> chain
-> attacks. Therefore, Vite prevents you from using `latest` as a version, there's no way to disable that behavior.
+We've specified a specific version of the image instead of simply using `latest`. Using `latest`
+as a version, unless its meaning is explicitly defined, may lead to unexpected behavior or be an open window for
+supply chain attacks. Therefore, Vite prevents you from using `latest` as a version, there's no way to disable that behavior.
 
-Applications are deployed to be available to the world, once you specify a host name, Vite's proxy will redirect the
-traffic
-from the host name to the service.
-
-> If you don't want to use Vite's reverse proxy and instead go for something like [Traefik](https://traefik.io/), the
-> hosts are also exposed as labels for external services to use.
+> Applications are deployed to be available to the world, once you specify a host name, Vite's proxy will redirect the
+incoming traffic to the service automatically.
 
 You may commit your changes and push them to the remote repository. Once you're done, tell Vite to use the new commit.
 

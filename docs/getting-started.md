@@ -2,15 +2,17 @@
 First, you need to set up a remote repository that will host your configuration. You can use any git provider
 you'd like but keep in mind that [vite.cloud](https://vite.cloud) only supports GitHub at the time of writing.
 
-Once, you created a repository, you can initialize a new Vite project by running the following command:
+Once you created a repository, you can initialize a new Vite project by running the following command:
 
 ```bash
 $ vite setup
+```
+```bash
 ? Select your provider:  [Use arrows to move, type to filter]
 > github
   gitlab
   bitbucket
-  
+
 ? Select your protocol:  [Use arrows to move, type to filter]
 > ssh
   https
@@ -21,11 +23,10 @@ $ vite setup
 ? Enter a sub-path (optional): 
 ```
 
-The configuration is saved in `~/.vite/locator/config.json`, you may always re-run `vite setup` to update the
-configuration but editing manually is not recommended.
+You may always re-run `vite setup` to update the configuration but editing manually is not recommended.
 
 
-Second, you need to choose which commit you want Vite to use in order to read your configuration. You may run `vite use`.
+Second, you need to choose which commit you want Vite to use in order to read your configuration:
 
 ```bash
 $ vite use
@@ -40,6 +41,5 @@ And you're done!
 
 ### What's next?
 
-* [Adding your first service](docs/deploying-your-first-service.md)
-* [Deploying your first service](docs/deploying-your-first-service.md)
-* [Vite in Production](docs/vite-in-production.md)
+* [Deploying your first service](deploying-your-first-service.md)
+* [Vite in Production](vite-in-production.md)
