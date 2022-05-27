@@ -31,7 +31,15 @@ func (r *Router) Proxy(w http.ResponseWriter, req *http.Request) {
 		r.API.ServeHTTP(w, req)
 		return
 	}
-	targetIP, _ := r.IPFor(req.Host)
+
+	targetIP, err := r.IPFor(req.Host)
+	if err != nil {
+		w.WriteHeader(http.StatusBadGateway)
+		w.Write([]byte("Bad Gateway"))
+		r.logger.LogR(req, zoup.ErrorLevel, err.Error())
+		return
+	}
+
 	if targetIP == "" {
 		w.WriteHeader(http.StatusBadGateway)
 		w.Write([]byte("Upstream did not respond."))

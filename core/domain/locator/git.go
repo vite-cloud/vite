@@ -63,7 +63,7 @@ func globalRun(cmd *exec.Cmd) ([]byte, error) {
 	return out, nil
 }
 
-// run runs a git command with the given arguments.
+// run a git command with the given arguments.
 func (g Git) run(args ...string) ([]byte, error) {
 	if _, err := os.Stat(g.String()); errors.Is(err, os.ErrNotExist) {
 		return nil, ErrRepositoryNotFound
