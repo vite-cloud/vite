@@ -5,6 +5,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	"github.com/vite-cloud/go-zoup"
 	"github.com/vite-cloud/vite/core/domain/log"
 	"gotest.tools/v3/assert"
 	"sort"
@@ -21,7 +22,7 @@ type testCtx struct {
 	ctx           context.Context
 	cli           *Client
 	raw           *client.Client
-	logger        *log.MemoryWriter
+	logger        *zoup.MemoryWriter
 	containerName string
 }
 
@@ -61,7 +62,7 @@ func TestClient(t *testing.T) {
 		test := test
 
 		t.Run(test.name, func(t *testing.T) {
-			logger := &log.MemoryWriter{}
+			logger := &zoup.MemoryWriter{}
 			log.SetLogger(logger)
 
 			test.test(&testCtx{

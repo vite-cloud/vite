@@ -26,8 +26,8 @@ func Gather() (*Metrics, error) {
 
 // Metrics holds the metrics about docker and the system.
 type Metrics struct {
-	SystemMetrics     *SystemMetrics            `json:"system_metrics"`
-	ContainersMetrics []*runtime.ContainerStats `json:"containers_metrics"`
+	SystemMetrics     *SystemMetrics        `json:"system_metrics"`
+	ContainersMetrics []*ContainerStatsJSON `json:"containers_metrics"`
 }
 
 // SystemMetrics holds the metrics about the system.

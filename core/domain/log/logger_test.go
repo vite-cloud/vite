@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"github.com/vite-cloud/go-zoup"
 	"os"
 	"testing"
 
@@ -11,15 +12,15 @@ import (
 )
 
 func TestLog(t *testing.T) {
-	l := &MemoryWriter{}
+	l := &zoup.MemoryWriter{}
 	SetLogger(l)
 
-	Log(DebugLevel, "hello world", Fields{
+	Log(zoup.DebugLevel, "hello world", zoup.Fields{
 		"a": "b",
 	})
 
 	assert.Equal(t, l.Len(), 1)
-	assert.Equal(t, l.Last().Level, DebugLevel)
+	assert.Equal(t, l.Last().Level, zoup.DebugLevel)
 	assert.Equal(t, l.Last().Message, "hello world")
 	assert.Equal(t, l.Last().Fields["a"], "b")
 
@@ -30,7 +31,7 @@ func TestLog2(t *testing.T) {
 
 	SetLogger(nil)
 
-	Log(DebugLevel, "hello world", Fields{
+	Log(zoup.DebugLevel, "hello world", zoup.Fields{
 		"foo":    "bar baz",
 		"_stack": "@", // simplifies testing
 		"_time":  "@", // simplifies testing
@@ -48,7 +49,7 @@ func TestLog2(t *testing.T) {
 }
 
 func TestGetLogger(t *testing.T) {
-	l := &MemoryWriter{}
+	l := &zoup.MemoryWriter{}
 	SetLogger(l)
 
 	assert.Equal(t, GetLogger(), l)
@@ -59,7 +60,7 @@ func TestLog3(t *testing.T) {
 	datadir.SetHomeDir("/nop")
 
 	panics.Panic(t, func() {
-		Log(DebugLevel, "hello world", Fields{})
+		Log(zoup.DebugLevel, "hello world", zoup.Fields{})
 	}, "mkdir /nop: permission denied")
 }
 
@@ -73,14 +74,6 @@ func TestLog4(t *testing.T) {
 	assert.NilError(t, err)
 
 	panics.Panic(t, func() {
-		Log(DebugLevel, "hello world", Fields{})
+		Log(zoup.DebugLevel, "hello world", zoup.Fields{})
 	}, fmt.Sprintf("open %s: is a directory", dir+"/"+LogFile))
-}
-
-func TestLog5(t *testing.T) {
-	SetLogger(&failingWriter{})
-
-	panics.Panic(t, func() {
-		Log(DebugLevel, "hello world", Fields{})
-	}, "failed")
 }

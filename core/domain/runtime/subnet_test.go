@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"github.com/vite-cloud/go-zoup"
 	"net"
 	"os"
 	"testing"
@@ -12,7 +13,7 @@ import (
 )
 
 func TestSubnetManager_IsFree(t *testing.T) {
-	log.SetLogger(&log.MemoryWriter{})
+	log.SetLogger(&zoup.MemoryWriter{})
 
 	datadir.UseTestHome(t)
 
@@ -39,7 +40,7 @@ func TestSubnetManager_IsFree(t *testing.T) {
 }
 
 func TestSubnetManager_Allocate(t *testing.T) {
-	log.SetLogger(&log.MemoryWriter{})
+	log.SetLogger(&zoup.MemoryWriter{})
 
 	datadir.UseTestHome(t)
 
@@ -60,7 +61,7 @@ func TestSubnetManager_Allocate(t *testing.T) {
 }
 
 func TestSubnetManager_Allocate2(t *testing.T) {
-	log.SetLogger(&log.MemoryWriter{})
+	log.SetLogger(&zoup.MemoryWriter{})
 
 	datadir.UseTestHome(t)
 
@@ -77,7 +78,7 @@ func TestSubnetManager_Allocate2(t *testing.T) {
 }
 
 func TestSubnetManager_Next(t *testing.T) {
-	log.SetLogger(&log.MemoryWriter{})
+	log.SetLogger(&zoup.MemoryWriter{})
 
 	datadir.UseTestHome(t)
 
@@ -102,7 +103,7 @@ func TestSubnetManager_Next(t *testing.T) {
 }
 
 func TestSubnetManager_Next2(t *testing.T) {
-	log.SetLogger(&log.MemoryWriter{})
+	log.SetLogger(&zoup.MemoryWriter{})
 
 	datadir.UseTestHome(t)
 
@@ -116,7 +117,7 @@ func TestSubnetManager_Next2(t *testing.T) {
 }
 
 func TestSubnetManager_Allocate3(t *testing.T) {
-	logger := &log.MemoryWriter{}
+	logger := &zoup.MemoryWriter{}
 	log.SetLogger(logger)
 
 	datadir.UseTestHome(t)
