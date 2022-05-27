@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/vite-cloud/go-zoup"
 	"github.com/vite-cloud/vite/core/domain/log"
 	"os"
 	"os/exec"
@@ -49,7 +50,7 @@ func globalRun(cmd *exec.Cmd) ([]byte, error) {
 	err := cmd.Run()
 	out := buf.Bytes()
 
-	log.Log(log.DebugLevel, "ran git command", log.Fields{
+	log.Log(zoup.DebugLevel, "ran git command", zoup.Fields{
 		"cmd":  cmd.Args,
 		"err":  err,
 		"code": cmd.ProcessState.ExitCode(),

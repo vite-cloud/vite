@@ -3,32 +3,20 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/vite-cloud/vite/core/domain/config"
 	"github.com/vite-cloud/vite/core/domain/deployment"
+	"github.com/vite-cloud/vite/core/domain/locator"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
 )
 
 func runDeployCommand(cli *cli.CLI) error {
-	conf, err := config.Get()
+	loc, err := locator.LoadFromStore()
 	if err != nil {
 		return err
 	}
 
 	events := make(chan deployment.Event)
 
-	go func() {
-		err = deployment.Deploy(events, conf)
-		if err != nil {
-			events <- deployment.Event{
-				ID:   deployment.ErrorEvent,
-				Data: err,
-			}
-		} else {
-			events <- deployment.Event{
-				ID: deployment.FinishEvent,
-			}
-		}
-	}()
+	go deployment.Deploy(events, loc)
 
 	for event := range events {
 		if event.ID == deployment.FinishEvent {

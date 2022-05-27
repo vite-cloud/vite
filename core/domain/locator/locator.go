@@ -119,3 +119,16 @@ func (l *Locator) Commits() (CommitList, error) {
 
 	return git.Commits(l.Branch)
 }
+func (l *Locator) Clone() error {
+	git, err := l.git()
+	if err != nil {
+		return err
+	}
+
+	err = git.Clone(l.Provider.URL(l.Protocol, l.Repository), l.Branch)
+	if errors.Is(err, ErrEmptyBranch) {
+		return fmt.Errorf("could not clone repository %s: no branch specified (run `vite setup` again)", l.Provider.URL(l.Protocol, l.Repository))
+	}
+
+	return err
+}

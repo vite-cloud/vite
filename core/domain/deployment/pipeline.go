@@ -2,6 +2,7 @@ package deployment
 
 import (
 	"context"
+	"github.com/vite-cloud/vite/core/domain/locator"
 	"github.com/vite-cloud/vite/core/domain/resource"
 	"strconv"
 	"sync"
@@ -27,17 +28,31 @@ const (
 
 const Store = datadir.Store("deployments")
 
-func Deploy(events chan<- Event, conf *config.Config) error {
+func Deploy(events chan<- Event, locator *locator.Locator) {
+	err := deploy(events, locator)
+	if err != nil {
+		events <- Event{
+			ID:   ErrorEvent,
+			Data: err,
+		}
+	} else {
+		events <- Event{
+			ID: FinishEvent,
+		}
+	}
+}
+
+func deploy(events chan<- Event, locator *locator.Locator) error {
 	docker, err := runtime.NewClient()
 	if err != nil {
 		return err
 	}
 
 	depl := Deployment{
-		id:     strconv.FormatInt(time.Now().UnixNano(), 10),
-		Docker: docker,
-		Bus:    events,
-		Config: conf,
+		id:      strconv.FormatInt(time.Now().UnixNano(), 10),
+		Docker:  docker,
+		Bus:     events,
+		Locator: locator,
 	}
 	defer func(depl *Deployment) {
 		err = resource.Save[*Deployment](Store, depl, func(d *Deployment) string {
@@ -54,6 +69,10 @@ func Deploy(events chan<- Event, conf *config.Config) error {
 	events <- Event{
 		ID:   StartEvent,
 		Data: depl.ID(),
+	}
+	conf, err := config.Get(locator)
+	if err != nil {
+		return err
 	}
 
 	layers, err := Layered(conf.Services)

@@ -85,9 +85,8 @@ func runSetupCommand(cli *cli.CLI) error {
 		return err
 	}
 
-	//fmt.Fprintln(cli.Out(), "\nSetup successfully. You may now run `vite use` to select a commit to use.")
-	//
-	//return nil
+	fmt.Fprintln(cli.Out(), "\nSetup successfully. You may now run `vite use` to select a commit to use.")
+
 	return nil
 }
 

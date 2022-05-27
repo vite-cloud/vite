@@ -129,7 +129,7 @@ func TestSubnetManager_Allocate3(t *testing.T) {
 	assert.NilError(t, err)
 
 	assert.Assert(t, logger.Len() > 0)
-	assert.Assert(t, logger.Last().Level == log.DebugLevel)
+	assert.Assert(t, logger.Last().Level == zoup.DebugLevel)
 	assert.Assert(t, logger.Last().Message == "subnet allocated")
 	assert.Assert(t, len(logger.Last().Fields) == 1)
 	assert.Assert(t, logger.Last().Fields["subnet"] == subnet)

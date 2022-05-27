@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
+	"github.com/vite-cloud/go-zoup"
 	"github.com/vite-cloud/vite/core/domain/log"
 )
 
@@ -22,7 +23,7 @@ func (c Client) NetworkCreate(ctx context.Context, name string, opts NetworkCrea
 		return "", err
 	}
 
-	log.Log(log.DebugLevel, "created network", log.Fields{
+	log.Log(zoup.DebugLevel, "created network", zoup.Fields{
 		"name":   name,
 		"id":     res.ID,
 		"config": opts.IPAM,
@@ -37,7 +38,7 @@ func (c Client) NetworkRemove(ctx context.Context, ID string) error {
 		return err
 	}
 
-	log.Log(log.DebugLevel, "removed network", log.Fields{
+	log.Log(zoup.DebugLevel, "removed network", zoup.Fields{
 		"id": ID,
 	})
 
@@ -50,7 +51,7 @@ func (c Client) NetworkConnect(ctx context.Context, networkID, containerID strin
 		return err
 	}
 
-	log.Log(log.DebugLevel, "connected network", log.Fields{
+	log.Log(zoup.DebugLevel, "connected network", zoup.Fields{
 		"network":   networkID,
 		"container": containerID,
 	})

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/vite-cloud/go-zoup"
 	"io"
 	"net"
 	"os"
@@ -49,26 +50,18 @@ var DefaultSubnetBlocks = []iplib.Net4{
 	iplib.NewNet4(net.IPv4(192, 168, 0, 0), 16),
 }
 
-var subnetManagerInstance *subnetManager
-
 // NewSubnetManager creates a new subnet manager.
 func NewSubnetManager() (*subnetManager, error) {
-	if subnetManagerInstance != nil {
-		return subnetManagerInstance, nil
-	}
-
 	file, err := Store.Open(SubnetDataFile, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err
 	}
 
-	subnetManagerInstance = &subnetManager{
+	return &subnetManager{
 		mu:     &sync.Mutex{},
 		used:   file,
 		blocks: DefaultSubnetBlocks,
-	}
-
-	return subnetManagerInstance, nil
+	}, nil
 }
 
 // WithBlocks sets the list of subnet blocks to use.
@@ -83,8 +76,7 @@ func (sm *subnetManager) Next() (*iplib.Net4, error) {
 	failed := 0
 
 	for _, network := range sm.blocks {
-		network := network
-		go func() {
+		go func(network iplib.Net4) {
 			subnets, _ := network.Subnet(24)
 
 			for _, subnet := range subnets {
@@ -96,8 +88,10 @@ func (sm *subnetManager) Next() (*iplib.Net4, error) {
 				}
 			}
 
+			sm.mu.Lock()
 			failed++
-		}()
+			sm.mu.Unlock()
+		}(network)
 	}
 
 	for {
@@ -108,9 +102,12 @@ func (sm *subnetManager) Next() (*iplib.Net4, error) {
 			}
 			return &subnet, nil
 		case <-time.After(time.Millisecond * 50):
+			sm.mu.Lock()
 			if failed == len(sm.blocks) {
+				sm.mu.Unlock()
 				return nil, ErrNoAvailableSubnet
 			}
+			sm.mu.Unlock()
 		}
 	}
 }
@@ -134,7 +131,7 @@ func (sm *subnetManager) Allocate(subnet string) error {
 		return err
 	}
 
-	log.Log(log.DebugLevel, "subnet allocated", log.Fields{
+	log.Log(zoup.DebugLevel, "subnet allocated", zoup.Fields{
 		"subnet": subnet,
 	})
 

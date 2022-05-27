@@ -1,10 +1,10 @@
-package plane
+package proxy
 
 import (
-	"github.com/gin-contrib/sse"
 	"github.com/gin-gonic/gin"
 	"github.com/vite-cloud/vite/core/domain/config"
 	"github.com/vite-cloud/vite/core/domain/deployment"
+	"github.com/vite-cloud/vite/core/domain/locator"
 	"github.com/vite-cloud/vite/core/domain/resource"
 	"github.com/vite-cloud/vite/core/domain/token"
 	"github.com/vite-cloud/vite/core/static"
@@ -13,7 +13,7 @@ import (
 
 const ApiV1Prefix = "/api/v1"
 
-func New() *gin.Engine {
+func NewAPI() *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.New()
@@ -63,7 +63,7 @@ func New() *gin.Engine {
 	})
 
 	router.GET(ApiV1Prefix+"/config", func(c *gin.Context) {
-		conf, err := config.Get()
+		conf, err := config.GetUsingDefaultLocator()
 		if err != nil {
 			c.AbortWithStatus(500)
 			return
@@ -73,48 +73,33 @@ func New() *gin.Engine {
 	})
 
 	router.GET(ApiV1Prefix+"/deploy", func(c *gin.Context) {
-		c.Writer.Header().Set("Content-Type", "text/event-stream")
-		c.Writer.Header().Set("Cache-Control", "no-cache")
-		c.Writer.Header().Set("Connection", "keep-alive")
-		c.Writer.Header().Set("Transfer-Encoding", "chunked")
-
-		conf, err := config.Get()
+		loc, err := locator.LoadFromStore()
 		if err != nil {
 			c.AbortWithStatus(500)
 			return
 		}
 
+		c.Writer.Header().Set("Content-Type", "text/event-stream")
+		c.Writer.Header().Set("Cache-Control", "no-cache")
+		c.Writer.Header().Set("Connection", "keep-alive")
+		c.Writer.Header().Set("Transfer-Encoding", "chunked")
+
 		events := make(chan deployment.Event)
 
-		go func() {
-			err = deployment.Deploy(events, conf)
-			if err != nil {
-				events <- deployment.Event{
-					ID:   deployment.ErrorEvent,
-					Data: err,
-				}
-			} else {
-				events <- deployment.Event{
-					ID: deployment.FinishEvent,
-				}
-			}
-		}()
+		go deployment.Deploy(events, loc)
 
 		c.Stream(func(w io.Writer) bool {
-			for event := range events {
-				if event.ID == deployment.FinishEvent {
-					return false
+			// Stream message to client from message channel
+			if event, ok := <-events; ok {
+				if event.Data == nil {
+					c.SSEvent(event.ID, "")
+				} else {
+					c.SSEvent(event.ID, event.Data)
 				}
-
-				sse.Encode(w, sse.Event{
-					Event: event.ID,
-					Data:  event.Data,
-				})
+				return true
 			}
-
-			return true
+			return false
 		})
-
 	})
 
 	return router

@@ -37,6 +37,18 @@ func (m Manager[T]) ListCommand(cli *cli.CLI) error {
 	return nil
 }
 
+func (m Manager[T]) ShowCommand(cli *cli.CLI, ID string) error {
+	dep, err := Get[T](m.Store, ID)
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(cli.Out(), "%+v", dep)
+	
+	return nil
+
+}
+
 func fmtTime(t time.Time) any {
 	d := time.Since(t)
 

@@ -53,13 +53,17 @@ type Service struct {
 
 var configCache = make(map[string]*Config)
 
-// Get returns the Config given a config locator.Locator.
-func Get() (*Config, error) {
+// GetUsingDefaultLocator returns the Config given a config locator.Locator.
+func GetUsingDefaultLocator() (*Config, error) {
 	l, err := locator.LoadFromStore()
 	if err != nil {
 		return nil, err
 	}
 
+	return Get(l)
+}
+
+func Get(l *locator.Locator) (*Config, error) {
 	if _, ok := configCache[l.Checksum()]; ok {
 		return configCache[l.Checksum()], nil
 	}
@@ -87,17 +91,4 @@ func Get() (*Config, error) {
 	configCache[l.Checksum()] = converted
 
 	return converted, nil
-}
-
-func (c *Config) Reload() error {
-	configCache = make(map[string]*Config)
-
-	reloaded, err := Get()
-	if err != nil {
-		return err
-	}
-
-	*c = *reloaded
-
-	return nil
 }

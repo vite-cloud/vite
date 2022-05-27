@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"github.com/docker/docker/api/types"
+	"github.com/vite-cloud/go-zoup"
 	"github.com/vite-cloud/vite/core/domain/log"
 	"io"
 )
@@ -46,7 +47,7 @@ func (c Client) ImagePull(ctx context.Context, image string, options ImagePullOp
 		return err
 	}
 
-	log.Log(log.DebugLevel, "pulling docker image", log.Fields{
+	log.Log(zoup.DebugLevel, "pulling docker image", zoup.Fields{
 		"image":     image,
 		"with_auth": options.Auth != nil,
 	})

@@ -266,7 +266,9 @@ func TestConfigYAML_ToConfig(t *testing.T) {
 
 			got, err := test.yaml.ToConfig()
 			assert.Assert(t, (err != nil) == test.wantErr, "unexpected err: %v", err)
-			assert.DeepEqual(t, test.want.Services, got.Services)
+			if err == nil {
+				assert.DeepEqual(t, test.want.Services, got.Services)
+			}
 		})
 	}
 }

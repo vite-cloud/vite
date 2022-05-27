@@ -15,7 +15,7 @@ func runRollbackCommand(cli *cli.CLI, ID int64) error {
 		return err
 	}
 
-	err = dep.Config.Locator.Save()
+	err = dep.Locator.Save()
 	if err != nil {
 		return err
 	}

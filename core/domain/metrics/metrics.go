@@ -26,23 +26,37 @@ func Gather() (*Metrics, error) {
 
 // Metrics holds the metrics about docker and the system.
 type Metrics struct {
-	SystemMetrics     *SystemMetrics
-	ContainersMetrics []*runtime.ContainerStats
+	SystemMetrics     *SystemMetrics            `json:"system_metrics"`
+	ContainersMetrics []*runtime.ContainerStats `json:"containers_metrics"`
 }
 
 // SystemMetrics holds the metrics about the system.
 type SystemMetrics struct {
-	Uptime time.Duration
+	Uptime time.Duration `json:"uptime"`
 
-	MemoryTotal ByteSize
-	MemoryUsed  ByteSize
-	MemoryFree  ByteSize
+	MemoryTotal ByteSize `json:"memory_total"`
+	MemoryUsed  ByteSize `json:"memory_used"`
+	MemoryFree  ByteSize `json:"memory_free"`
 
-	CPUCount int
+	CPUCount int `json:"cpu_count"`
 
-	CPUUser   float64
-	CPUSystem float64
-	CPUIdle   float64
+	CPUUser   float64 `json:"cpu_user"`
+	CPUSystem float64 `json:"cpu_system"`
+	CPUIdle   float64 `json:"cpu_idle"`
+}
+
+type ContainerStatsJSON struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
+
+	MemoryUsed      uint64  `json:"memory_used"`
+	MemoryAvailable uint64  `json:"memory_available"`
+	MemoryUsage     float64 `json:"memory_usage"` // percentage
+
+	CPUCount       int     `json:"cpu_count"`
+	CPUDelta       uint64  `json:"cpu_delta"`
+	CPUSystemDelta uint64  `json:"cpu_system_delta"`
+	CPUUsage       float64 `json:"cpu_usage"` // percentage
 }
 
 // SystemGatherer collects metrics
@@ -134,7 +148,19 @@ func gatherDockerStats(metrics *Metrics) error {
 		return err
 	}
 
-	metrics.ContainersMetrics = stats
+	for _, stat := range stats {
+		metrics.ContainersMetrics = append(metrics.ContainersMetrics, &ContainerStatsJSON{
+			Name:            stat.Name,
+			ID:              stat.ID,
+			MemoryUsed:      stat.MemoryUsed,
+			MemoryAvailable: stat.MemoryAvailable,
+			MemoryUsage:     stat.MemoryUsage,
+			CPUCount:        stat.CPUCount,
+			CPUDelta:        stat.CPUDelta,
+			CPUSystemDelta:  stat.CPUSystemDelta,
+			CPUUsage:        stat.CPUUsage,
+		})
+	}
 
 	return nil
 }

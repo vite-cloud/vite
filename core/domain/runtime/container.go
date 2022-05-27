@@ -6,6 +6,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
+	"github.com/vite-cloud/go-zoup"
 	"github.com/vite-cloud/vite/core/domain/log"
 )
 
@@ -55,7 +56,7 @@ func (c Client) ContainerCreate(ctx context.Context, image string, opts Containe
 		return container.ContainerCreateCreatedBody{}, err
 	}
 
-	log.Log(log.DebugLevel, "created container", log.Fields{
+	log.Log(zoup.DebugLevel, "created container", zoup.Fields{
 		"id":            res.ID,
 		"image":         image,
 		"with_registry": opts.Registry != nil,
@@ -71,7 +72,7 @@ func (c Client) ContainerStart(ctx context.Context, ID string) error {
 		return err
 	}
 
-	log.Log(log.DebugLevel, "started container", log.Fields{
+	log.Log(zoup.DebugLevel, "started container", zoup.Fields{
 		"id": ID,
 	})
 
@@ -85,7 +86,7 @@ func (c Client) ContainerStop(ctx context.Context, ID string) error {
 		return err
 	}
 
-	log.Log(log.DebugLevel, "stopped container", log.Fields{
+	log.Log(zoup.DebugLevel, "stopped container", zoup.Fields{
 		"id": ID,
 	})
 
@@ -102,7 +103,7 @@ func (c Client) ContainerRemove(ctx context.Context, ID string) error {
 		return err
 	}
 
-	log.Log(log.DebugLevel, "removed container", log.Fields{
+	log.Log(zoup.DebugLevel, "removed container", zoup.Fields{
 		"id": ID,
 	})
 
@@ -122,7 +123,7 @@ func (c Client) ContainerExec(ctx context.Context, ID string, command string) er
 		return err
 	}
 
-	log.Log(log.DebugLevel, "exec command", log.Fields{
+	log.Log(zoup.DebugLevel, "exec command", zoup.Fields{
 		"id":      ID,
 		"command": command,
 	})

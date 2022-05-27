@@ -1,12 +1,13 @@
 package log
 
 import (
+	"github.com/vite-cloud/go-zoup"
 	"github.com/vite-cloud/vite/core/domain/datadir"
 	"os"
 )
 
 // logger contains an instance of the global logger.
-var logger Writer
+var logger zoup.Writer
 
 const (
 	// Store is the unique name of the logger store
@@ -16,17 +17,17 @@ const (
 )
 
 // SetLogger sets the global logger to a given writer.
-func SetLogger(w Writer) {
+func SetLogger(w zoup.Writer) {
 	logger = w
 }
 
 // GetLogger returns the global logger.
-func GetLogger() Writer {
+func GetLogger() zoup.Writer {
 	return logger
 }
 
 // defaultLogger creates a default logger.
-func defaultLogger() (Writer, error) {
+func defaultLogger() (zoup.Writer, error) {
 	dir, err := Store.Dir()
 	if err != nil {
 		return nil, err
@@ -37,11 +38,11 @@ func defaultLogger() (Writer, error) {
 		return nil, err
 	}
 
-	return &FileWriter{file}, nil
+	return &zoup.FileWriter{file}, nil
 }
 
 // Log logs an internal event to the global logger
-func Log(level Level, message string, fields Fields) {
+func Log(level zoup.Level, message string, fields zoup.Fields) {
 	if logger == nil {
 		w, err := defaultLogger()
 		if err != nil {

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/vite-cloud/go-zoup"
 	"github.com/vite-cloud/vite/core/domain/log"
 	"io"
 
@@ -80,7 +81,7 @@ func (c *CLI) Run(args []string) int {
 	}
 
 	if err == nil {
-		log.Log(log.InfoLevel, "command ran successfully", log.Fields{
+		log.Log(zoup.InfoLevel, "command ran successfully", zoup.Fields{
 			"command": command,
 		})
 
@@ -88,7 +89,7 @@ func (c *CLI) Run(args []string) int {
 	} else if statusErr, ok := err.(*StatusError); ok {
 		fmt.Fprintf(c.Err(), "Error: %s\n", statusErr.Status)
 
-		log.Log(log.ErrorLevel, "command failed", log.Fields{
+		log.Log(zoup.ErrorLevel, "command failed", zoup.Fields{
 			"command": command,
 			"err":     statusErr.Status,
 			"code":    statusErr.StatusCode,
@@ -98,7 +99,7 @@ func (c *CLI) Run(args []string) int {
 	} else {
 		fmt.Fprintf(c.Err(), "Error: %s\n", err)
 
-		log.Log(log.ErrorLevel, "command failed", log.Fields{
+		log.Log(zoup.ErrorLevel, "command failed", zoup.Fields{
 			"command": command,
 			"err":     err,
 			"code":    1,

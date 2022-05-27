@@ -5,8 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"sort"
+	"github.com/vite-cloud/vite/core/domain/locator"
 	"strconv"
 	"sync"
 	"time"
@@ -21,9 +20,10 @@ import (
 // Deployment holds the information needed to deploy a service.
 // When updating fields, make sure to also update deploymentJSON accordingly.
 type Deployment struct {
-	id     string
-	Docker *runtime.Client
-	Config *config.Config
+	id      string
+	Docker  *runtime.Client
+	config  *config.Config
+	Locator *locator.Locator
 
 	Bus       chan<- Event
 	resources sync.Map
@@ -31,17 +31,6 @@ type Deployment struct {
 
 func (d *Deployment) ID() string {
 	return d.id
-}
-
-func (d *Deployment) RunHooks(ctx context.Context, containerID string, commands []string) error {
-	for _, command := range commands {
-		err := d.Docker.ContainerExec(ctx, containerID, command)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // Deploy deploys a service.
@@ -271,7 +260,7 @@ var ErrValueNotFound = errors.New("value not found")
 type deploymentJSON struct {
 	ID        string
 	Resources map[string][]LabeledValue
-	Config    *config.Config
+	Locator   *locator.Locator
 }
 
 // Add adds a resource to the manifest under a given tag.
@@ -301,7 +290,7 @@ func (d *Deployment) MarshalJSON() ([]byte, error) {
 	return json.Marshal(deploymentJSON{
 		ID:        d.ID(),
 		Resources: d.All(),
-		Config:    d.Config,
+		Locator:   d.Locator,
 	})
 }
 
@@ -318,7 +307,7 @@ func (d *Deployment) UnmarshalJSON(data []byte) error {
 	}
 
 	d.id = manifestJSON.ID
-	d.Config = manifestJSON.Config
+	d.Locator = manifestJSON.Locator
 
 	for k, v := range manifestJSON.Resources {
 		d.resources.Store(k, v)
@@ -364,47 +353,13 @@ func (d *Deployment) Time() time.Time {
 	return time.Unix(0, id)
 }
 
-func retrieveIDs() ([]int64, error) {
-	dir, err := Store.Dir()
-	if err != nil {
-		return nil, err
-	}
-
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	var ids []int64
-
-	for _, f := range files {
-		if !f.IsDir() {
-			id, err := strconv.Atoi(f.Name()[:len(f.Name())-5])
-			if err != nil {
-				return nil, err
-			}
-
-			ids = append(ids, int64(id))
+func (d *Deployment) RunHooks(ctx context.Context, containerID string, commands []string) error {
+	for _, command := range commands {
+		err := d.Docker.ContainerExec(ctx, containerID, command)
+		if err != nil {
+			return err
 		}
 	}
 
-	// sort
-	sort.Slice(ids, func(i, j int) bool {
-		return ids[i] < ids[j]
-	})
-
-	return ids, nil
-}
-
-func Latest() (int64, error) {
-	ids, err := retrieveIDs()
-	if err != nil {
-		return 0, err
-	}
-
-	if len(ids) == 0 {
-		return 0, errors.New("no deployments found")
-	}
-
-	return ids[len(ids)-1], nil
+	return nil
 }

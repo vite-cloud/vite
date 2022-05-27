@@ -127,7 +127,7 @@ func testContainerCreate(tc *testCtx) {
 
 	assert.Equal(tc.t, tc.logger.Len(), 1)
 	assert.Equal(tc.t, tc.logger.Last().Message, "created container")
-	assert.Equal(tc.t, tc.logger.Last().Level, log.DebugLevel)
+	assert.Equal(tc.t, tc.logger.Last().Level, zoup.DebugLevel)
 	assert.Equal(tc.t, tc.logger.Last().Fields["id"], body.ID)
 	assert.Equal(tc.t, tc.logger.Last().Fields["image"], testImage)
 	assert.Equal(tc.t, tc.logger.Last().Fields["with_registry"], false)
@@ -156,7 +156,7 @@ func testContainerStart(tc *testCtx) {
 
 	assert.Equal(tc.t, tc.logger.Len(), 2)
 	assert.Equal(tc.t, tc.logger.Last().Message, "started container")
-	assert.Equal(tc.t, tc.logger.Last().Level, log.DebugLevel)
+	assert.Equal(tc.t, tc.logger.Last().Level, zoup.DebugLevel)
 	assert.Equal(tc.t, tc.logger.Last().Fields["id"], body.ID)
 
 	//started, err := tc.ctx.Value(manifest.ContextKey).(*manifest.Manifest).Get(StartedContainerManifestKey)
@@ -186,7 +186,7 @@ func testContainerStop(tc *testCtx) {
 
 	assert.Equal(tc.t, tc.logger.Len(), 3)
 	assert.Equal(tc.t, tc.logger.Last().Message, "stopped container")
-	assert.Equal(tc.t, tc.logger.Last().Level, log.DebugLevel)
+	assert.Equal(tc.t, tc.logger.Last().Level, zoup.DebugLevel)
 	assert.Equal(tc.t, tc.logger.Last().Fields["id"], body.ID)
 
 	//stopped, err := tc.ctx.Value(manifest.ContextKey).(*manifest.Manifest).Get(StoppedContainerManifestKey)
@@ -216,7 +216,7 @@ func testContainerRemove(tc *testCtx) {
 
 	assert.Equal(tc.t, tc.logger.Len(), 4)
 	assert.Equal(tc.t, tc.logger.Last().Message, "removed container")
-	assert.Equal(tc.t, tc.logger.Last().Level, log.DebugLevel)
+	assert.Equal(tc.t, tc.logger.Last().Level, zoup.DebugLevel)
 	assert.Equal(tc.t, tc.logger.Last().Fields["id"], body.ID)
 
 	//removed, err := tc.ctx.Value(manifest.ContextKey).(*manifest.Manifest).Get(RemovedContainerManifestKey)

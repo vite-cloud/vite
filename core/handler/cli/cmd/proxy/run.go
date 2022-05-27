@@ -2,9 +2,9 @@ package proxy
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/vite-cloud/go-zoup"
 	"github.com/vite-cloud/vite/core/domain/config"
 	"github.com/vite-cloud/vite/core/domain/deployment"
-	"github.com/vite-cloud/vite/core/domain/log"
 	server "github.com/vite-cloud/vite/core/domain/proxy"
 	"github.com/vite-cloud/vite/core/domain/resource"
 	"github.com/vite-cloud/vite/core/handler/cli/cli"
@@ -12,34 +12,19 @@ import (
 )
 
 type runOpts struct {
-	ID       int64
-	hasID    bool
-	HTTP     string
-	HTTPS    string
-	Unsecure bool
+	deployment *deployment.Deployment
+	HTTP       string
+	HTTPS      string
+	Unsecure   bool
 }
 
 func runRunCommand(cli *cli.CLI, opts *runOpts) error {
-	if !opts.hasID {
-		id, err := deployment.Latest()
-		if err != nil {
-			return err
-		}
-
-		opts.ID = id
-	}
-
-	depl, err := resource.Get[deployment.Deployment](deployment.Store, opts.ID)
+	proxy, err := server.New(cli.Out(), opts.deployment)
 	if err != nil {
 		return err
 	}
 
-	proxy, err := server.New(cli.Out(), depl)
-	if err != nil {
-		return err
-	}
-
-	proxy.Logger.Log(log.DebugLevel, "starting", log.Fields{"http_port": opts.HTTP, "https_port": opts.HTTPS, "secure": !opts.Unsecure})
+	proxy.Logger.Log(zoup.DebugLevel, "starting", zoup.Fields{"http_port": opts.HTTP, "https_port": opts.HTTPS, "secure": !opts.Unsecure})
 
 	proxy.Run(opts.HTTP, opts.HTTPS, opts.Unsecure)
 
@@ -52,21 +37,24 @@ func newRunCommand(cli *cli.CLI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run [id]",
 		Short: "run the proxy",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.hasID = len(args) > 0
-			if opts.hasID {
-				id, err := strconv.Atoi(args[0])
-				if err != nil {
-					return err
-				}
-
-				opts.ID = int64(id)
-			}
-
-			conf, err := config.Get()
+			id, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
+
+			dep, err := resource.Get[deployment.Deployment](deployment.Store, id)
+			if err != nil {
+				return err
+			}
+
+			conf, err := config.Get(dep.Locator)
+			if err != nil {
+				return err
+			}
+
+			opts.deployment = dep
 
 			if opts.HTTP == "" {
 				opts.HTTP = conf.Proxy.HTTP

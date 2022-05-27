@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/vite-cloud/vite/core/domain/log"
+	"github.com/vite-cloud/go-zoup"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -22,12 +22,12 @@ type Router struct {
 	mu         sync.Mutex
 	logger     *Logger
 	API        *gin.Engine
+	config     *config.Config
 }
 
 func (r *Router) Proxy(w http.ResponseWriter, req *http.Request) {
-	fmt.Println(req.Host, r.deployment.Config.ControlPlane.Host)
-	if req.Host == r.deployment.Config.ControlPlane.Host {
-		r.logger.LogR(req, log.DebugLevel, "proxy to control plane")
+	if req.Host == r.config.ControlPlane.Host {
+		r.logger.LogR(req, zoup.DebugLevel, "proxy to control plane")
 		r.API.ServeHTTP(w, req)
 		return
 	}
@@ -35,7 +35,7 @@ func (r *Router) Proxy(w http.ResponseWriter, req *http.Request) {
 	if targetIP == "" {
 		w.WriteHeader(http.StatusBadGateway)
 		w.Write([]byte("Upstream did not respond."))
-		r.logger.LogR(req, log.InfoLevel, "host not found")
+		r.logger.LogR(req, zoup.InfoLevel, "host not found")
 		return
 	}
 
@@ -44,7 +44,7 @@ func (r *Router) Proxy(w http.ResponseWriter, req *http.Request) {
 		Host:   targetIP,
 	}).ServeHTTP(w, req)
 
-	r.logger.LogR(req, log.InfoLevel, "served")
+	r.logger.LogR(req, zoup.InfoLevel, "served")
 }
 
 func (r *Router) IPFor(host string) (string, error) {
@@ -76,7 +76,7 @@ func (r *Router) IPFor(host string) (string, error) {
 }
 
 func (r *Router) serviceFor(host string) (*config.Service, error) {
-	for _, service := range r.deployment.Config.Services {
+	for _, service := range r.config.Services {
 		for _, h := range service.Hosts {
 			if ok, err := hostMatches(host, h); ok {
 				return service, err
@@ -107,8 +107,4 @@ func (r *Router) Accepts(host string) (bool, error) {
 	}
 
 	return true, nil
-}
-
-func (r *Router) ServeAPI(w http.ResponseWriter, req *http.Request) {
-
 }

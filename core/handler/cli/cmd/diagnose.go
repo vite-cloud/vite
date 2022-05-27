@@ -10,7 +10,7 @@ import (
 
 // runDiagnoseCommand handles the `diagnose` command.
 func runDiagnoseCommand(cli *cli.CLI) error {
-	conf, err := config.Get()
+	conf, err := config.GetUsingDefaultLocator()
 	if err != nil {
 		return err
 	}
